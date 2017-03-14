@@ -1,0 +1,100 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : 13-Oct-2016, 11:42:39
+    Author     : Mike
+*/
+
+body {margin: 0;}
+
+button::-moz-focus-inner {padding:0; border:0}
+
+#LogoWrap { 
+            margin: auto;
+            height: 60px;
+            background-color: rgb(240,240,240);
+}
+
+/*#oldLogoWrap { 
+            position: absolute;
+            top: 0%;
+            left: 50%;
+            margin-left: -80px;
+            margin-top: 10px;
+            background-color: rgb(250,250,250);
+}*/
+
+#MetricsWrap { 
+            margin: auto;
+            height: 60px;
+            padding: 10px 0px 20px 0px;
+}
+
+#GraphWrap { 
+            margin: auto;
+}
+
+/* Doesn't seem to work */
+button::-moz-focus-inner,
+input::-moz-focus-inner {border: 0; padding: 0;}
+
+/*input[type=text] {
+    height: 25px;
+    border-radius: 5px;
+}*/
+
+input[type=datetime] {
+/*    display:block;*/
+    font-family: Arial;    
+    height: 25px; 
+    border-radius: 5px;
+    margin: 5px 0px 0px 0px; 
+}
+
+input[type=submit] {
+    font-family: Arial;    
+    height: 30px; 
+    border-radius: 5px;
+    margin: 10px 0px 0px 0px; 
+    background-color: rgb(169,224,254);  /* lightskyblue */
+}
+
+select {
+    height: 30px; 
+    border-radius: 5px; 
+    font-family: Arial;  
+    margin: 5px 0px 0px 0px;
+}
+
+label {
+    display:block;
+/*    font-weight: bold;    */
+/*    font-family: futura;    */
+    font-family: Arial;    
+    font-size: 16px;
+    color: grey;
+    margin-bottom: 5px;
+    margin-left: 3px;    
+}
+
+.block-field {
+    float: left;
+    margin-right: 0px;    
+}
+
+.block-field input,
+.block-field label {
+    display: block;
+    margin: 1px ;
+    font-size: 14px;
+    color: black;
+/*    vertical-align: middle;  Fixes any weird issues in Firefox and IE */
+}
+
+input[type=checkbox] {
+    margin: 0px 2px; 
+}
+

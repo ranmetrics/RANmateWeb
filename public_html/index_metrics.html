@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>RANMate Metrics</title>
+        <meta charset="UTF-8">
+<!--        <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+        <link rel="stylesheet" href="css/RANMateMetrics.css">
+        <script src="js/RANMateMetrics.js"></script>
+        <script src="js/moment.min.js"></script>            
+        <script src="js/Chart.min.js"></script>            
+    </head>
+    <body onload="initPage()">
+        <!-- Header-->
+        <div id="LogoWrap">        
+<!--            <a><img class="main" src="./img/RANmetricsLogoSmall.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>-->
+            <a><img class="main" src="./img/RANmetricsLogoTransparent.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>
+        </div>
+
+        <!-- Gather Inputs-->
+        <div id="MetricsWrap" style=" text-align: center; ">        
+        <div id="MetricsInner" style=" display: inline-block; ">        
+
+                <section>
+
+                    <div style="float:left;margin-right:30px;">
+                        <label for="name">Metric</label>            
+                        <select id="metric" onchange="showSites(this.value); ">
+                            <option value="">(Select metric)</option>
+                            <option disabled>── Femto Metrics ──</option>
+<!--                            <option value="Femto-packets">Packets (Femto)</option>
+                            <option value="Femto-poe">PoE (Femto)</option>-->
+                            <option value="Femto-packets">Packets</option>
+                            <option value="Femto-poe">PoE</option>
+<!--                            <option disabled>────────────────</option>-->
+                            <option disabled>── Router Ping ──</option>
+                            <option value="Ping-min">Min Ping Latency</option>
+                            <option value="Ping-max">Max Ping Latency</option>
+                            <option value="Ping-avg">Average Ping Latency</option>
+                            <option value="Ping-mdev">Max Ping Deviation</option>
+                            <option disabled>── Router RPM ──</option>
+                            <option value="RPM-latency" disabled>Latency</option>
+                            <option value="RPM-jitter" disabled>Jitter</option>
+                            <option value="RPM-bandwidth" disabled>Bandwidth</option>
+                            <option disabled>─ Router Counters ─</option>
+                            <option value="Counter-input_bytes">Bytes In</option>
+                            <option value="Counter-input_bps">Bit/s In</option>
+                            <option value="Counter-input_packets">Packets In</option>
+                            <option value="Counter-input_pps">Packet/s In</option>
+                            <option value="Counter-output_bytes">Bytes Out</option>
+                            <option value="Counter-output_bps">Bit/s Out</option>
+                            <option value="Counter-output_packets">Packets Out</option>
+                            <option value="Counter-output_pps">Packet/s Out</option>
+                            <option value="Counter-input_errors">Input Errors</option>
+                            <option value="Counter-input_drops">Input Drops</option>
+                            <option value="Counter-framing_errors">Framing Errors In</option>
+                            <option value="Counter-input_l2_channel_errors">Input L2 Channel Errors</option>
+                            <option value="Counter-carrier_transitions">Carrier Transitions Out</option>
+                            <option value="Counter-output_errors">Output Errors</option>
+                            <option value="Counter-output_drops">Output Drops</option>
+                            <option value="Counter-aged_packets">Aged Packets Out</option>
+                            <option value="Counter-hs_link_crc_errors">HS Link CRC Errors Out</option>
+<!--                            <option value="Counter-input_bytes">Bytes In (DCN)</option>
+                            <option value="Counter-input_bps">Bit/s In (DCN)</option>
+                            <option value="Counter-input_packets">Packets In (DCN)</option>
+                            <option value="Counter-input_pps">Packet/s In (DCN)</option>
+                            <option value="Counter-output_bytes">Bytes Out (DCN)</option>
+                            <option value="Counter-output_bps">Bit/s Out (DCN)</option>
+                            <option value="Counter-output_packets">Packets Out (DCN)</option>
+                            <option value="Counter-output_pps">Packet/s Out (DCN)</option>
+                            <option value="Counter-input_errors">Input Errors (DCN)</option>
+                            <option value="Counter-input_drops">Input Drops (DCN)</option>
+                            <option value="Counter-framing_errors">Framing Errors In (DCN)</option>
+                            <option value="Counter-input_l2_channel_errors">Input L2 Channel Errors (DCN)</option>
+                            <option value="Counter-carrier_transitions">Carrier Transitions Out (DCN)</option>
+                            <option value="Counter-output_errors">Output Errors (DCN)</option>
+                            <option value="Counter-output_drops">Output Drops (DCN)</option>
+                            <option value="Counter-aged_packets">Aged Packets Out (DCN)</option>
+                            <option value="Counter-hs_link_crc_errors">HS Link CRC Errors Out (DCN)</option>-->
+                        </select> 
+                    </div>
+                    
+                    <div style="float:left;margin-right:30px;">
+                        <label for="name" id="SiteLabel">Site</label>            
+                        <select id="site" style="min-width: 130px;" onchange="showInterfaces(this.value); ">
+<!--                            <option value="Bishopsgate">Bishopsgate</option>
+                            <option value="Gala">Gala</option>
+                            <option value="Ladbroke Grove">Ladbroke Grove</option>
+                            <option value="Moor Place">Moor Place</option>
+                            <option value="Sea Containers">Sea Containers</option>-->
+                        </select> 
+                    </div>
+
+                    <div style="float:left;margin-right:30px;">
+                        <label for="name" id="IfaceName">Interface</label>            
+                        <select id="interface" style="min-width: 130px;">
+                        </select> 
+                        <script>
+                            document.getElementById("interface").style.display = 'none';
+                            document.getElementById("IfaceName").style.display = 'none';
+                        </script>
+                    </div>
+                    
+<!--                    The original way
+                    <div id="operators" style="float:left;margin-right:30px;">
+                        <label for="name" id="OpCoName" style="margin-left:0px;">Operator</label>            
+                        <div class="block-field" id="V"><label for="checkbox" style="margin: 0px 2px;">V</label><input type="checkbox" id="Vodafone"></div>                        
+                        <div class="block-field" id="O"><label for="checkbox" style="margin: 0px 2px;">O</label><input type="checkbox" id="O2"></div>                        
+                        <div class="block-field" id="T"><label for="checkbox" style="margin: 0px 2px;">T</label><input type="checkbox" id="Three"></div>                        
+                        <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input type="checkbox" id="EE"></div>                        
+                    </div>-->
+
+                    <div id="operators" style="float:left;margin-right:30px;">
+                        <label for="name" id="OpCoName" style="margin-left:0px;">Operator</label>            
+                        <div class="block-field" id="V"><label for="checkbox" style="margin: 0px 2px;">V</label><input type="checkbox" id=0 onChange="opcoSelected(this.id)"></div>                        
+                        <div class="block-field" id="O"><label for="checkbox" style="margin: 0px 2px;">O</label><input type="checkbox" id=1 onChange="opcoSelected(this.id)"></div>                        
+                        <div class="block-field" id="T"><label for="checkbox" style="margin: 0px 2px;">T</label><input type="checkbox" id=2 onChange="opcoSelected(this.id)"></div>                        
+                        <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input type="checkbox" id=3 onChange="opcoSelected(this.id)"></div>                        
+                    </div>
+                    
+                    
+                    <div id="cells" style="float:left;margin-right:30px;">
+                        <label for="name" id="CellNum">Femto Number</label>            
+<!--                        <div style="float:left;margin-right:0px;"><input type="checkbox" name="FemtoNumber" value="1" style="font-family: Arial; font-size: 60%"> 1<br></div>-->
+                        <div class="block-field" id="FAP1" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">1</label><input type="checkbox" id="Femto1"></div>                        
+                        <div class="block-field" id="FAP2" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">2</label><input type="checkbox" id="Femto2"></div>                        
+                        <div class="block-field" id="FAP3" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">3</label><input type="checkbox" id="Femto3"></div>                        
+                        <div class="block-field" id="FAP4" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">4</label><input type="checkbox" id="Femto4"></div>                        
+                        <div class="block-field" id="FAP5" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">5</label><input type="checkbox" id="Femto5"></div>                        
+                        <div class="block-field" id="FAP6" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">6</label><input type="checkbox" id="Femto6"></div>                        
+                        <div class="block-field" id="FAP7" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">7</label><input type="checkbox" id="Femto7"></div>                        
+                        <div class="block-field" id="FAP8" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">8</label><input type="checkbox" id="Femto8"></div>                        
+                    </div>
+                    
+                    <div style="float:left;margin-right:30px;">
+                        <label for="name">Start Date/Time</label>            
+                        <input id="startTime" title="YYYY-MM-DD hh:mm" type="datetime" name="Start"><br>
+                        <script>
+                            document.getElementById("startTime").value =
+                            document.getElementById("startTime").defaultValue = getYesterday();
+                        </script>
+                    </div>
+
+                    <div style="float:left;margin-right:30px;">
+                        <label for="name">End Date/Time</label>            
+<!--                        <input title="YYYY-MM-DD hh:mm:ssZ" type="datetime" name="End" value="2016-10-13 18:00:00Z"><br>-->
+                        <input id="endTime" title="YYYY-MM-DD hh:mm" type="datetime" name="End" ><br>
+                        <script>
+                            document.getElementById("endTime").value =
+                            document.getElementById("endTime").defaultValue = getNow();
+                        </script>
+                    </div>
+                    
+                    <div style="float:left">
+                        <br>   
+                            <input id="graphButton" type="submit" value="Graph" onclick="showGraph('graph', true); ">           
+                    </div>
+                </section>
+        </div>
+        </div>
+            
+        <!-- Display the Graph-->
+<!--        <div id="GraphWrap" style="width:500px; height:300px; padding: 100px 100px 100px 100px;">        -->
+        <div id="GraphWrap" style="width:90%; height:90%;">        
+                <canvas id="graph" width=800 height=400></canvas>
+            
+<!--            <a><img id="graph" class="main" src="./img/Graph2.png" style=" display: block; margin: auto; vertical-align: middle; visibility: hidden;"></a>-->
+        </div>
+            
+    </body>
+</html>
+ 
