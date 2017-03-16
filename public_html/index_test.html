@@ -13,6 +13,15 @@ and open the template in the editor.
         <script src="js/RANMateMetrics.js"></script>
         <script src="js/moment.min.js"></script>            
         <script src="js/Chart.min.js"></script>            
+
+        <!-- Include Twitter Bootstrap and jQuery: -->
+        <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css"/>
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="js/bootstrap.min.js"></script>
+
+        <!-- Include the plugin's CSS and JS: -->
+        <script type="text/javascript" src="js/bootstrap-multiselect.js"></script>
+        <link rel="stylesheet" href="css/bootstrap-multiselect.css" type="text/css"/>        
     </head>
     <body onload="initPage()">
         <!-- Header-->
@@ -30,23 +39,14 @@ and open the template in the editor.
                     <div style="float:left;margin-right:30px;">
                         <label for="name">Metric</label>            
                         
-                        <div class="mutliSelect">
-                            <ul>
-                                <li>
-                                    <input type="checkbox" value="Apple" />Apple</li>
-                                <li>
-                                    <input type="checkbox" value="Blackberry" />Blackberry</li>
-                                <li>
-                                    <input type="checkbox" value="HTC" />HTC</li>
-                                <li>
-                                    <input type="checkbox" value="Sony Ericson" />Sony Ericson</li>
-                                <li>
-                                    <input type="checkbox" value="Motorola" />Motorola</li>
-                                <li>
-                                    <input type="checkbox" value="Nokia" />Nokia</li>
-                            </ul>
-                        </div>
-
+                        <select id="example-getting-started" multiple="multiple">
+                            <option value="cheese">Cheese</option>
+                            <option value="tomatoes">Tomatoes</option>
+                            <option value="mozarella">Mozzarella</option>
+                            <option value="mushrooms">Mushrooms</option>
+                            <option value="pepperoni">Pepperoni</option>
+                            <option value="onions">Onions</option>
+                        </select>
                         
 <!--                        <select id="metric" onchange="showSites(this.value); ">
                             <option value="">(Select metric)</option>

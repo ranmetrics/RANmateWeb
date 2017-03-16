@@ -9,10 +9,22 @@ and open the template in the editor.
         <title>RANMate Metrics Test</title>
         <meta charset="UTF-8">
 <!--        <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+
+        <!-- Include Twitter Bootstrap and jQuery: -->
+        <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css"/>
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="js/tether.min.js"></script>
+        <script type="text/javascript" src="js/bootstrap.min.js"></script>
+
+        <!-- Include the plugin's CSS and JS: -->
+        <script type="text/javascript" src="js/bootstrap-multiselect.js"></script>
+        <link rel="stylesheet" href="css/bootstrap-multiselect.css" type="text/css"/>        
+
         <link rel="stylesheet" href="css/RANMateMetrics.css">
         <script src="js/RANMateMetrics.js"></script>
         <script src="js/moment.min.js"></script>            
         <script src="js/Chart.min.js"></script>            
+        
     </head>
     <body onload="initPage()">
         <!-- Header-->
@@ -28,60 +40,20 @@ and open the template in the editor.
                 <section>
 
                     <div style="float:left;margin-right:30px;">
-                        <label for="name">Metric</label>            
-                        <select id="metric" onchange="showSites(this.value); ">
-                            <option value="">(Select metric)</option>
-                            <option disabled>── Femto Metrics ──</option>
-<!--                            <option value="Femto-packets">Packets (Femto)</option>
-                            <option value="Femto-poe">PoE (Femto)</option>-->
-                            <option value="Femto-packets">Packets</option>
-                            <option value="Femto-poe">PoE</option>
-<!--                            <option disabled>────────────────</option>-->
-                            <option disabled>── Router Ping ──</option>
-                            <option value="Ping-min">Min Ping Latency</option>
-                            <option value="Ping-max">Max Ping Latency</option>
-                            <option value="Ping-avg">Average Ping Latency</option>
-                            <option value="Ping-mdev">Max Ping Deviation</option>
-                            <option disabled>── Router RPM ──</option>
-                            <option value="RPM-latency" disabled>Latency</option>
-                            <option value="RPM-jitter" disabled>Jitter</option>
-                            <option value="RPM-bandwidth" disabled>Bandwidth</option>
-                            <option disabled>─ Router Counters ─</option>
-                            <option value="Counter-input_bytes">Bytes In</option>
-                            <option value="Counter-input_bps">Bit/s In</option>
-                            <option value="Counter-input_packets">Packets In</option>
-                            <option value="Counter-input_pps">Packet/s In</option>
-                            <option value="Counter-output_bytes">Bytes Out</option>
-                            <option value="Counter-output_bps">Bit/s Out</option>
-                            <option value="Counter-output_packets">Packets Out</option>
-                            <option value="Counter-output_pps">Packet/s Out</option>
-                            <option value="Counter-input_errors">Input Errors</option>
-                            <option value="Counter-input_drops">Input Drops</option>
-                            <option value="Counter-framing_errors">Framing Errors In</option>
-                            <option value="Counter-input_l2_channel_errors">Input L2 Channel Errors</option>
-                            <option value="Counter-carrier_transitions">Carrier Transitions Out</option>
-                            <option value="Counter-output_errors">Output Errors</option>
-                            <option value="Counter-output_drops">Output Drops</option>
-                            <option value="Counter-aged_packets">Aged Packets Out</option>
-                            <option value="Counter-hs_link_crc_errors">HS Link CRC Errors Out</option>
-<!--                            <option value="Counter-input_bytes">Bytes In (DCN)</option>
-                            <option value="Counter-input_bps">Bit/s In (DCN)</option>
-                            <option value="Counter-input_packets">Packets In (DCN)</option>
-                            <option value="Counter-input_pps">Packet/s In (DCN)</option>
-                            <option value="Counter-output_bytes">Bytes Out (DCN)</option>
-                            <option value="Counter-output_bps">Bit/s Out (DCN)</option>
-                            <option value="Counter-output_packets">Packets Out (DCN)</option>
-                            <option value="Counter-output_pps">Packet/s Out (DCN)</option>
-                            <option value="Counter-input_errors">Input Errors (DCN)</option>
-                            <option value="Counter-input_drops">Input Drops (DCN)</option>
-                            <option value="Counter-framing_errors">Framing Errors In (DCN)</option>
-                            <option value="Counter-input_l2_channel_errors">Input L2 Channel Errors (DCN)</option>
-                            <option value="Counter-carrier_transitions">Carrier Transitions Out (DCN)</option>
-                            <option value="Counter-output_errors">Output Errors (DCN)</option>
-                            <option value="Counter-output_drops">Output Drops (DCN)</option>
-                            <option value="Counter-aged_packets">Aged Packets Out (DCN)</option>
-                            <option value="Counter-hs_link_crc_errors">HS Link CRC Errors Out (DCN)</option>-->
-                        </select> 
+                        <label for="name">Metric</label>
+                        <script type="text/javascript">
+                            $(document).ready(function() {
+                                $('#metric').multiselect();
+                            });
+                        </script>
+                        <select id="metric" multiple="multiple">
+                            <option value="cheese">Cheese</option>
+                            <option value="tomatoes">Tomatoes</option>
+                            <option value="mozarella">Mozzarella</option>
+                            <option value="mushrooms">Mushrooms</option>
+                            <option value="pepperoni">Pepperoni</option>
+                            <option value="onions">Onions</option>
+                        </select>
                     </div>
                     
                     <div style="float:left;margin-right:30px;">
