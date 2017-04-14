@@ -30,7 +30,7 @@ button::-moz-focus-inner {padding:0; border:0}
 #MetricsWrap { 
             margin: auto;
             height: 60px;
-            padding: 10px 0px 20px 0px;
+            padding: 10px 0px 80px 0px;  // orig 10px 0px 20px 0px;
 }
 
 #GraphWrap { 
@@ -49,16 +49,19 @@ input::-moz-focus-inner {border: 0; padding: 0;}
 input[type=datetime] {
 /*    display:block;*/
     font-family: Arial;    
-    height: 25px; 
+    height: 38px; 
     border-radius: 5px;
-    margin: 5px 0px 0px 0px; 
+    margin: 0px 0px 0px 0px; 
+    background-color: rgb(240,240,240);
+    border: 0;
+    text-align: center;    
 }
 
 input[type=submit] {
     font-family: Arial;    
-    height: 30px; 
+    height: 39px; 
     border-radius: 5px;
-    margin: 10px 0px 0px 0px; 
+    margin: 5px 0px 0px 0px; 
     background-color: rgb(169,224,254);  /* lightskyblue */
 }
 
@@ -98,3 +101,9 @@ input[type=checkbox] {
     margin: 0px 2px; 
 }
 
+// The bootstrap multi-select look
+ul.multiselect-container {
+  width: 100% !important;
+}
+
+.dropdown-menu {width:100% !important;}

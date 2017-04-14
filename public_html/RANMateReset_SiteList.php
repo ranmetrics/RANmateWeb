@@ -4,8 +4,8 @@
 <body>
 
 <?php
-$conn = mysqli_connect('localhost:3307','dataduct','davy15','ranmate-femto');
-//$conn = mysqli_connect('localhost:3306','dataduct','Brearly16','ranmate-femto');
+//$conn = mysqli_connect('localhost:3307','dataduct','davy15','ranmate-femto');
+$conn = mysqli_connect('localhost:3306','dataduct','Brearly16','ranmate-femto');
 //$conn = mysqli_connect('185.171.220.1:3306','dataduct','Brearly16','ranmate-femto');      // OpenCell live server
 if (!$conn) {
     die('Could not connect: ' . mysqli_error($conn));
@@ -30,6 +30,7 @@ if ($result->num_rows > 0) {
     echo $sites;         // maybe 1 echo is more efficient - client side reports 30 - 50 milliseconds regardless of which approach is taken
 } else {
     echo "<option disabled>(No Femto Sites)</option>";    
+    //echo "(No Cells) sql=" . $sql;        
 }
 $conn->close();
 

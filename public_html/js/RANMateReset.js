@@ -80,7 +80,7 @@ function initPage() {
     xmlhttp.send();
 
     if (xmlhttp.status === 200) {
-        // console.log("Response " + xmlhttp.responseText);
+        //console.log("initPage() response is " + xmlhttp.responseText);
         document.getElementById("site").innerHTML = xmlhttp.responseText;
         document.getElementById("site").selectedIndex = -1;
     } else {
@@ -157,7 +157,7 @@ function femtoSelected(cell) {
 }
 
 function updateOpCoCells(str) {
-    // console.log("updateOpCoCells() called with " + str);
+    console.log("updateOpCoCells() called with " + str);
     if (str == "") {
         return;
     } else {
@@ -170,6 +170,7 @@ function updateOpCoCells(str) {
         }
         xmlhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
+                console.log("RANMateReset_OpCoCellList() returned " + this.responseText);
                 liveCells = new Map();
                 liveCells.set(0, new Set()); 
                 liveCells.set(1, new Set());
@@ -209,7 +210,7 @@ function updateOpCoCells(str) {
                 var fap8 = document.getElementById('FAP8');
                 
                 var cellSet = new Set();
-                // console.log("RANMateReset_OpCoCellList() returned " + this.responseText);
+                console.log("RANMateReset_OpCoCellList() returned " + this.responseText);
                 var cellList = this.responseText.split(' ');
                 var arrayLength = cellList.length;
                 for (var i = 0; i < arrayLength; i++) {
@@ -251,6 +252,7 @@ function updateOpCoCells(str) {
                 // console.log(cellList.length + " cells in that list");
             }
         };
+        console.log("What's going on?");
         xmlhttp.open("GET","RANMateReset_OpCoCellList.php?switch="+encodeURIComponent(str),true);
         xmlhttp.send();
     }

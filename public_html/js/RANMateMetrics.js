@@ -45,6 +45,7 @@ function getDateTimeString(day) {
 };
 
 function showSites(str) {
+    //console.log("Str=" + str);
     if (str == "") {
         //document.getElementById("metric").innerHTML = "";
         return;
@@ -72,9 +73,11 @@ function showSites(str) {
         var fap8 = document.getElementById("FAP8");
 
         xmlhttp.onreadystatechange = function() {
+            console.log("Received response from server: " + this.responseText);
             if (this.readyState == 4 && this.status == 200) {
                 document.getElementById("site").innerHTML = this.responseText;
                 document.getElementById("site").selectedIndex = -1;
+                // $('site').multiselect('rebuild');
             }
         };
 
@@ -90,6 +93,18 @@ function showSites(str) {
             iface.style.display = "block";
             iface.style.margin = "10px 0px 0px 0px";    // no idea why we now need a 10px top border instead of 5px to keep it inline
             ifaceLabel.style.display = "block";
+            xmlhttp.open("GET","RANMateMetrics_SiteList.php?group="+str,true);
+            xmlhttp.send();
+        } else if (str.startsWith("Buddy-") && (currentMetricType !== "Buddy")) {
+            currentMetricType = "Buddy";
+            clearTickBoxes();
+            cellNum.style.display = 'none';
+            opCoName.style.display = 'none';
+            iface.style.display = 'none';
+            ifaceLabel.style.display = 'none';
+            V.style.display = O.style.display = T.style.display = E.style.display = 'none';
+            fap1.style.display = fap2.style.display = fap3.style.display = fap4.style.display = 'none';
+            fap5.style.display = fap6.style.display = fap7.style.display = fap8.style.display = 'none';
             xmlhttp.open("GET","RANMateMetrics_SiteList.php?group="+str,true);
             xmlhttp.send();
         } else if (str.startsWith("Ping-") && (currentMetricType !== "Ping")) {
@@ -411,7 +426,7 @@ function showGraph(id, visible) {
                                             " WHERE " + metric.substring(6) + ".site_id=(SELECT SwitchIP from `ranmate-femto`.customer_config where customer_config.Site='" + siteOnly + "' AND customer_config.SwitchLocation='" + floorOnly + "' GROUP BY SwitchIP) " +
                                             "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
                                             "GROUP BY measurement_time;";
-                                    // console.log("SQL is " + query);
+                                    // console.log("Femto SQL is " + query);
                                 }
                             }
                         } else if (metric.substring(0,5) == "Ping-") { // Router to Router Ping
@@ -420,7 +435,44 @@ function showGraph(id, visible) {
                                     " WHERE ping.public_site_id=(SELECT RouterIP from `ranmate-femto`.customer_config where customer_config.Site='" + site + "' GROUP BY RouterIP) " +
                                     "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
                                     "GROUP BY measurement_time;";
-                            console.log("SQL is " + query);
+                            console.log("Ping SQL is " + query);
+//                                alert("SQL is " + query);
+                        } else if (metric.substring(0,6) == "Buddy-") { // Keith's pride and joy
+                            if (metric.endsWith('jitter')) {
+                                yLabelTitle = 'milliseconds';
+                                query = "SELECT measurement_time, " + metric.substring(6) + " FROM `metrics`.buddy_jitter " +
+                                        "WHERE buddy_jitter.site_name='" + site + "' " +
+                                        "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+                                        "GROUP BY measurement_time;";
+                            } else if (metric.substring(6).startsWith('rtt')) {
+                                yLabelTitle = 'milliseconds';
+                                query = "SELECT measurement_time, " + metric.substring(6) + " FROM `metrics`.buddy_latency " +
+                                        "WHERE buddy_latency.site_name='" + site + "' " +
+                                        "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+                                        "GROUP BY measurement_time;";                                
+                            /* } else if (metric.endsWith('max_latency')) {
+                                query = "SELECT measurement_time, rtt_max FROM `metrics`.buddy_latency " +
+                                        "WHERE buddy_latency.site_name='" + site + "' " +
+                                        "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+                                        "GROUP BY measurement_time;";                                
+                            } else if (metric.endsWith('avg_latency')) {
+                                query = "SELECT measurement_time, rtt_avg FROM `metrics`.buddy_latency " +
+                                        "WHERE buddy_latency.site_name='" + site + "' " +
+                                        "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+                                        "GROUP BY measurement_time;";                                
+                            } else if (metric.endsWith('mdev_latency')) {
+                                query = "SELECT measurement_time, rtt_mdev FROM `metrics`.buddy_latency " +
+                                        "WHERE buddy_latency.site_name='" + site + "' " +
+                                        "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+                                        "GROUP BY measurement_time;"; */
+                            } else if (metric.endsWith('bandwidth')) {
+                                yLabelTitle = 'bit/s';
+                                query = "SELECT measurement_time, " + metric.substring(6) + " FROM `metrics`.buddy_bandwidth " +
+                                        "WHERE buddy_bandwidth.site_name='" + site + "' " +
+                                        "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+                                        "GROUP BY measurement_time;";                                
+                            }
+                            console.log("Buddy SQL is " + query);
 //                                alert("SQL is " + query);
                         } else {  // Backhaul Counter Metric
                             var interface = document.getElementById("interface").value;
@@ -433,7 +485,7 @@ function showGraph(id, visible) {
                                         "AND router_counters.interface='" + interface + "' " +
                                         "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
                                         "GROUP BY measurement_time;";
-                                console.log("SQL is " + query);
+                                console.log("Counter SQL is " + query);
 //                                alert("SQL is " + query);
                             }
                         }

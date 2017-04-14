@@ -13,8 +13,9 @@ if (!$conn) {
     die('Could not connect: ' . mysqli_error($con));
 }
 
-$sql = "Select DISTINCT interface from `ranmate-femto`.customer_config, `metrics`.router_counters "
-        . "WHERE customer_config.Site='" . $Site . "' and customer_config.RouterIp=router_counters.public_site_id";
+//$sql = "Select DISTINCT interface from `ranmate-femto`.customer_config, `metrics`.router_counters "
+//        . "WHERE customer_config.Site='" . $Site . "' and customer_config.RouterIp=router_counters.public_site_id";
+$sql = "Select interface from metrics.router_counters_sites WHERE site_name='" . $Site . "'";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {

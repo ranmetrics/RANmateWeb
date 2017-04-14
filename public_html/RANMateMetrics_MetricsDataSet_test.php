@@ -1,5 +1,3 @@
-
-
 <?php
 $sql = $_GET['query'];
 //echo "<option value=\"". $MetricGroup . "\">" . $MetricGroup . "</option>";
@@ -28,7 +26,18 @@ while ($tok !== false) {
     $tok = strtok(",");
 }
 
-$result = $conn->query($sql);
+$queryTok = strtok($sql, ";\n");
+$prevTok;
+$prevPrevTok;
+
+while ($queryTok !== false) {
+    $result = $conn->query($queryTok);
+//    $prevPrevTok = $queryTok;
+    $prevTok = $queryTok;
+    $queryTok = strtok(";\n");
+}
+
+//$result = $conn->query($sql);
 $response = array();
 
 if ($result->num_rows > 0) {
@@ -41,8 +50,10 @@ if ($result->num_rows > 0) {
         );
         
         foreach ($metric_names as &$metric) {
-            $dcn[$metric] = $row[$metric];
-        }        
+            //$log = $log . ", metric=" . $metric;
+            //$dcn[$metric] = $row[$metric];
+            $dcn[str_replace("`", "", $metric)] = $row[str_replace("`", "", $metric)];
+        } 
         
         // push the final array onto the returning array
         array_push($response, $dcn);
@@ -51,6 +62,7 @@ if ($result->num_rows > 0) {
     $responseString = json_encode($response);
 //    echo strlen($responseString);        
     echo $responseString;        
+    //echo $log;        
     
 //        $response[] = $row;
 //        $iface = $row["interface"];
@@ -58,7 +70,8 @@ if ($result->num_rows > 0) {
 //    }
 //    $jsonData = json_encode($response);     
 } else {
-    echo "<data>(No data available for query: \"$sql\")</data>";    
+    // echo "<data>(No data available for query: \"$sql\")</data>";    
+    echo "<data>(No data available for query: \"$prevTok\")</data>";    
 }
 $conn->close();
 

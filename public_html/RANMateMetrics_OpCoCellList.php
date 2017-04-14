@@ -1,5 +1,5 @@
 <?php
-$switch = str_replace(" - ", "-", $_GET['switch']);
+$switch = str_replace(" - ", "-", $_GET['switch'],1); // Some sites like Corsham St have ' - ' in the name
 //$switch = 'Bishopsgate-Floor 2';
 
 //$conn = mysqli_connect('localhost:3307','dataduct','davy15','ranmate-femto');

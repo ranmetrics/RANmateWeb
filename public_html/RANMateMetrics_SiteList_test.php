@@ -14,25 +14,26 @@ if (!$conn) {
 }
 
 if (($MetricGroup == 'Counter') || ($MetricGroup == 'Ping')) {
-    $sql = "Select DISTINCT Site from `ranmate-femto`.customer_config WHERE SwitchIP LIKE '10.%' ORDER BY Site";
+    $sql = "Select DISTINCT site_name from metrics.router_counters_sites ORDER BY site_name";
+    //$sql = "Select DISTINCT Site from `ranmate-femto`.customer_config WHERE SwitchIP LIKE '10.%' ORDER BY Site";
 } else if ($MetricGroup == 'Buddy') {
-    $sql = "Select DISTINCT site_name from metrics.buddy ORDER BY site_name";
+    $sql = "Select DISTINCT site_name from metrics.buddy where NOT exclude ORDER BY site_name";
 } else if ($MetricGroup == 'Femto') {
      // $sql = "Select DISTINCT SwitchIP, Site, SwitchLocation, SiteRef from `ranmate-femto`.customer_config WHERE SwitchIP LIKE '10.%' AND SwitchLocation != '' ORDER BY Site, SwitchLocation";
     $sql = "Select DISTINCT customer_config.SwitchIP, customer_config.Site, customer_config.SwitchLocation, customer_config.SiteRef "
             . "from `ranmate-femto`.customer_config, `ranmate-femto`.sites "
             . "WHERE SwitchIP LIKE '10.%' AND SwitchLocation != '' AND CONCAT(customer_config.Site,'-',customer_config.SwitchLocation) = sites.site_id "
             . "AND sites.exclude='0' and sites.effective_to > NOW() ORDER BY Site, SwitchLocation";
-}  
+} else {
+    echo "Unexpected Metric Group " . $MetricGroup . "\n";
+}
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
     // output data of each row
     while($row = $result->fetch_assoc()) {
 //        echo $row["Site"] . " - " . $row["SwitchLocation"] . " (" . $row["SwitchIP"] . ")\n";
-        if (($MetricGroup == 'Counter') || ($MetricGroup == 'Ping')) {
-            $site = $row["Site"];
-        } else if ($MetricGroup == 'Buddy') {
+        if (($MetricGroup == 'Counter') || ($MetricGroup == 'Buddy') || ($MetricGroup == 'Ping')) {
             $site = $row["site_name"];
         } else if ($MetricGroup == 'Femto') {
             $site = $row["Site"] . " - " . $row["SwitchLocation"];

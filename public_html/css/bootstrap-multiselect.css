@@ -11,7 +11,7 @@ span.multiselect-native-select select {
     position: absolute!important;
     width: 1px!important;
     left: 50%;
-    top: 30px
+    top: 30px;
 }
 .multiselect-container {
     position: absolute;
@@ -30,9 +30,11 @@ span.multiselect-native-select select {
 }
 .multiselect-container>li.multiselect-group label {
     margin: 0;
-    padding: 3px 20px 3px 20px;
-    height: 100%;
-    font-weight: 700
+/*    padding: 3px 20px 3px 20px;*/
+    padding: 1px 5px 1px 5px;
+    height: 90%;
+    // colour: black;   // previously not set, no obvious effect
+    font-weight: 700  // 700
 }
 .multiselect-container>li.multiselect-group-clickable label {
     cursor: pointer
@@ -43,16 +45,20 @@ span.multiselect-native-select select {
 .multiselect-container>li>a>label {
     margin: 0;
     height: 100%;
-    cursor: pointer;
+/*    cursor: pointer;*/
     font-weight: 400;
-    padding: 3px 20px 3px 40px
+    padding: 1px 5px 1px 10px; // 3px 20px 3px 40px
+    font-family: Arial;    
+//    colour: black;   // previously not set, no obvious impact
+    font-size: 14px     // originally 16px
+        
 }
 .multiselect-container>li>a>label.radio,
 .multiselect-container>li>a>label.checkbox {
     margin: 0
 }
 .multiselect-container>li>a>label>input[type=checkbox] {
-    margin-bottom: 5px
+    margin-bottom: 1px // originally 5px
 }
 .btn-group>.btn-group:nth-child(2)>.multiselect.btn {
     border-top-left-radius: 4px;
@@ -60,7 +66,7 @@ span.multiselect-native-select select {
 }
 .form-inline .multiselect-container label.checkbox,
 .form-inline .multiselect-container label.radio {
-    padding: 3px 20px 3px 40px
+    padding: 0px 0px 0px 0px // originally 3px 20px 3px 40px
 }
 .form-inline .multiselect-container li a label.checkbox input[type=checkbox],
 .form-inline .multiselect-container li a label.radio input[type=radio] {

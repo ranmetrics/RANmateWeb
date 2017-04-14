@@ -4,10 +4,13 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/Dataduct/Source/RANmateWeb/public_html/css/RANMateMetrics.css</file>
-            <file>file:/C:/Dataduct/Source/RANmateWeb/public_html/index.html</file>
-            <file>file:/C:/Dataduct/Source/RANmateWeb/public_html/js/RANMateReset.js</file>
-            <file>file:/C:/Dataduct/Source/RANmateWeb/public_html/RANMateReset_Reset.php</file>
+            <file>file:/C:/Dataduct/Source/RANmateWeb/public_html/RANMateMetrics_SiteList_test.php</file>
+            <file>file:/C:/Dataduct/Source/RANmateWeb/public_html/RANMateMetrics_OpCoCellList.php</file>
+            <file>file:/C:/Dataduct/Source/RANmateWeb/public_html/RANMateMetrics_InterfaceList.php</file>
+            <file>file:/C:/Dataduct/Source/RANmateWeb/public_html/js/RANMateMetrics_test.js</file>
             <file>file:/C:/Dataduct/Source/RANmateWeb/public_html/js/RANMateMetrics.js</file>
+            <file>file:/C:/Dataduct/Source/RANmateWeb/public_html/index_metrics_test.html</file>
+            <file>file:/C:/Dataduct/Source/RANmateWeb/public_html/RANMateMetrics_OpCoCellList_test.php</file>
         </group>
     </open-files>
 </project-private>

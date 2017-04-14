@@ -15,13 +15,15 @@ and open the template in the editor.
         <script type="text/javascript" src="js/jquery.min.js"></script>
         <script type="text/javascript" src="js/tether.min.js"></script>
         <script type="text/javascript" src="js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="js/jshashtable/hashtable.js"></script>
+        <script type="text/javascript" src="js/jshashtable/hashset.js"></script>
 
         <!-- Include the plugin's CSS and JS: -->
         <script type="text/javascript" src="js/bootstrap-multiselect.js"></script>
         <link rel="stylesheet" href="css/bootstrap-multiselect.css" type="text/css"/>        
 
         <link rel="stylesheet" href="css/RANMateMetrics.css">
-        <script src="js/RANMateMetrics.js"></script>
+        <script src="js/RANMateMetrics_test.js"></script>
         <script src="js/moment.min.js"></script>            
         <script src="js/Chart.min.js"></script>            
         
@@ -43,35 +45,104 @@ and open the template in the editor.
                         <label for="name">Metric</label>
                         <script type="text/javascript">
                             $(document).ready(function() {
-                                $('#metric').multiselect();
+                                $('#metric').multiselect({                                        
+                                    maxHeight: 200,
+                                    buttonWidth: '250px',
+                                    numberDisplayed: 2,
+                                    width: 'auto'
+                                });
                             });
                         </script>
-                        <select id="metric" multiple="multiple">
-                            <option value="cheese">Cheese</option>
-                            <option value="tomatoes">Tomatoes</option>
-                            <option value="mozarella">Mozzarella</option>
-                            <option value="mushrooms">Mushrooms</option>
-                            <option value="pepperoni">Pepperoni</option>
-                            <option value="onions">Onions</option>
+                        <select id="metric" multiple="multiple" onchange="showSites(this.value);" style="width:100%;">
+<!--                        <select id="metric" multiple="multiple">-->
+<!--                            <option disabled>── Femto Metrics ──</option>-->
+                            <optgroup label="Femto&nbsp;Metrics">
+                                <option value="Femto-packets">Packets</option>
+                                <option value="Femto-poe">PoE</option>
+                            </optgroup>                            
+<!--                            <option disabled>── Router Ping ──</option>-->
+                            <optgroup label="Router Buddy">
+                                <option value="Buddy-bandwidth_loss_pct">Bandwidth Loss</option>
+                                <option value="Buddy-tcp-bandwidth_bandwidth">Bandwidth Headroom</option>
+                                <option value="Buddy-jitter_jitter">Jitter</option>
+                                <option value="Buddy-latency_rtt_min">Min Latency</option>
+                                <option value="Buddy-latency_rtt_max">Max Latency</option>
+                                <option value="Buddy-latency_rtt_avg">Avg Latency</option>
+                                <option value="Buddy-latency_rtt_mdev">Max Latency Deviation</option>
+                            </optgroup>
+                            <optgroup label="Router Ping">
+                                <option value="Ping-min">Min Ping Latency</option>
+                                <option value="Ping-max">Max Ping Latency</option>
+                                <option value="Ping-avg">Average Ping Latency</option>
+                                <option value="Ping-mdev">Max Ping Deviation</option>
+                            </optgroup>
+<!--                            <option disabled>── Router RPM ──</option>-->
+                            <optgroup label="Router RPM">
+                                <option value="RPM-latency" disabled>Latency</option>
+                                <option value="RPM-jitter" disabled>Jitter</option>
+                                <option value="RPM-bandwidth" disabled>Bandwidth</option>
+                            </optgroup>
+<!--                            <option disabled>─ Router Counters ─</option>-->
+                            <optgroup label="Router Counters">                                
+                                <option value="Counter-input_bytes">Bytes In</option>
+                                <option value="Counter-input_bps">Bit/s In</option>
+                                <option value="Counter-input_packets">Packets In</option>
+                                <option value="Counter-input_pps">Packet/s In</option>
+                                <option value="Counter-output_bytes">Bytes Out</option>
+                                <option value="Counter-output_bps">Bit/s Out</option>
+                                <option value="Counter-output_packets">Packets Out</option>
+                                <option value="Counter-output_pps">Packet/s Out</option>
+                                <option value="Counter-input_errors">Input Errors</option>
+                                <option value="Counter-input_drops">Input Drops</option>
+                                <option value="Counter-framing_errors">Framing Errors In</option>
+                                <option value="Counter-input_l2_channel_errors">Input L2 Channel Errors</option>
+                                <option value="Counter-carrier_transitions">Carrier Transitions Out</option>
+                                <option value="Counter-output_errors">Output Errors</option>
+                                <option value="Counter-output_drops">Output Drops</option>
+                                <option value="Counter-aged_packets">Aged Packets Out</option>
+                                <option value="Counter-hs_link_crc_errors">HS Link CRC Errors Out</option>
+                            </optgroup>
                         </select>
                     </div>
                     
                     <div style="float:left;margin-right:30px;">
                         <label for="name" id="SiteLabel">Site</label>            
-                        <select id="site" style="min-width: 130px;" onchange="showInterfaces(this.value); ">
-<!--                            <option value="Bishopsgate">Bishopsgate</option>
-                            <option value="Gala">Gala</option>
-                            <option value="Ladbroke Grove">Ladbroke Grove</option>
-                            <option value="Moor Place">Moor Place</option>
-                            <option value="Sea Containers">Sea Containers</option>-->
+                        <script type="text/javascript">
+                            $(document).ready(function() {
+                                $('#site').multiselect({                                        
+                                    maxHeight: 200,
+                                    buttonWidth: '420px',
+                                    numberDisplayed: 2,
+                                    width: 'auto'
+                                });
+                            });
+                        </script>
+                        <select id="site" multiple="multiple" style="min-width: 130px;" onchange="showInterfaces(this.value); ">
+<!--                            <option value="Gerrards Cross - First Floor">Gerrards Cross - First Floor</option>
+                            <option value="Gorkana - 8th Floor Comms Room">Gorkana - 8th Floor Comms Room</option>
+                            <option value="Hilton Bankside - Basement 1">Hilton Bankside - Basement 1</option>
+                            <option value="Hilton Bankside - Basement 2">Hilton Bankside - Basement 2</option>
+                            <option value="Hilton Bankside - Ground ">Hilton Bankside - Ground </option>
+                            <option value="Holland House - 4th FL IT Cabinet">Holland House - 4th FL IT Cabinet</option>-->
                         </select> 
                     </div>
 
-                    <div style="float:left;margin-right:30px;">
+                    <div id="interfacewrapper" style="float:left;margin-right:30px;">
                         <label for="name" id="IfaceName">Interface</label>            
+                        <script type="text/javascript">
+                            $(document).ready(function() {
+                                $('#interface').multiselect({                                        
+                                    maxHeight: 200,
+                                    buttonWidth: '200px',
+                                    numberDisplayed: 1,
+                                    width: 'auto'
+                                });
+                            });
+                        </script>
                         <select id="interface" style="min-width: 130px;">
                         </select> 
                         <script>
+                            $('#interfacewrapper').hide();
                             document.getElementById("interface").style.display = 'none';
                             document.getElementById("IfaceName").style.display = 'none';
                         </script>
