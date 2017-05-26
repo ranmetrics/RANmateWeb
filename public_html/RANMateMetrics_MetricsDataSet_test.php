@@ -8,12 +8,18 @@ if (!$conn) {
     die('Could not connect: ' . mysqli_error($con));
 }
 
-$metrics_end = strpos($sql, ' FROM ');
+if (substr($sql, 0, 13) === "SELECT * FROM") { 
+    // complex queries involving pivots and UNIONs are wrapped in a SELECT * FROM (..query here ...) ORDER BY measurement_time
+    $metrics_end = strpos($sql, ' FROM ', 13);    
+} else {
+    $metrics_end = strpos($sql, ' FROM ');
+}
 $tok = strtok(substr($sql, 7, ($metrics_end - 7)), ",");
 $metric_names = array();
 
 //burn off the measurement_time part which will always be first
 $tok = strtok(",");
+//echo "Sanity check " . substr($sql, 7, ($metrics_end - 7));
 while ($tok !== false) {
     $metricIncAlias = trim($tok);   
     if (strpos($metricIncAlias, ' AS ') !== false) {
@@ -21,7 +27,7 @@ while ($tok !== false) {
     } else {
         $metric = $metricIncAlias;
     }
-//    echo "Metric=$metric<br />";
+//    echo "Metric=$metric";
     $metric_names[] = $metric; 
     $tok = strtok(",");
 }
@@ -52,7 +58,7 @@ if ($result->num_rows > 0) {
         foreach ($metric_names as &$metric) {
             //$log = $log . ", metric=" . $metric;
             //$dcn[$metric] = $row[$metric];
-            $dcn[str_replace("`", "", $metric)] = $row[str_replace("`", "", $metric)];
+            $dcn[str_replace("'", "", str_replace("`", "", $metric))] = $row[str_replace("'", "", str_replace("`", "", $metric))];
         } 
         
         // push the final array onto the returning array

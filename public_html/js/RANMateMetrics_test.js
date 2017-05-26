@@ -45,10 +45,10 @@ function getDateTimeString(day) {
     return day.getFullYear()+'-'+mm+'-'+dd+' '+hh+':'+min;
 };
 
-function showSites(str) {
-    //console.log("showSites called with str=" + str);
+function showSites(justNowSelected) {
+    //console.log("showSites called with the last selected metric being " + justNowSelected);
     console.log("showSites called with metrics " + $('#metric').val() + " and currentMetricType=" + currentMetricType);
-    if (str == "") {
+    if (justNowSelected == "") {
         //document.getElementById("metric").innerHTML = "";
         return;
     } else {
@@ -77,7 +77,7 @@ function showSites(str) {
         xmlhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status === 200) {
                 //console.log("showSites() received response from server: " + this.responseText);
-                //console.log("Site List rebuilt because thisMetricType=" + thisMetricType + " and currentMetricType=" + currentMetricType);
+                console.log("Site List rebuilt because thisMetricType=" + thisMetricType + " and currentMetricType=" + currentMetricType);
                 document.getElementById("site").innerHTML = this.responseText;
                 document.getElementById("site").selectedIndex = -1;
                 $('#site').multiselect('rebuild');
@@ -86,18 +86,23 @@ function showSites(str) {
 
         // Parse all the selected metrics to check for conflicts
         // Buddy, the metric with the fewest sites should be listed first in the drop down so that metric groups with more
+        var buddyMetricSelected = false;
+        var pingOrCounterMetricSelected = false;
         previousMetricTypes = null;
         for (i = 0; i < $('#metric').val().length; i++) {
             selectedMetric = $('#metric').val()[i];
-            if (selectedMetric.startsWith('Counter-'))
+            if (selectedMetric.startsWith('Counter-')) {
                thisMetricType = "Counter";
-            else if (selectedMetric.startsWith('Ping-'))
+               pingOrCounterMetricSelected = true;
+            } else if (selectedMetric.startsWith('Ping-')) {
                thisMetricType = "Ping";
-            else if (selectedMetric.startsWith('Buddy-'))
+               pingOrCounterMetricSelected = true;
+            } else if (selectedMetric.startsWith('Buddy-')) {
                thisMetricType = "Buddy";
-            else if (selectedMetric.startsWith('Femto-'))
+               buddyMetricSelected = true;
+            } else if (selectedMetric.startsWith('Femto-'))
                thisMetricType = "Femto";
-            console.log("Processing " + selectedMetric + ". thisMetricType=" + thisMetricType);
+            //console.log("Processing " + selectedMetric + ". thisMetricType=" + thisMetricType);
             if (previousMetricTypes != null) {
                 // if all the metrics are not either all Femto-metrics or all non-Femto metrics
                 if (((thisMetricType === 'Femto') && (previousMetricTypes !== 'Femto')) || ((previousMetricTypes === 'Femto') && (thisMetricType !== 'Femto'))) { // ||
@@ -120,6 +125,17 @@ function showSites(str) {
                 previousMetricTypes = thisMetricType;
             }
         }
+
+        // Added by MW 17/4 Reuses 'thisMetricType' perhaps a little confusing but it means I dont; have to make any destructive changes to the later block of code
+        if (justNowSelected.startsWith('Counter-')) {
+           thisMetricType = "Counter";
+        } else if (justNowSelected.startsWith('Ping-')) {
+           thisMetricType = "Ping";
+        } else if (justNowSelected.startsWith('Buddy-')) {
+           thisMetricType = "Buddy";
+        } else if (justNowSelected.startsWith('Femto-')) {
+           thisMetricType = "Femto";
+        } 
 
         // Determine what components should be displayed
         // console.log("Str=" + str + ", currentMetricType=" + currentMetricType);
@@ -145,8 +161,13 @@ function showSites(str) {
             //iface.style.margin = "10px 0px 0px 0px";    // no idea why we now need a 10px top border instead of 5px to keep it inline
             //ifaceLabel.style.display = "block";
             //$('#interfacewrapper').show();
-            console.log("Calling RANMateMetrics_SiteList_test.php with group=" + selectedMetric);
-            xmlhttp.open("GET","RANMateMetrics_SiteList_test.php?group="+selectedMetric,true);
+            if (pingOrCounterMetricSelected && buddyMetricSelected) {
+                console.log("Calling RANMateMetrics_SiteList_test.php with group=Mixed");            
+                xmlhttp.open("GET","RANMateMetrics_SiteList_test.php?group=Mixed",true);
+            } else {
+                console.log("Calling RANMateMetrics_SiteList_test.php with group=" + selectedMetric);            
+                xmlhttp.open("GET","RANMateMetrics_SiteList_test.php?group="+selectedMetric,true);
+            }
             xmlhttp.send();
         } else if ((thisMetricType === "Buddy") && (currentMetricType !== "Buddy")) { 
             console.log("Need to rebuild Site list for Buddy metric");
@@ -160,8 +181,13 @@ function showSites(str) {
             //iface.style.margin = "10px 0px 0px 0px";    // no idea why we now need a 10px top border instead of 5px to keep it inline
             //ifaceLabel.style.display = "block";
             //$('#interfacewrapper').show();
-            console.log("Calling RANMateMetrics_SiteList_test.php with group=" + selectedMetric);
-            xmlhttp.open("GET","RANMateMetrics_SiteList_test.php?group="+selectedMetric,true);
+            if (pingOrCounterMetricSelected && buddyMetricSelected) {
+                console.log("Calling RANMateMetrics_SiteList_test.php with group=Mixed");            
+                xmlhttp.open("GET","RANMateMetrics_SiteList_test.php?group=Mixed",true);
+            } else {
+                console.log("Calling RANMateMetrics_SiteList_test.php with group=" + selectedMetric);            
+                xmlhttp.open("GET","RANMateMetrics_SiteList_test.php?group="+selectedMetric,true);
+            }
             xmlhttp.send();
         } 
         /* else if ((thisMetricType === "Ping") && (currentMetricType !== "Ping")) {
@@ -193,6 +219,8 @@ function showSites(str) {
             // this PHP call is included in the if check since we don't want to call it and reset the list if the user isn't changing from Femto -> Router stats or vice versa.
             xmlhttp.open("GET","RANMateMetrics_SiteList_test.php?group="+selectedMetric,true);
             xmlhttp.send();
+        } else {
+            console.log("Site List won't be rebuilt because the new MetricType=" + thisMetricType + " and the existing MetricType=" + currentMetricType);
         }
         currentMetricType = thisMetricType;
     }
@@ -723,8 +751,8 @@ function showGraph(id, visible) {
                                             return;
                                         } else {
                                             query = getSQL_Buddy_MultiMetrics_SingleSite($('#metric').val(), site, startDateTime, endDateTime);
+                                            if (query === null) { return; }
                                             console.log("Buddy SQL is " + query);
-                                            // return;
                                         }
                                     } else if (metricTypes[0] == "Ping") {
                                         query = getSQL_Ping_MultiMetrics_SingleSite($('#metric').val(), site, startDateTime, endDateTime);
@@ -739,8 +767,9 @@ function showGraph(id, visible) {
                                         }
                                     }
                                 } else {
-                                    alert("Graphing multiple metric types " + metricTypes.toString() + " for an individual site is not yet supported");
-                                    return;
+                                    query = getSQL_Mixed_MultiMetrics_SingleSite($('#metric').val(), site, startDateTime, endDateTime);
+                                    if (query === null) { return; }
+                                    console.log("Mixed SQL is " + query);
                                 }
                             // N Metrics : N Sites
                             } else if (($('#metric').val().length > 1) && ($('#site').val().length > 1) ) {
@@ -759,7 +788,7 @@ function showGraph(id, visible) {
                                 var d = new Date();
                                 var endMillis = d.getTime();
                                 console.log(endMillis - startMillis + " millis taken to run query");
-                                // console.log("showGraph() data=" + this.responseText.substring(0,500));
+                                console.log("showGraph() data=" + this.responseText.substring(0,500));
                                 // alert(this.responseText.substring(0,1000));
                                 // response string
                                 // [{"time":"2016-11-05 03:55:00","VF_1":"152","O2_1":"90"},{"time":"2016-11-05 04:00:00","VF_1":"157","O2_1":"90"},{"tim...
@@ -887,7 +916,8 @@ function showGraph(id, visible) {
                         }
                         var d = new Date();
                         startMillis = d.getTime();
-                        xmlhttp.open("GET","RANMateMetrics_MetricsDataSet_test.php?query="+query,true);
+                        // xmlhttp.open("GET","RANMateMetrics_MetricsDataSet_test.php?query="+query,true); 
+                        xmlhttp.open("GET","RANMateMetrics_MetricsDataSet_test.php?query="+encodeURIComponent(query),true);
                         xmlhttp.send();
 
                         // construct a suitable query
@@ -1090,27 +1120,102 @@ function getSQL_Buddy_MultiMetrics_SingleSite(metrics, site, startDateTime, endD
                 "SELECT " + tables[1] + ".measurement_time, " + fieldsString + " FROM metrics." + tables[0] + " RIGHT JOIN metrics." + tables[1] +
                 " ON (" + tables[0] + ".measurement_time = " + tables[1] + ".measurement_time AND " + tables[0] + ".site_name = " + tables[1] + ".site_name)" +
                 " WHERE " + tables[1] + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "'" +
-                " AND " + tables[1] + ".site_name = '" + site + "' AND " + tables[0] + "." + fields[0] +
+//                " AND " + tables[1] + ".site_name = '" + site + "' AND " + tables[0] + "." + fields[0] +
+                " AND " + tables[1] + ".site_name = '" + site + "' AND " + fields[0] +
                 " IS NULL) a order by measurement_time;";
-    /*select * from
-    (select ping.measurement_time, ping.max, buddy_latency.rtt_max
-    from ping
-    left join buddy_latency on (ping.measurement_time = buddy_latency.measurement_time and ping.site_name = buddy_latency.site_name)
-    where ping.measurement_time between '2017-04-01 20:58:00' and '2017-04-01 21:21:00'
-    and ping.site_name = 'Moor Place'
-    UNION ALL
-    select buddy_latency.measurement_time, ping.max, buddy_latency.rtt_max
-    from ping
-    right join buddy_latency on (ping.measurement_time = buddy_latency.measurement_time and ping.site_name = buddy_latency.site_name)
-    where buddy_latency.measurement_time between '2017-04-01 20:58:00' and '2017-04-01 21:21:00'
-    and buddy_latency.site_name = 'Moor Place'
-    and ping.max IS NULL) a
-    order by measurement_time; */
         } else if (fields.length == 3) {
-            returnString = "TBD";        
+        // 3 table full outer join - http://stackoverflow.com/questions/30497230/how-to-full-outer-join-multiple-tables-in-mysql 
+            returnString += "SELECT " + tables[0] + ".measurement_time, " + fieldsString + " FROM metrics." + tables[0] + 
+                " LEFT JOIN metrics." + tables[1] +
+                " ON (" + tables[0] + ".measurement_time = " + tables[1] + ".measurement_time AND " + tables[0] + ".site_name = " + tables[1] + ".site_name)" + 
+                " LEFT JOIN metrics." + tables[2] + 
+                " ON (" + tables[0] + ".measurement_time = " + tables[2] + ".measurement_time AND " + tables[0] + ".site_name = " + tables[2] + ".site_name)" +
+                " WHERE " + tables[0] + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "'" +
+                " AND " + tables[0] + ".site_name = '" + site + 
+                "' UNION ALL " +
+                "SELECT " + tables[1] + ".measurement_time, " + fieldsString + " FROM metrics." + tables[1] + 
+                " LEFT JOIN metrics." + tables[0] +
+                " ON (" + tables[0] + ".measurement_time = " + tables[1] + ".measurement_time AND " + tables[0] + ".site_name = " + tables[1] + ".site_name)" +
+                " LEFT JOIN metrics." + tables[2] +
+                " ON (" + tables[1] + ".measurement_time = " + tables[2] + ".measurement_time AND " + tables[1] + ".site_name = " + tables[2] + ".site_name)" +
+                " WHERE " + tables[1] + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "'" +
+                " AND " + tables[1] + ".site_name = '" + site + 
+                "' AND " + fields[0] + " IS NULL " +
+                " UNION ALL " +
+                "SELECT " + tables[2] + ".measurement_time, " + fieldsString + " FROM metrics." + tables[2] + 
+                " LEFT JOIN metrics." + tables[0] +
+                " ON (" + tables[0] + ".measurement_time = " + tables[2] + ".measurement_time AND " + tables[0] + ".site_name = " + tables[2] + ".site_name)" +
+                " LEFT JOIN metrics." + tables[1] +
+                " ON (" + tables[1] + ".measurement_time = " + tables[2] + ".measurement_time AND " + tables[1] + ".site_name = " + tables[2] + ".site_name)" +
+                " WHERE " + tables[2] + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "'" +
+                " AND " + tables[2] + ".site_name = '" + site + 
+                "' AND " + fields[0] + " IS NULL AND " + fields[1] + " IS NULL " +
+                ") a order by measurement_time;";
+
+// nicely formatted for debugging, the same as above, however PHP doesn't like getting the \n s
+            /* returnString += "\nSELECT " + tables[0] + ".measurement_time, " + fieldsString + " \nFROM metrics." + tables[0] + 
+                "\n LEFT JOIN metrics." + tables[1] +
+                " ON (" + tables[0] + ".measurement_time = " + tables[1] + ".measurement_time AND " + tables[0] + ".site_name = " + tables[1] + ".site_name)\n" + 
+                " LEFT JOIN metrics." + tables[2] + 
+                " ON (" + tables[0] + ".measurement_time = " + tables[2] + ".measurement_time AND " + tables[0] + ".site_name = " + tables[2] + ".site_name)\n" +
+                " WHERE " + tables[0] + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "'\n" +
+                " AND " + tables[0] + ".site_name = '" + site + 
+                "'\n UNION ALL \n" +
+                "SELECT " + tables[1] + ".measurement_time, " + fieldsString + " \nFROM metrics." + tables[1] + 
+                "\n LEFT JOIN metrics." + tables[0] +
+                " ON (" + tables[0] + ".measurement_time = " + tables[1] + ".measurement_time AND " + tables[0] + ".site_name = " + tables[1] + ".site_name)\n" +
+                " LEFT JOIN metrics." + tables[2] +
+                " ON (" + tables[1] + ".measurement_time = " + tables[2] + ".measurement_time AND " + tables[1] + ".site_name = " + tables[2] + ".site_name)\n" +
+                " WHERE " + tables[1] + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "'\n" +
+                " AND " + tables[1] + ".site_name = '" + site + 
+                "'\n AND " + fields[0] + " IS NULL " +
+                "\n UNION ALL \n" +
+                "SELECT " + tables[2] + ".measurement_time, " + fieldsString + " \nFROM metrics." + tables[2] + 
+                " LEFT JOIN metrics." + tables[0] +
+                " ON (" + tables[0] + ".measurement_time = " + tables[2] + ".measurement_time AND " + tables[0] + ".site_name = " + tables[2] + ".site_name)\n" +
+                " LEFT JOIN metrics." + tables[1] +
+                " ON (" + tables[1] + ".measurement_time = " + tables[2] + ".measurement_time AND " + tables[1] + ".site_name = " + tables[2] + ".site_name)\n" +
+                " WHERE " + tables[2] + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "'\n" +
+                " AND " + tables[2] + ".site_name = '" + site + 
+                "'\n AND " + fields[0] + " IS NULL AND " + fields[1] + " IS NULL " +
+                "\n) a order by measurement_time;"; */
+
+/*SELECT * FROM (
+SELECT buddy_bandwidth.measurement_time, buddy_bandwidth.loss_pct AS 'loss_pct', buddy_jitter.jitter AS 'jitter', buddy_latency.rtt_mdev AS 'rtt_mdev'
+FROM metrics.buddy_bandwidth 
+LEFT JOIN metrics.buddy_jitter 
+ON (buddy_bandwidth.measurement_time = buddy_jitter.measurement_time AND buddy_bandwidth.site_name = buddy_jitter.site_name) 
+LEFT JOIN metrics.buddy_latency 
+ON (buddy_bandwidth.measurement_time = buddy_latency.measurement_time AND buddy_bandwidth.site_name = buddy_latency.site_name) 
+WHERE buddy_bandwidth.measurement_time BETWEEN '2017-04-15 18:45' AND '2017-04-15 20:45' 
+AND buddy_bandwidth.site_name = 'Moor Place' 
+#AND (buddy_jitter.jitter IS NULL or buddy_latency.rtt_mdev IS NULL)
+UNION ALL
+SELECT buddy_jitter.measurement_time, buddy_bandwidth.loss_pct AS 'loss_pct', buddy_jitter.jitter AS 'jitter', buddy_latency.rtt_mdev AS 'rtt_mdev' 
+FROM metrics.buddy_jitter 
+LEFT JOIN metrics.buddy_bandwidth 
+ON (buddy_bandwidth.measurement_time = buddy_jitter.measurement_time AND buddy_bandwidth.site_name = buddy_jitter.site_name) 
+LEFT JOIN metrics.buddy_latency 
+ON (buddy_jitter.measurement_time = buddy_latency.measurement_time AND buddy_jitter.site_name = buddy_latency.site_name) 
+WHERE buddy_jitter.measurement_time BETWEEN '2017-04-15 18:45' AND '2017-04-15 20:45' 
+AND buddy_jitter.site_name = 'Moor Place' 
+AND buddy_bandwidth.loss_pct IS NULL
+UNION ALL
+SELECT buddy_latency.measurement_time, buddy_bandwidth.loss_pct AS 'loss_pct', buddy_jitter.jitter AS 'jitter', buddy_latency.rtt_mdev AS 'rtt_mdev' 
+FROM metrics.buddy_latency 
+LEFT JOIN metrics.buddy_bandwidth 
+ON (buddy_bandwidth.measurement_time = buddy_latency.measurement_time AND buddy_bandwidth.site_name = buddy_latency.site_name) 
+LEFT JOIN metrics.buddy_jitter 
+ON (buddy_latency.measurement_time = buddy_jitter.measurement_time AND buddy_latency.site_name = buddy_jitter.site_name) 
+WHERE buddy_latency.measurement_time BETWEEN '2017-04-15 18:45' AND '2017-04-15 20:45' 
+AND buddy_latency.site_name = 'Moor Place' 
+AND (buddy_bandwidth.loss_pct IS NULL AND buddy_jitter.jitter IS NULL)
+) a 
+order by measurement_time; */            
         } else {
-            console.log("getSQL_Buddy_MultiMetrics_SingleSite() called with too many fields (" + fields.length + ")");
-            returnString = "";
+            console.log("getSQL_Buddy_MultiMetrics_SingleSite() called with too many fields (" + fields.length + "), maximum is 3");
+            alert("The maximum number of Buddy metrics that can be displayed on the same graph is 3");
+            returnString = null;
         }
     } 
     return returnString;
@@ -1161,10 +1266,10 @@ function buddyMetricsToTablesString(metrics) {
     for (var i = 0; i < metrics.length; i++) {
         if (i == 0) {
             //tableString += "metrics." + metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase();
-            tableString += metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase();
+            tableString += metrics[i].substring(0, metrics[i].indexOf('_')).replace(/-/g, "_").toLowerCase();
         } else {
             //tableString += ", metrics." + metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase();
-            tableString += ", " + metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase();
+            tableString += ", " + metrics[i].substring(0, metrics[i].indexOf('_')).replace(/-/g, "_").toLowerCase();
         }
     }    
     return tableString;
@@ -1174,7 +1279,7 @@ function buddyMetricsToTablesArray(metrics) {
     var tableArray = new Array();
     for (var i = 0; i < metrics.length; i++) {
         //tableArray[i] = "metrics." + metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase();
-        tableArray[i] = metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase();
+        tableArray[i] = metrics[i].substring(0, metrics[i].indexOf('_')).replace(/-/g, "_").toLowerCase();
     }    
     return tableArray;
 }
@@ -1185,8 +1290,8 @@ function buddyMetricsToTableSet(metrics) {
     for (var i = 0; i < metrics.length; i++) {
         //tableArray[i] = "metrics." + metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase();
         //console.log("Adding " + metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase() + " to table set");
-        tableSet.add(metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase());
-        console.log("Added " + metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase() + " to table set");
+        tableSet.add(metrics[i].substring(0, metrics[i].indexOf('_')).replace(/-/g, "_").toLowerCase());
+        console.log("Added " + metrics[i].substring(0, metrics[i].indexOf('_')).replace(/-/g, "_").toLowerCase() + " to table set");
     }    
     return tableSet.values();
 }
@@ -1195,10 +1300,10 @@ function buddyMetricsToTableSitesString(metrics, site) {
     var tableSiteString = "";
     for (var i = 0; i < metrics.length; i++) {
         if (i == 0) {
-            tableSiteString += metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase() + ".site_name = '" + site + "'";
+            tableSiteString += metrics[i].substring(0, metrics[i].indexOf('_')).replace(/-/g, "_").toLowerCase() + ".site_name = '" + site + "'";
         } else {
             //tableSiteString += " AND metrics." + metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase() + ".site_name = '" + site + "'";
-            tableSiteString += " AND " + metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase() + ".site_name = '" + site + "'";
+            tableSiteString += " AND " + metrics[i].substring(0, metrics[i].indexOf('_')).replace(/-/g, "_").toLowerCase() + ".site_name = '" + site + "'";
         }
     }    
     return tableSiteString;
@@ -1207,12 +1312,13 @@ function buddyMetricsToTableSitesString(metrics, site) {
 function buddyMetricsToFieldsString(metrics) {
     var fieldString = "";
     for (var i = 0; i < metrics.length; i++) {
+        fieldName = metrics[i].substring(metrics[i].indexOf('_') + 1).toLowerCase();
         if (i == 0) {
-            //fieldString += metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase() + "." + metrics[i].substring(metrics[i].indexOf('_') + 1).toLowerCase();
-            fieldString += metrics[i].substring(metrics[i].indexOf('_') + 1).toLowerCase();
+            fieldString += metrics[i].substring(0, metrics[i].indexOf('_')).replace(/-/g, "_").toLowerCase() + "." + fieldName + " AS '" + fieldName + "'";
+            //fieldString += metrics[i].substring(metrics[i].indexOf('_') + 1).toLowerCase(); // field name only can be ambiguous
         } else {
-            //fieldString += ", " + metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase() + "." + metrics[i].substring(metrics[i].indexOf('_') + 1).toLowerCase();
-            fieldString += ", " + metrics[i].substring(metrics[i].indexOf('_') + 1).toLowerCase();
+            fieldString += ", " + metrics[i].substring(0, metrics[i].indexOf('_')).replace(/-/g, "_").toLowerCase() + "." + fieldName + " AS '" + fieldName + "'";
+            //fieldString += ", " + metrics[i].substring(metrics[i].indexOf('_') + 1).toLowerCase(); // field name only can be ambiguous
         }
     }    
     return fieldString;
@@ -1221,7 +1327,7 @@ function buddyMetricsToFieldsString(metrics) {
 function buddyMetricsToFieldsArray(metrics) {
     var fieldArray = new Array();
     for (var i = 0; i < metrics.length; i++) {
-        fieldArray[i] = metrics[i].substring(0, metrics[i].indexOf('_')).replace('-', '_').toLowerCase() + "." + metrics[i].substring(metrics[i].indexOf('_') + 1).toLowerCase();
+        fieldArray[i] = metrics[i].substring(0, metrics[i].indexOf('_')).replace(/-/g, "_").toLowerCase() + "." + metrics[i].substring(metrics[i].indexOf('_') + 1).toLowerCase();
     }    
     return fieldArray;
 }
@@ -1246,6 +1352,119 @@ function buddyMetricsToFieldsArray(metrics) {
 //        "' AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
 //        "GROUP BY measurement_time;";
 //}
+
+/**************************************************/
+/*************** MIXED SQL FUNCS ******************/
+/**************************************************/
+
+function getSQL_Mixed_MultiMetrics_SingleSite(metrics, site, startDateTime, endDateTime) {
+    tablesFields = mixedMetricsToTablesFields(metrics);
+    var returnString = "SELECT * FROM (";
+    if (metrics.length === 2) {
+        returnString += "SELECT " + tablesFields[0][0] + ".measurement_time, " + tablesFields[2] + " FROM metrics." + tablesFields[0][0] + " LEFT JOIN metrics." + tablesFields[0][1] +
+            " ON (" + tablesFields[0][0] + ".measurement_time = " + tablesFields[0][1] + ".measurement_time AND " + tablesFields[0][0] + ".site_name = " + tablesFields[0][1] + ".site_name)" +
+            " WHERE " + tablesFields[0][0] + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "'" +
+            " AND " + tablesFields[0][0] + ".site_name = '" + site + "' UNION ALL " +
+            "SELECT " + tablesFields[0][1] + ".measurement_time, " + tablesFields[2] + " FROM metrics." + tablesFields[0][0] + " RIGHT JOIN metrics." + tablesFields[0][1] +
+            " ON (" + tablesFields[0][0] + ".measurement_time = " + tablesFields[0][1] + ".measurement_time AND " + tablesFields[0][0] + ".site_name = " + tablesFields[0][1] + ".site_name)" +
+            " WHERE " + tablesFields[0][1] + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "'" +
+//            " AND " + tablesFields[0][1] + ".site_name = '" + site + "' AND " + tablesFields[0][0] + "." + tablesFields[1][0] +
+            " AND " + tablesFields[0][1] + ".site_name = '" + site + "' AND " + tablesFields[1][0] +
+            " IS NULL) a order by measurement_time;";
+    } else if (metrics.length === 3) {
+        // 3 table full outer join - http://stackoverflow.com/questions/30497230/how-to-full-outer-join-multiple-tables-in-mysql 
+            returnString += "SELECT " + tablesFields[0][0] + ".measurement_time, " + tablesFields[2] + " FROM metrics." + tablesFields[0][0] + 
+                " LEFT JOIN metrics." + tablesFields[0][1] +
+                " ON (" + tablesFields[0][0] + ".measurement_time = " + tablesFields[0][1] + ".measurement_time AND " + tablesFields[0][0] + ".site_name = " + tablesFields[0][1] + ".site_name)" + 
+                " LEFT JOIN metrics." + tablesFields[0][2] + 
+                " ON (" + tablesFields[0][0] + ".measurement_time = " + tablesFields[0][2] + ".measurement_time AND " + tablesFields[0][0] + ".site_name = " + tablesFields[0][2] + ".site_name)" +
+                " WHERE " + tablesFields[0][0] + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "'" +
+                " AND " + tablesFields[0][0] + ".site_name = '" + site + 
+                "' UNION ALL " +
+                "SELECT " + tablesFields[0][1] + ".measurement_time, " + tablesFields[2] + " FROM metrics." + tablesFields[0][1] + 
+                " LEFT JOIN metrics." + tablesFields[0][0] +
+                " ON (" + tablesFields[0][0] + ".measurement_time = " + tablesFields[0][1] + ".measurement_time AND " + tablesFields[0][0] + ".site_name = " + tablesFields[0][1] + ".site_name)" +
+                " LEFT JOIN metrics." + tablesFields[0][2] +
+                " ON (" + tablesFields[0][1] + ".measurement_time = " + tablesFields[0][2] + ".measurement_time AND " + tablesFields[0][1] + ".site_name = " + tablesFields[0][2] + ".site_name)" +
+                " WHERE " + tablesFields[0][1] + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "'" +
+                " AND " + tablesFields[0][1] + ".site_name = '" + site + 
+                "' AND " + tablesFields[1][0] + " IS NULL " +
+                " UNION ALL " +
+                "SELECT " + tablesFields[0][2] + ".measurement_time, " + tablesFields[2] + " FROM metrics." + tablesFields[0][2] + 
+                " LEFT JOIN metrics." + tablesFields[0][0] +
+                " ON (" + tablesFields[0][0] + ".measurement_time = " + tablesFields[0][2] + ".measurement_time AND " + tablesFields[0][0] + ".site_name = " + tablesFields[0][2] + ".site_name)" +
+                " LEFT JOIN metrics." + tablesFields[0][1] +
+                " ON (" + tablesFields[0][1] + ".measurement_time = " + tablesFields[0][2] + ".measurement_time AND " + tablesFields[0][1] + ".site_name = " + tablesFields[0][2] + ".site_name)" +
+                " WHERE " + tablesFields[0][2] + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "'" +
+                " AND " + tablesFields[0][2] + ".site_name = '" + site + 
+                "' AND " + tablesFields[1][0] + " IS NULL AND " + tablesFields[1][1] + " IS NULL " +
+                ") a order by measurement_time;";
+    } else {
+        console.log("getSQL_Mixed_MultiMetrics_SingleSite() called with too many fields (" + tablesFields[1].length + "), maximum is 3");
+        alert("The maximum number of Mixed metrics that can be displayed on the same graph is 3");
+        returnString = null;
+    }
+    return returnString;
+}
+
+function mixedMetricsToTablesFields(metrics) {
+    var tableFieldsArray = new Array();
+    var tableArray = new Array();
+    var fieldArray = new Array();
+    var fieldName = "";
+    var fieldString = "";
+    var prefix = "";
+    for (var i = 0; i < metrics.length; i++) {
+        if (i === 1) {
+            prefix = ", ";
+        }
+        var metricType = getMetricType(metrics[i]);
+        if (metricType === 'Buddy') {
+            tableArray[i] = metrics[i].substring(0, metrics[i].indexOf('_')).replace(/-/g, "_").toLowerCase();
+            fieldName = metrics[i].substring(metrics[i].indexOf('_') + 1).toLowerCase();
+            fieldArray[i] = tableArray[i] + "." + fieldName;
+            fieldString += prefix + fieldArray[i] + " AS '" + metricType + "-" + fieldName + "'";
+            //fieldString += prefix + fieldArray[i] + " AS " + metricType + "-" + fieldName;
+        } else if (metricType === 'Counter') {
+            tableArray[i] = 'router_counters'; // all ping metrics are columns in the ping table
+            fieldName = metrics[i].substring(metrics[i].indexOf('-') + 1).toLowerCase()
+            fieldArray[i] = tableArray[i] + "." + fieldName;
+            fieldString += prefix + fieldArray[i] + " AS '" + metricType + "-" + fieldName + "'";
+            //fieldString += prefix + fieldArray[i] + " AS " + metricType + "-" + fieldName;
+        } else if (metricType === 'Ping') {
+            tableArray[i] = 'ping'; // all ping metrics are columns in the ping table
+            fieldName = metrics[i].substring(5);
+            fieldArray[i] = tableArray[i] + "." + fieldName;
+            fieldString += prefix + fieldArray[i] + " AS '" + metricType + "-" + fieldName + "'";
+            //fieldString += prefix + fieldArray[i] + " AS " + metricType + "-" + fieldName;
+        } else if (metricType === 'RPM') {
+            alert("RPM metrics not yet supported");
+        }
+    }
+    tableFieldsArray[0] = tableArray;
+    tableFieldsArray[1] = fieldArray;
+    tableFieldsArray[2] = fieldString;
+    return tableFieldsArray;
+}
+
+function getMetricType(theMetric) {
+    var thisMetricType = "Unknown";
+    if (theMetric.startsWith('Counter-')) {
+       thisMetricType = "Counter";
+    } else if (theMetric.startsWith('Ping-')) {
+       thisMetricType = "Ping";
+    } else if (theMetric.startsWith('Buddy-')) {
+       thisMetricType = "Buddy";
+    } else if (theMetric.startsWith('Femto-')) {
+       thisMetricType = "Femto";
+    } else if (theMetric.startsWith('RPM-')) {
+       thisMetricType = "RPM";
+    } else {
+        alert("Unknown metric type: " + theMetric);
+    }
+    return thisMetricType;
+}
+
 
 function formatGraphLine(label, values) {
     var lineColour = dynamicColors();
