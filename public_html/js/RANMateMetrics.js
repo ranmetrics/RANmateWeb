@@ -23,9 +23,15 @@ function getNow() {
     return getDateTimeString(new Date());
 //    return "2016-11-06 03:52";  // used when testing specific dates
 }
+
 function getYesterday() {
+    return getEarlier(30);
+}
+    
+// hours are the number of hours earlier to get
+function getEarlier(hours) {
     var d = new Date();
-    d.setHours(d.getHours() - 30);
+    d.setHours(d.getHours() - hours);
     // return "2016-11-05 03:52";    // used when testing specific dates
     return getDateTimeString(d);
 }
@@ -55,7 +61,11 @@ function listIsEmpty(listName){
 }
 
 function showSites(justNowSelected) {
-    //console.log("showSites called, the first selected metric in the list is " + justNowSelected);
+    showSites(justNowSelected, null);
+}
+
+function showSites(justNowSelected, siteToBeSelected) {
+    //console.log("showSites called, the first selected metric in the list is " + justNowSelected + ", and the site to be selected is " + siteToBeSelected);
     //console.log("showSites called with metrics " + $('#metric').val() + " and currentMetricType=" + currentMetricType);
     if (justNowSelected == "") {
         //document.getElementById("metric").innerHTML = "";
@@ -91,6 +101,12 @@ function showSites(justNowSelected) {
                 document.getElementById("site").innerHTML = this.responseText;
                 document.getElementById("site").selectedIndex = -1;
                 $('#site').multiselect('rebuild');
+                if (siteToBeSelected !== null) {
+                    $('#site').multiselect('select', siteToBeSelected, true);
+                    //console.log("Site set to URL param, " + siteToBeSelected);    
+                    $('#site').multiselect('updateButtonText');
+                    //console.log("Site button updated");                        
+                }
             }
         };
 
@@ -277,6 +293,10 @@ function showSites(justNowSelected) {
 }
 
 function updateOpCoCells(str) {
+    updateOpCoCells(str, null, null, null);
+}
+
+function updateOpCoCells(str, operatorToBeChecked, femtoToBeChecked, initSite) {
     // console.log("updateOpCoCells() called with str=" + str);
     //console.log("updateOpCoCells() called with sites " + $('#site').val());
     if (str == "") {
@@ -370,26 +390,39 @@ function updateOpCoCells(str) {
                     }
                 }
                 // console.log(cellList.length + " cells in that list");
+                if (operatorToBeChecked != null) {
+                    document.getElementById(operatorToBeChecked).checked = true;
+                }
+                if (femtoToBeChecked != null) {
+                    document.getElementById(femtoToBeChecked).checked = true;
+                    showGraph('graph', true, initSite);
+                }
             }
         };
-        // (site_id = 'Bishopsgate-Floor 1' or site_id = 'Bishopsgate-Floor 3')
-        siteStr = "(site_id = ";
-        for (i = 0; i < $('#site').val().length; i++) {
-            if (i > 0) {
-                siteStr = siteStr + " || site_id = ";
+        // if the operator and femto are specified (as URL params) use the site name in the param list
+        //if ((operatorToBeChecked != null) && (femtoToBeChecked != null)) {
+        if (initSite != null) {
+            siteStr = "(site_id = \'" + initSite + '\')';
+        } else {
+            // (site_id = 'Bishopsgate-Floor 1' or site_id = 'Bishopsgate-Floor 3')
+            siteStr = "(site_id = ";
+            for (i = 0; i < $('#site').val().length; i++) {
+                if (i > 0) {
+                    siteStr = siteStr + " || site_id = ";
+                }
+                selectedSite = $('#site').val()[i];
+                console.log(selectedSite + " contains " + (selectedSite.match(/\-/g) || []).length + " dashes");
+                if (((selectedSite.match(/\-/g) || []).length > 1) && ($('#site').val().length > 1)){
+                    alert("Switches with '-' in the site/floor name can't be included in multiple selections");
+                } else {
+                    // console.log("Switch " + selectedSite + " does not have a dash in the name or is a single selection");
+                }
+                siteStr = siteStr + '\'' + selectedSite + '\'';
             }
-            selectedSite = $('#site').val()[i];
-            console.log(selectedSite + " contains " + (selectedSite.match(/\-/g) || []).length + " dashes");
-            if (((selectedSite.match(/\-/g) || []).length > 1) && ($('#site').val().length > 1)){
-                alert("Switches with '-' in the site/floor name can't be included in multiple selections");
-            } else {
-                // console.log("Switch " + selectedSite + " does not have a dash in the name or is a single selection");
-            }
-            siteStr = siteStr + '\'' + selectedSite + '\'';
+            siteStr = siteStr + ')';
         }
-        siteStr = siteStr + ')';
 
-        // console.log("RANMateMetrics_OpCoCellList.php called with: " + siteStr);
+        console.log("RANMateMetrics_OpCoCellList.php called with: " + siteStr);
         xmlhttp.open("GET","RANMateMetrics_OpCoCellList.php?switches="+encodeURIComponent(siteStr),true);
         xmlhttp.send();
     }
@@ -432,7 +465,7 @@ function opcoSelected(opco) {
 }
 
 function showInterfaces(str) {
-    //console.log("showInterfaces called with " + str);
+    console.log("showInterfaces called with " + str);
     if (str == "") {
         return;
     } else {
@@ -466,12 +499,66 @@ function showInterfaces(str) {
 
 function initPage() {
     clearTickBoxes();
-    document.getElementById("metric").selectedIndex = 0;  // was previously 1
+    document.getElementById("metric").selectedIndex = 0;  // was previously 1    
     // so that the metrics drop down is cleared when the page is refreshed
     $('#metric').multiselect('deselectAll', false);
+    var metricParam = getURLParameter('metric');
+    if (metricParam != null) {
+        initWithParams(metricParam);
+    } else {
+        console.log("metric name is not specified, ignoring any other URL params");        
+    }
     $('#metric').multiselect('updateButtonText');
     console.log("Enabling the graph button");
     document.getElementById("graphButton").disabled = false;
+}
+
+function initWithParams(metricParam) {
+    //console.log("metric name is " + metricParam);
+    $('#metric').multiselect('select', metricParam, true);
+    var siteParam = decodeURIComponent(getURLParameter('site')).replace(/\+/g, " ").replace(/%28/g, '(').replace(/%29/g,')');
+    //showSites(metricParam, siteParam.replace("-", " - "));    
+    //                                                 " WHERE " + metricName + ".site_name = '" + site.replace(/ - ([^ ])/, "-$1") +
+
+    showSites(metricParam, siteParam.replace(/([^ ])-([^ ])/, "$1 - $2"));    
+    var opcoParam = getURLParameter('operator');
+    var femtoParam = getURLParameter('femto');
+    if (opcoParam != null) {
+        if (femtoParam != null) {
+            //updateOpCoCells(siteParam, decodeURIComponent(opcoParam), decodeURIComponent(femtoParam), siteParam);
+            updateOpCoCells(siteParam, decodeURIComponent(opcoParam), decodeURIComponent(femtoParam), siteParam.replace(/([^ ])-([^ ])/, "$1 - $2"));
+        } else {
+            updateOpCoCells(siteParam, null, null, siteParam);        
+            alert("The required Femto was not included in the launch URL");
+        }
+    } else {
+            updateOpCoCells(siteParam, null, null, siteParam);        
+        alert("The required Operator was not included in the launch URL");
+    }
+    // instead of displaying the default 30 hours, display either 6 hours previous or the number of hours if requested by RANmate Outage Screen
+    var rangeParam = getURLParameter('range');          // range should be passed as a number of minutes
+    if ((rangeParam != null) && (isInt(rangeParam))) {
+        document.getElementById("startTime").value = getEarlier(Math.ceil(rangeParam/60) + 1);
+    } else {
+        document.getElementById("startTime").value = getEarlier(6); 
+    }
+}
+
+function isInt(value) {
+  return !isNaN(value) && 
+         parseInt(Number(value)) == value && 
+         !isNaN(parseInt(value, 10));
+}
+
+function getURLParameter(sParam) {
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) {
+        var sParameterName = sURLVariables[i].split('=');
+        if (sParameterName[0] == sParam) {
+            return sParameterName[1];
+        }
+    }
 }
 
 function clearTickBoxes() {
@@ -496,13 +583,22 @@ function isValidDateTimeString(day) {
 }
 
 function showGraph(id, visible) {
+    showGraph(id, visible, null);
+}
+
+function showGraph(id, visible, siteParam) {
     // check that the start date-time is valid
     yLabelTitle = ''; // clear the label, just in case
     var metric = document.getElementById("metric").value;
     if (metric == "") {
         alert("A metric must be selected");
     } else {
-        var site = document.getElementById("site").value;
+        var site;
+        if (siteParam == null) {
+             site = document.getElementById("site").value;
+        } else {
+            site = siteParam;
+        }
         if (site == "") {
             alert("A site must be selected");
         } else {
@@ -594,7 +690,7 @@ function showGraph(id, visible) {
                                     // siteFloorStr = "((customer_config.Site = ";
                                     // siteFloorStr = siteFloorStr + ')';
 
-                                    if ($('#site').val().length > 1) { // this is going to be tough, pivot needed
+                                    if ((siteParam == null) && ($('#site').val().length > 1)) { // this is going to be tough, pivot needed
 
                                         var cellList = new Array();
                                         if (vfChecked && fap1Checked) cellList.push(new Array('cell_0','VF_1'));
@@ -643,11 +739,11 @@ function showGraph(id, visible) {
                                                 for (j = 0; j < cellList.length; j++) {
                                                     columnName = selectedSite + ' ' + cellList[j][1];
                                                     if (j == 0) {
-                                                        //pivotStr = "\n case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
-                                                        pivotStr = " case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
+                                                        // pivotStr = " case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
+                                                        pivotStr = " case when " + metricName + ".site_name = \'" + selectedSite + "\' then ROUND(" + metricName + "." + cellList[j][0] + ",3) end AS `" + columnName + '`';
                                                     } else {
-                                                        //pivotStr += ",\n case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
-                                                        pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
+                                                        // pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
+                                                        pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then ROUND(" + metricName + "." + cellList[j][0] + ",3) end AS `" + columnName + '`';
                                                     }
                                                     //columnsStr += ",\n sum(`" + columnName + "`) AS `" + columnName + '`';
                                                     columnsStr += ", sum(`" + columnName + "`) AS `" + columnName + '`';
@@ -658,9 +754,8 @@ function showGraph(id, visible) {
                                                 siteFloorStr += ',\'' + selectedSite + '\'';
                                                 for (j = 0; j < cellList.length; j++) {
                                                     columnName = selectedSite + ' ' + cellList[j][1];
-                                                    //pivotStr += ",\n case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
-                                                    //columnsStr += ",\n sum(`" + columnName + "`) AS `" + columnName + '`';
-                                                    pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
+                                                    //pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
+                                                    pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then ROUND(" + metricName + "." + cellList[j][0] + ",3) end AS `" + columnName + '`';
                                                     columnsStr += ", sum(`" + columnName + "`) AS `" + columnName + '`';
                                                 }
                                             }
@@ -701,7 +796,7 @@ function showGraph(id, visible) {
                                         group by measurement_time
                                         ); */
 
-                                    } else { // just the usuual single site
+                                    } else { // just the usual single site
                                         var cells = vfChecked && fap1Checked ? ', cell_0 AS VF_1' : "";
                                         cells += o2Checked && fap1Checked ? ', cell_1 AS O2_1' : "";
                                         cells += thChecked && fap1Checked ? ', cell_2 AS 3_1' : "";
@@ -740,7 +835,8 @@ function showGraph(id, visible) {
 //                                                "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
 //                                                "GROUP BY measurement_time;";
                                         query = "SELECT measurement_time" + cells + " FROM metrics." + metricName +
-                                                " WHERE " + metricName + ".site_name = '" + site.replace(" - ", "-") +
+                                                //" WHERE " + metricName + ".site_name = '" + site.replace(" - ", "-") +
+                                                " WHERE " + metricName + ".site_name = '" + site.replace(/ - ([^ ])/, "-$1") +
                                                 "' AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
                                                 "GROUP BY measurement_time;";
                                     }
@@ -1128,6 +1224,7 @@ function getSQL_Buddy_SingleMetric_SingleSite(metric, site, startDateTime, endDa
     field = metric.substring(metric.indexOf('_') + 1).toLowerCase();
     if (field === 'loss_pct') { yLabelTitle = 'percentage packet loss (at 20Mb/s)'; } 
     else if (field === 'jitter') { yLabelTitle = 'milliseconds'; } 
+    else if (field === 'bandwidth') { yLabelTitle = 'MBytes'; } 
     else if (table.endsWith('latency')) { yLabelTitle = 'milliseconds'; } 
     return "SELECT " + table + ".measurement_time, " + field + " FROM " + table + " WHERE " + table + ".site_name='" + site + "' AND " + 
             table + ".measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' GROUP BY " + table + ".measurement_time;";  
@@ -1137,9 +1234,17 @@ function getSQL_Buddy_SingleMetric_SingleSite(metric, site, startDateTime, endDa
 function getSQL_Buddy_MultiMetrics_SingleSite(metrics, site, startDateTime, endDateTime) {
     fields = buddyMetricsToFieldsArray(metrics);
     fieldsString = buddyMetricsToFieldsString(metrics);
-    if (fieldsString.indexOf('loss_pct') >= 0) { yLabelTitle = 'milliseconds/percentage packet loss (at 20Mb/s)'; } 
-    //if (fields.indexOf('loss_pct') >= 0) { yLabelTitle = 'percentage packet loss/milliseconds'; } 
-    else { yLabelTitle = 'milliseconds'; } 
+
+    // console.log("fieldsString is: " + fieldsString);
+    if (fieldsString.indexOf('loss_pct') >= 0) { yLabelTitle = 'percentage packet loss (at 20Mb/s)'; } 
+    if (fieldsString.indexOf('.bandwidth') >= 0) { 
+        if (yLabelTitle !== '') { yLabelTitle += ' / '; }
+        yLabelTitle += 'MBytes'; 
+    } 
+    if ((fieldsString.indexOf('latency') >= 0) || (fieldsString.indexOf('jitter') >= 0)) {  
+        if (yLabelTitle !== '') { yLabelTitle += ' / '; }
+        yLabelTitle += 'milliseconds';
+    } 
 //    return getSQL_Buddy_AllScenarios(metrics[0].substring(0, metrics[0].indexOf('_')).replace('-', '_').toLowerCase(), tables, fields, buddyMetricsToTableSitesString(metrics, site), startDateTime, endDateTime);
     var returnString;
     // set for testing only
@@ -1277,9 +1382,12 @@ function getSQL_Buddy_SingleMetric_MultiSites(metric, sites, startDateTime, endD
     var columnsStr = "";
     var metricName = metric.substring(metric.indexOf('_') + 1).toLowerCase();
     var tableName = metric.substring(0,metric.indexOf('_')).replace(/-/g, "_").toLowerCase();
+    
     if (metricName === 'loss_pct') { yLabelTitle = 'percentage packet loss (@ 20Mb/s)'; } 
     else if (metricName === 'jitter') { yLabelTitle = 'milliseconds'; } 
+    else if (metricName === 'bandwidth') { yLabelTitle = 'MBytes'; } 
     else if (tableName.endsWith('latency')) { yLabelTitle = 'milliseconds'; } 
+    
     for (i = 0; i < sites.length; i++) {
         selectedSite = sites[i].replace(" - ", "-");
         if (i == 0) {
@@ -1519,7 +1627,6 @@ function getMetricType(theMetric) {
     }
     return thisMetricType;
 }
-
 
 function formatGraphLine(label, values) {
     var lineColour = dynamicColors();

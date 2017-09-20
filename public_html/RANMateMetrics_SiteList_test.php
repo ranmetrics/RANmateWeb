@@ -23,7 +23,8 @@ if (($MetricGroup == 'Counter') || ($MetricGroup == 'Ping')) {
     $sql = "Select DISTINCT customer_config.SwitchIP, customer_config.Site, customer_config.SwitchLocation, customer_config.SiteRef "
             . "from `ranmate-femto`.customer_config, `ranmate-femto`.sites "
             . "WHERE SwitchIP LIKE '10.%' AND SwitchLocation != '' AND CONCAT(customer_config.Site,'-',customer_config.SwitchLocation) = sites.site_id "
-            . "AND sites.exclude='0' and sites.effective_to > NOW() ORDER BY Site, SwitchLocation";
+            . "AND sites.effective_to > NOW() ORDER BY Site, SwitchLocation";
+//            . "AND sites.exclude='0' and sites.effective_to > NOW() ORDER BY Site, SwitchLocation";
 } else if ($MetricGroup == 'Mixed') {
     $sql = "Select DISTINCT router_counters_sites.site_name from metrics.router_counters_sites INNER JOIN metrics.buddy ON "
             . "router_counters_sites.site_name = buddy.site_name where NOT exclude ORDER BY router_counters_sites.site_name";
