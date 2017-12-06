@@ -13,9 +13,14 @@ if (!$conn) {
     die('Could not connect: ' . mysqli_error($conn));
 }
 
-if (($MetricGroup == 'Counter') || ($MetricGroup == 'Ping')) {
+//if (($MetricGroup == 'Counter') || ($MetricGroup == 'Ping')) {
+if ($MetricGroup == 'Counter') {
     $sql = "Select DISTINCT site_name from metrics.router_counters_sites ORDER BY site_name";
     //$sql = "Select DISTINCT Site from `ranmate-femto`.customer_config WHERE SwitchIP LIKE '10.%' ORDER BY Site";
+} else if ($MetricGroup == 'Ping') {
+    $sql = "Select ' 5 Worst Sites (last 24 hours)' as 'site_name' from metrics.router_counters_sites union "
+            . "Select ' 5 Worst Sites (last 7 days)' as 'site_name' from metrics.router_counters_sites union "
+            . "Select DISTINCT site_name from metrics.router_counters_sites ORDER BY site_name";
 } else if ($MetricGroup == 'Buddy') {
     $sql = "Select DISTINCT site_name from metrics.buddy where NOT exclude ORDER BY site_name";
 } else if ($MetricGroup == 'Femto') {

@@ -95,17 +95,21 @@ function showSites(justNowSelected, siteToBeSelected) {
 
         xmlhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status === 200) {
-                //console.log("showSites() received response from server: " + this.responseText);
-                //console.log("Site List rebuilt because thisMetricType=" + thisMetricType + " and currentMetricType=" + currentMetricType);
-                //console.log("Site List rebuilt: thisMetricType=" + thisMetricType + " and currentMetricType=" + currentMetricType);
-                document.getElementById("site").innerHTML = this.responseText;
-                document.getElementById("site").selectedIndex = -1;
-                $('#site').multiselect('rebuild');
-                if (siteToBeSelected !== null) {
-                    $('#site').multiselect('select', siteToBeSelected, true);
-                    //console.log("Site set to URL param, " + siteToBeSelected);    
-                    $('#site').multiselect('updateButtonText');
-                    //console.log("Site button updated");                        
+                if (this.responseText.startsWith("<!DOCTYPE html>")) {
+                    console.log("showSites() received response from server: " + this.responseText);
+                    //console.log("Site List rebuilt because thisMetricType=" + thisMetricType + " and currentMetricType=" + currentMetricType);
+                    console.log("Site List rebuilt: thisMetricType=" + thisMetricType + " and currentMetricType=" + currentMetricType);
+                    document.getElementById("site").innerHTML = this.responseText;
+                    document.getElementById("site").selectedIndex = -1;
+                    $('#site').multiselect('rebuild');
+                    if (siteToBeSelected !== null) {
+                        $('#site').multiselect('select', siteToBeSelected, true);
+                        //console.log("Site set to URL param, " + siteToBeSelected);    
+                        $('#site').multiselect('updateButtonText');
+                        //console.log("Site button updated");                        
+                    }
+                } else {
+                    console.log("showSites() will not process non-html response from server: " + this.responseText);                    
                 }
             }
         };
@@ -602,201 +606,57 @@ function showGraph(id, visible, siteParam) {
         if (site == "") {
             alert("A site must be selected");
         } else {
-            var startDateTime = document.getElementById("startTime").value;
-            if (!isValidDateTimeString(startDateTime)) {
-                alert("The Start Date (" + startDateTime + ") is not correctly specified (YYYY-MM-DD hh:mm)")
-            } else {
-                // check that the end date-time is valid
-                var endDateTime = document.getElementById("endTime").value;
-                if (!isValidDateTimeString(endDateTime)) {
-                    alert("The End Date (" + endDateTime + ") is not correctly specified (YYYY-MM-DD hh:mm)")
+            if ($('#site').val().length > 1 && $('#site').val()[0].startsWith(" 5 Worst")) {
+                alert("The \"5 Worst Sites\" cannot be selected with any other sites");
+            } else {            
+                var startDateTime = document.getElementById("startTime").value;
+                if (!isValidDateTimeString(startDateTime)) {
+                    alert("The Start Date (" + startDateTime + ") is not correctly specified (YYYY-MM-DD hh:mm)")
                 } else {
-                    // check that the start time is before the end time
-                    if (endDateTime <= startDateTime) {
-                        alert("The End Date-Time is before the Start Date-Time")
+                    // check that the end date-time is valid
+                    var endDateTime = document.getElementById("endTime").value;
+                    if (!isValidDateTimeString(endDateTime)) {
+                        alert("The End Date (" + endDateTime + ") is not correctly specified (YYYY-MM-DD hh:mm)")
                     } else {
-                        // if it's a Femto metric get all the values of the tick boxes
-                        var query;
-                        if (metric.substring(0,6) == "Femto-") {
-//                            var siteOnly = site.substring(0, site.indexOf(' - '));
-//                            var floorOnly = site.substring(site.indexOf(' - ') + 3);
+                        // check that the start time is before the end time
+                        if (endDateTime <= startDateTime) {
+                            alert("The End Date-Time is before the Start Date-Time")
+                        } else {
+                            // if it's a Femto metric get all the values of the tick boxes
+                            var query;
+                            if (metric.substring(0,6) == "Femto-") {
+    //                            var siteOnly = site.substring(0, site.indexOf(' - '));
+    //                            var floorOnly = site.substring(site.indexOf(' - ') + 3);
 
-//                            var vfChecked = document.getElementById('Vodafone').checked;
-//                            var o2Checked = document.getElementById('O2').checked;
-//                            var thChecked = document.getElementById('Three').checked;
-//                            var eeChecked = document.getElementById('EE').checked;
-                            var vfChecked = document.getElementById(0).checked;
-                            var o2Checked = document.getElementById(1).checked;
-                            var thChecked = document.getElementById(2).checked;
-                            var eeChecked = document.getElementById(3).checked;
-                            var metricName = metric.substring(6);
+    //                            var vfChecked = document.getElementById('Vodafone').checked;
+    //                            var o2Checked = document.getElementById('O2').checked;
+    //                            var thChecked = document.getElementById('Three').checked;
+    //                            var eeChecked = document.getElementById('EE').checked;
+                                var vfChecked = document.getElementById(0).checked;
+                                var o2Checked = document.getElementById(1).checked;
+                                var thChecked = document.getElementById(2).checked;
+                                var eeChecked = document.getElementById(3).checked;
+                                var metricName = metric.substring(6);
 
-                            if (!(vfChecked || o2Checked || thChecked || eeChecked)) {
-                                alert("At least 1 operator must be ticked")
-                                return;
-                            } else {
-
-                                var fap1Checked = document.getElementById('Femto1').checked;
-                                var fap2Checked = document.getElementById('Femto2').checked;
-                                var fap3Checked = document.getElementById('Femto3').checked;
-                                var fap4Checked = document.getElementById('Femto4').checked;
-                                var fap5Checked = document.getElementById('Femto5').checked;
-                                var fap6Checked = document.getElementById('Femto6').checked;
-                                var fap7Checked = document.getElementById('Femto7').checked;
-                                var fap8Checked = document.getElementById('Femto8').checked;
-
-                                if (!(fap1Checked || fap2Checked || fap3Checked || fap4Checked || fap5Checked || fap6Checked || fap7Checked || fap8Checked)) {
-                                    alert("At least 1 Femto Number must be ticked")
+                                if (!(vfChecked || o2Checked || thChecked || eeChecked)) {
+                                    alert("At least 1 operator must be ticked")
                                     return;
                                 } else {
-                                    var cellList = new Array();
-                                    var cells = vfChecked && fap1Checked ? ', cell_0 AS VF_1' : "";
-                                    cells += o2Checked && fap1Checked ? ', cell_1 AS O2_1' : "";
-                                    cells += thChecked && fap1Checked ? ', cell_2 AS 3_1' : "";
-                                    cells += eeChecked && fap1Checked ? ', cell_3 AS EE_1' : "";
-                                    cells += vfChecked && fap2Checked ? ', cell_4 AS VF_2' : "";
-                                    cells += o2Checked && fap2Checked ? ', cell_5 AS O2_2' : "";
-                                    cells += thChecked && fap2Checked ? ', cell_6 AS 3_2' : "";
-                                    cells += eeChecked && fap2Checked ? ', cell_7 AS EE_2' : "";
-                                    cells += vfChecked && fap3Checked ? ', cell_8 AS VF_3' : "";
-                                    cells += o2Checked && fap3Checked ? ', cell_9 AS O2_3' : "";
-                                    cells += thChecked && fap3Checked ? ', cell_10 AS 3_3' : "";
-                                    cells += eeChecked && fap3Checked ? ', cell_11 AS EE_3' : "";
-                                    cells += vfChecked && fap4Checked ? ', cell_12 AS VF_4' : "";
-                                    cells += o2Checked && fap4Checked ? ', cell_13 AS O2_4' : "";
-                                    cells += thChecked && fap4Checked ? ', cell_14 AS 3_4' : "";
-                                    cells += eeChecked && fap4Checked ? ', cell_15 AS EE_4' : "";
-                                    cells += vfChecked && fap5Checked ? ', cell_16 AS VF_5' : "";
-                                    cells += o2Checked && fap5Checked ? ', cell_17 AS O2_5' : "";
-                                    cells += thChecked && fap5Checked ? ', cell_18 AS 3_5' : "";
-                                    cells += eeChecked && fap5Checked ? ', cell_19 AS EE_5' : "";
-                                    cells += vfChecked && fap6Checked ? ', cell_20 AS VF_6' : "";
-                                    cells += o2Checked && fap6Checked ? ', cell_21 AS O2_6' : "";
-                                    cells += thChecked && fap6Checked ? ', cell_22 AS 3_6' : "";
-                                    cells += eeChecked && fap6Checked ? ', cell_23 AS EE_6' : "";
-                                    cells += vfChecked && fap7Checked ? ', cell_24 AS VF_7' : "";
-                                    cells += o2Checked && fap7Checked ? ', cell_25 AS O2_7' : "";
-                                    cells += thChecked && fap7Checked ? ', cell_26 AS 3_7' : "";
-                                    cells += eeChecked && fap7Checked ? ', cell_27 AS EE_7' : "";
-                                    cells += vfChecked && fap8Checked ? ', cell_28 AS VF_8' : "";
-                                    cells += o2Checked && fap8Checked ? ', cell_29 AS O2_8' : "";
-                                    cells += thChecked && fap8Checked ? ', cell_30 AS 3_8' : "";
-                                    cells += eeChecked && fap8Checked ? ', cell_31 AS EE_8' : "";
 
-//                                    query = "SELECT measurement_time" + cells + " FROM metrics." + metric.substring(6) +
-//                                            " WHERE " + metric.substring(6) + ".site_id=(SELECT SwitchIP from `ranmate-femto`.customer_config where customer_config.Site='" + siteOnly + "' AND customer_config.SwitchLocation='" + floorOnly + "' GROUP BY SwitchIP) " +
-//                                            "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
-//                                            "GROUP BY measurement_time;";
-                                    // siteFloorStr = "((customer_config.Site = ";
-                                    // siteFloorStr = siteFloorStr + ')';
+                                    var fap1Checked = document.getElementById('Femto1').checked;
+                                    var fap2Checked = document.getElementById('Femto2').checked;
+                                    var fap3Checked = document.getElementById('Femto3').checked;
+                                    var fap4Checked = document.getElementById('Femto4').checked;
+                                    var fap5Checked = document.getElementById('Femto5').checked;
+                                    var fap6Checked = document.getElementById('Femto6').checked;
+                                    var fap7Checked = document.getElementById('Femto7').checked;
+                                    var fap8Checked = document.getElementById('Femto8').checked;
 
-                                    if ((siteParam == null) && ($('#site').val().length > 1)) { // this is going to be tough, pivot needed
-
+                                    if (!(fap1Checked || fap2Checked || fap3Checked || fap4Checked || fap5Checked || fap6Checked || fap7Checked || fap8Checked)) {
+                                        alert("At least 1 Femto Number must be ticked")
+                                        return;
+                                    } else {
                                         var cellList = new Array();
-                                        if (vfChecked && fap1Checked) cellList.push(new Array('cell_0','VF_1'));
-                                        if (o2Checked && fap1Checked) cellList.push(new Array('cell_1','O2_1'));
-                                        if (thChecked && fap1Checked) cellList.push(new Array('cell_2','3_1'));
-                                        if (eeChecked && fap1Checked) cellList.push(new Array('cell_3','EE_1'));
-                                        if (vfChecked && fap2Checked) cellList.push(new Array('cell_4','VF_2'));
-                                        if (o2Checked && fap2Checked) cellList.push(new Array('cell_5','O2_2'));
-                                        if (thChecked && fap2Checked) cellList.push(new Array('cell_6','3_2'));
-                                        if (eeChecked && fap2Checked) cellList.push(new Array('cell_7','EE_2'));
-                                        if (vfChecked && fap3Checked) cellList.push(new Array('cell_8','VF_3'));
-                                        if (o2Checked && fap3Checked) cellList.push(new Array('cell_9','O2_3'));
-                                        if (thChecked && fap3Checked) cellList.push(new Array('cell_10','3_3'));
-                                        if (eeChecked && fap3Checked) cellList.push(new Array('cell_11','EE_3'));
-                                        if (vfChecked && fap4Checked) cellList.push(new Array('cell_12','VF_4'));
-                                        if (o2Checked && fap4Checked) cellList.push(new Array('cell_13','O2_4'));
-                                        if (thChecked && fap4Checked) cellList.push(new Array('cell_14','3_4'));
-                                        if (eeChecked && fap4Checked) cellList.push(new Array('cell_15','EE_4'));
-                                        if (vfChecked && fap5Checked) cellList.push(new Array('cell_16','VF_5'));
-                                        if (o2Checked && fap5Checked) cellList.push(new Array('cell_17','O2_5'));
-                                        if (thChecked && fap5Checked) cellList.push(new Array('cell_18','3_5'));
-                                        if (eeChecked && fap5Checked) cellList.push(new Array('cell_19','EE_5'));
-                                        if (vfChecked && fap6Checked) cellList.push(new Array('cell_20','VF_6'));
-                                        if (o2Checked && fap6Checked) cellList.push(new Array('cell_21','O2_6'));
-                                        if (thChecked && fap6Checked) cellList.push(new Array('cell_22','3_6'));
-                                        if (eeChecked && fap6Checked) cellList.push(new Array('cell_23','EE_6'));
-                                        if (vfChecked && fap7Checked) cellList.push(new Array('cell_24','VF_7'));
-                                        if (o2Checked && fap7Checked) cellList.push(new Array('cell_25','O2_7'));
-                                        if (thChecked && fap7Checked) cellList.push(new Array('cell_26','3_7'));
-                                        if (eeChecked && fap7Checked) cellList.push(new Array('cell_27','EE_7'));
-                                        if (vfChecked && fap8Checked) cellList.push(new Array('cell_28','VF_8'));
-                                        if (o2Checked && fap8Checked) cellList.push(new Array('cell_29','O2_8'));
-                                        if (thChecked && fap8Checked) cellList.push(new Array('cell_30','3_8'));
-                                        if (eeChecked && fap8Checked) cellList.push(new Array('cell_31','EE_8'));
-
-                                        // console.log("cellList has " + cellList.length + " entries which are " + cellList.toString());
-                                        var columnsStr = "";
-                                        for (i = 0; i < $('#site').val().length; i++) {
-                                            selectedSite = $('#site').val()[i].replace(" - ", "-");
-                                            siteOnly = selectedSite.substring(0, selectedSite.indexOf(' - '));
-                                            floorOnly = selectedSite.substring(selectedSite.indexOf(' - ') + 3);
-                                            if (i == 0) {
-                                                // siteFloorStr = siteFloorStr + " || (customer_config.Site = ";
-                                                // siteFloorStr = '\'' + selectedSite.replace(" - ", "-") + '\'';
-                                                siteFloorStr = '\'' + selectedSite + '\'';
-                                                for (j = 0; j < cellList.length; j++) {
-                                                    columnName = selectedSite + ' ' + cellList[j][1];
-                                                    if (j == 0) {
-                                                        // pivotStr = " case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
-                                                        pivotStr = " case when " + metricName + ".site_name = \'" + selectedSite + "\' then ROUND(" + metricName + "." + cellList[j][0] + ",3) end AS `" + columnName + '`';
-                                                    } else {
-                                                        // pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
-                                                        pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then ROUND(" + metricName + "." + cellList[j][0] + ",3) end AS `" + columnName + '`';
-                                                    }
-                                                    //columnsStr += ",\n sum(`" + columnName + "`) AS `" + columnName + '`';
-                                                    columnsStr += ", sum(`" + columnName + "`) AS `" + columnName + '`';
-                                                }
-                                            } else {
-                                                // siteFloorStr = siteFloorStr + '\'' + siteOnly + "\' AND customer_config.SwitchLocation = \'" + floorOnly + '\')';
-                                                // siteFloorStr += ',\'' + selectedSite.replace(" - ", "-") + '\'';
-                                                siteFloorStr += ',\'' + selectedSite + '\'';
-                                                for (j = 0; j < cellList.length; j++) {
-                                                    columnName = selectedSite + ' ' + cellList[j][1];
-                                                    //pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
-                                                    pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then ROUND(" + metricName + "." + cellList[j][0] + ",3) end AS `" + columnName + '`';
-                                                    columnsStr += ", sum(`" + columnName + "`) AS `" + columnName + '`';
-                                                }
-                                            }
-                                        }
-
-                                        query = "drop view if exists " + metricName + "_tmp;" +
-                                                "create view " + metricName + "_tmp as ( SELECT measurement_time, " +
-                                                pivotStr +
-                                                " FROM metrics." + metricName + 
-                                                " WHERE " + metricName + ".site_name IN (" + siteFloorStr + ") " +
-                                                "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
-                                                "ORDER BY measurement_time, site_id);" +
-                                                "select measurement_time" +
-                                                columnsStr +
-                                                " from " + metricName + "_tmp " +
-                                                "group by measurement_time";
-
-                                        /* drop view if exists packet_tmp;
-                                        create view packet_tmp as (
-                                        select measurement_time,
-                                        case when packets.site_id = '10.10.5.11' then packets.cell_0 end AS `10.10.5.11 VF_1`,
-                                        case when packets.site_id = '10.10.5.12' then packets.cell_0 end AS `10.10.5.12 VF_1`
-                                        from metrics.packets
-                                        where (site_id in (select SwitchIP from `ranmate-femto`.customer_config
-                                        where ((customer_config.Site = 'Bishopsgate' and customer_config.SwitchLocation = 'Floor 1') or
-                                        (customer_config.Site = 'Bishopsgate' and customer_config.SwitchLocation = 'Floor 2'))
-                                        group by SwitchIP))
-                                        and measurement_time between '2017-03-22 07:10' and '2017-03-23 13:10'
-                                        order by measurement_time
-                                        );
-
-                                        drop view if exists packet_tmp_pivot;
-                                        create view packet_tmp_pivot as (
-                                        select measurement_time,
-                                        sum(`10.10.5.11 VF_1`) AS `10.10.5.11 VF_1`,
-                                        sum(`10.10.5.12 VF_1`) AS `10.10.5.12 VF_1`
-                                        from packet_tmp
-                                        group by measurement_time
-                                        ); */
-
-                                    } else { // just the usual single site
                                         var cells = vfChecked && fap1Checked ? ', cell_0 AS VF_1' : "";
                                         cells += o2Checked && fap1Checked ? ', cell_1 AS O2_1' : "";
                                         cells += thChecked && fap1Checked ? ', cell_2 AS 3_1' : "";
@@ -830,241 +690,389 @@ function showGraph(id, visible, siteParam) {
                                         cells += thChecked && fap8Checked ? ', cell_30 AS 3_8' : "";
                                         cells += eeChecked && fap8Checked ? ', cell_31 AS EE_8' : "";
 
-//                                        query = "SELECT measurement_time" + cells + " FROM metrics." + metric.substring(6) +
-//                                                " WHERE " + metric.substring(6) + ".site_id=(SELECT SwitchIP from `ranmate-femto`.customer_config where customer_config.Site='" + siteOnly + "' AND customer_config.SwitchLocation='" + floorOnly + "' GROUP BY SwitchIP) " +
-//                                                "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
-//                                                "GROUP BY measurement_time;";
-                                        query = "SELECT measurement_time" + cells + " FROM metrics." + metricName +
-                                                //" WHERE " + metricName + ".site_name = '" + site.replace(" - ", "-") +
-                                                " WHERE " + metricName + ".site_name = '" + site.replace(/ - ([^ ])/, "-$1") +
-                                                "' AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
-                                                "GROUP BY measurement_time;";
-                                    }
-                                    //console.log("showGraph() SQL is " + query);
-                                }
-                            }
-                        } else { // Separate the Backhaul metrics into 1 Metrics : 1 Site, 1 Metrics : N Sites, N Metrics : 1 Site and N Metrics : N Sites
-                            //console.log("#metrics=" + $('#metric').val().length + ", and #sites=" + $('#site').val().length)
-                            // 1 Metric : 1 Site
-                            if (($('#metric').val().length == 1) && ($('#site').val().length == 1) ) {                                                          
-                                if (metric.substring(0,6) == "Buddy-") { 
-                                    query = getSQL_Buddy_SingleMetric_SingleSite(metric, site, startDateTime, endDateTime);
-                                    console.log("Buddy SQL is " + query);
-                                } else if (metric.substring(0,5) == "Ping-"){  // Backhaul Counter Metric
-                                    query = getSQL_Ping_SingleMetric_SingleSite(metric, site, startDateTime, endDateTime);
-                                    //console.log("Ping SQL is " + query);
-                                } else if (metric.substring(0,8) == "Counter-"){  // Backhaul Counter Metric
-                                    var interface = document.getElementById("interface").value;
-                                    if (interface == "") {
-                                        alert("An interface must be selected");
-                                        return;
-                                    } else {
-                                        query = getSQL_Counter_SingleMetric_SingleSite(metric, site, interface, startDateTime, endDateTime);
-                                    }
-                                    //console.log("Counter SQL is " + query);
-                                }
-                            // 1 Metric : N Sites
-                            } else if (($('#metric').val().length == 1) && ($('#site').val().length > 1) ) {
-                                if (metric.substring(0,5) == "Ping-") { // Router to Router Ping
-                                    query = getSQL_Ping_SingleMetric_MultiSites(metric, $('#site').val(), startDateTime, endDateTime);
-                                    console.log("Ping SQL is " + query);
-                                } else if (metric.substring(0,6) == "Buddy-") { 
-                                    query = getSQL_Buddy_SingleMetric_MultiSites(metric, $('#site').val(), startDateTime, endDateTime);
-                                    console.log("Buddy SQL is " + query);
-                                } else if (metric.substring(0,8) == "Counter-"){  // Backhaul Counter Metric
-                                    query = getSQL_Counter_SingleMetric_MultiSites(metric, $('#site').val(), startDateTime, endDateTime);
-                                    console.log("Counter SQL is " + query);                                    
-                                } else {
-                                    //alert("Multiple Sites are not yet supported for Counter metrics");
-                                    alert("Unexpected Metric Group");
-                                    return;
-                                }
-                            // N Metrics : 1 Site
-                            } else if (($('#metric').val().length > 1) && ($('#site').val().length == 1) ) {
-                                // if metrics all the same type
-                                metricTypes = getMetricTypes($('#metric').val());
-                                if (metricTypes.length == 1) {
-                                    console.log("Only " + metricTypes[0] + " metrics required");
-                                    if (metricTypes[0] == "Buddy") {
-                                        if ($('#metric').val().length > 3) {
-                                            alert("The maximum number of Buddy metrics that can be displayed on the same graph is 3");
-                                            return;
-                                        } else {
-                                            query = getSQL_Buddy_MultiMetrics_SingleSite($('#metric').val(), site, startDateTime, endDateTime);
-                                            if (query === null) { return; }
-                                            console.log("Buddy SQL is " + query);
+    //                                    query = "SELECT measurement_time" + cells + " FROM metrics." + metric.substring(6) +
+    //                                            " WHERE " + metric.substring(6) + ".site_id=(SELECT SwitchIP from `ranmate-femto`.customer_config where customer_config.Site='" + siteOnly + "' AND customer_config.SwitchLocation='" + floorOnly + "' GROUP BY SwitchIP) " +
+    //                                            "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+    //                                            "GROUP BY measurement_time;";
+                                        // siteFloorStr = "((customer_config.Site = ";
+                                        // siteFloorStr = siteFloorStr + ')';
+
+                                        if ((siteParam == null) && ($('#site').val().length > 1)) { // this is going to be tough, pivot needed
+
+                                            var cellList = new Array();
+                                            if (vfChecked && fap1Checked) cellList.push(new Array('cell_0','VF_1'));
+                                            if (o2Checked && fap1Checked) cellList.push(new Array('cell_1','O2_1'));
+                                            if (thChecked && fap1Checked) cellList.push(new Array('cell_2','3_1'));
+                                            if (eeChecked && fap1Checked) cellList.push(new Array('cell_3','EE_1'));
+                                            if (vfChecked && fap2Checked) cellList.push(new Array('cell_4','VF_2'));
+                                            if (o2Checked && fap2Checked) cellList.push(new Array('cell_5','O2_2'));
+                                            if (thChecked && fap2Checked) cellList.push(new Array('cell_6','3_2'));
+                                            if (eeChecked && fap2Checked) cellList.push(new Array('cell_7','EE_2'));
+                                            if (vfChecked && fap3Checked) cellList.push(new Array('cell_8','VF_3'));
+                                            if (o2Checked && fap3Checked) cellList.push(new Array('cell_9','O2_3'));
+                                            if (thChecked && fap3Checked) cellList.push(new Array('cell_10','3_3'));
+                                            if (eeChecked && fap3Checked) cellList.push(new Array('cell_11','EE_3'));
+                                            if (vfChecked && fap4Checked) cellList.push(new Array('cell_12','VF_4'));
+                                            if (o2Checked && fap4Checked) cellList.push(new Array('cell_13','O2_4'));
+                                            if (thChecked && fap4Checked) cellList.push(new Array('cell_14','3_4'));
+                                            if (eeChecked && fap4Checked) cellList.push(new Array('cell_15','EE_4'));
+                                            if (vfChecked && fap5Checked) cellList.push(new Array('cell_16','VF_5'));
+                                            if (o2Checked && fap5Checked) cellList.push(new Array('cell_17','O2_5'));
+                                            if (thChecked && fap5Checked) cellList.push(new Array('cell_18','3_5'));
+                                            if (eeChecked && fap5Checked) cellList.push(new Array('cell_19','EE_5'));
+                                            if (vfChecked && fap6Checked) cellList.push(new Array('cell_20','VF_6'));
+                                            if (o2Checked && fap6Checked) cellList.push(new Array('cell_21','O2_6'));
+                                            if (thChecked && fap6Checked) cellList.push(new Array('cell_22','3_6'));
+                                            if (eeChecked && fap6Checked) cellList.push(new Array('cell_23','EE_6'));
+                                            if (vfChecked && fap7Checked) cellList.push(new Array('cell_24','VF_7'));
+                                            if (o2Checked && fap7Checked) cellList.push(new Array('cell_25','O2_7'));
+                                            if (thChecked && fap7Checked) cellList.push(new Array('cell_26','3_7'));
+                                            if (eeChecked && fap7Checked) cellList.push(new Array('cell_27','EE_7'));
+                                            if (vfChecked && fap8Checked) cellList.push(new Array('cell_28','VF_8'));
+                                            if (o2Checked && fap8Checked) cellList.push(new Array('cell_29','O2_8'));
+                                            if (thChecked && fap8Checked) cellList.push(new Array('cell_30','3_8'));
+                                            if (eeChecked && fap8Checked) cellList.push(new Array('cell_31','EE_8'));
+
+                                            // console.log("cellList has " + cellList.length + " entries which are " + cellList.toString());
+                                            var columnsStr = "";
+                                            for (i = 0; i < $('#site').val().length; i++) {
+                                                selectedSite = $('#site').val()[i].replace(" - ", "-");
+                                                siteOnly = selectedSite.substring(0, selectedSite.indexOf(' - '));
+                                                floorOnly = selectedSite.substring(selectedSite.indexOf(' - ') + 3);
+                                                if (i == 0) {
+                                                    // siteFloorStr = siteFloorStr + " || (customer_config.Site = ";
+                                                    // siteFloorStr = '\'' + selectedSite.replace(" - ", "-") + '\'';
+                                                    siteFloorStr = '\'' + selectedSite + '\'';
+                                                    for (j = 0; j < cellList.length; j++) {
+                                                        columnName = selectedSite + ' ' + cellList[j][1];
+                                                        if (j == 0) {
+                                                            // pivotStr = " case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
+                                                            pivotStr = " case when " + metricName + ".site_name = \'" + selectedSite + "\' then ROUND(" + metricName + "." + cellList[j][0] + ",3) end AS `" + columnName + '`';
+                                                        } else {
+                                                            // pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
+                                                            pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then ROUND(" + metricName + "." + cellList[j][0] + ",3) end AS `" + columnName + '`';
+                                                        }
+                                                        //columnsStr += ",\n sum(`" + columnName + "`) AS `" + columnName + '`';
+                                                        columnsStr += ", sum(`" + columnName + "`) AS `" + columnName + '`';
+                                                    }
+                                                } else {
+                                                    // siteFloorStr = siteFloorStr + '\'' + siteOnly + "\' AND customer_config.SwitchLocation = \'" + floorOnly + '\')';
+                                                    // siteFloorStr += ',\'' + selectedSite.replace(" - ", "-") + '\'';
+                                                    siteFloorStr += ',\'' + selectedSite + '\'';
+                                                    for (j = 0; j < cellList.length; j++) {
+                                                        columnName = selectedSite + ' ' + cellList[j][1];
+                                                        //pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then " + metricName + "." + cellList[j][0] + " end AS `" + columnName + '`';
+                                                        pivotStr += ", case when " + metricName + ".site_name = \'" + selectedSite + "\' then ROUND(" + metricName + "." + cellList[j][0] + ",3) end AS `" + columnName + '`';
+                                                        columnsStr += ", sum(`" + columnName + "`) AS `" + columnName + '`';
+                                                    }
+                                                }
+                                            }
+
+                                            query = "drop view if exists " + metricName + "_tmp;" +
+                                                    "create view " + metricName + "_tmp as ( SELECT measurement_time, " +
+                                                    pivotStr +
+                                                    " FROM metrics." + metricName + 
+                                                    " WHERE " + metricName + ".site_name IN (" + siteFloorStr + ") " +
+                                                    "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+                                                    "ORDER BY measurement_time, site_id);" +
+                                                    "select measurement_time" +
+                                                    columnsStr +
+                                                    " from " + metricName + "_tmp " +
+                                                    "group by measurement_time";
+
+                                            /* drop view if exists packet_tmp;
+                                            create view packet_tmp as (
+                                            select measurement_time,
+                                            case when packets.site_id = '10.10.5.11' then packets.cell_0 end AS `10.10.5.11 VF_1`,
+                                            case when packets.site_id = '10.10.5.12' then packets.cell_0 end AS `10.10.5.12 VF_1`
+                                            from metrics.packets
+                                            where (site_id in (select SwitchIP from `ranmate-femto`.customer_config
+                                            where ((customer_config.Site = 'Bishopsgate' and customer_config.SwitchLocation = 'Floor 1') or
+                                            (customer_config.Site = 'Bishopsgate' and customer_config.SwitchLocation = 'Floor 2'))
+                                            group by SwitchIP))
+                                            and measurement_time between '2017-03-22 07:10' and '2017-03-23 13:10'
+                                            order by measurement_time
+                                            );
+
+                                            drop view if exists packet_tmp_pivot;
+                                            create view packet_tmp_pivot as (
+                                            select measurement_time,
+                                            sum(`10.10.5.11 VF_1`) AS `10.10.5.11 VF_1`,
+                                            sum(`10.10.5.12 VF_1`) AS `10.10.5.12 VF_1`
+                                            from packet_tmp
+                                            group by measurement_time
+                                            ); */
+
+                                        } else { // just the usual single site
+                                            var cells = vfChecked && fap1Checked ? ', cell_0 AS VF_1' : "";
+                                            cells += o2Checked && fap1Checked ? ', cell_1 AS O2_1' : "";
+                                            cells += thChecked && fap1Checked ? ', cell_2 AS 3_1' : "";
+                                            cells += eeChecked && fap1Checked ? ', cell_3 AS EE_1' : "";
+                                            cells += vfChecked && fap2Checked ? ', cell_4 AS VF_2' : "";
+                                            cells += o2Checked && fap2Checked ? ', cell_5 AS O2_2' : "";
+                                            cells += thChecked && fap2Checked ? ', cell_6 AS 3_2' : "";
+                                            cells += eeChecked && fap2Checked ? ', cell_7 AS EE_2' : "";
+                                            cells += vfChecked && fap3Checked ? ', cell_8 AS VF_3' : "";
+                                            cells += o2Checked && fap3Checked ? ', cell_9 AS O2_3' : "";
+                                            cells += thChecked && fap3Checked ? ', cell_10 AS 3_3' : "";
+                                            cells += eeChecked && fap3Checked ? ', cell_11 AS EE_3' : "";
+                                            cells += vfChecked && fap4Checked ? ', cell_12 AS VF_4' : "";
+                                            cells += o2Checked && fap4Checked ? ', cell_13 AS O2_4' : "";
+                                            cells += thChecked && fap4Checked ? ', cell_14 AS 3_4' : "";
+                                            cells += eeChecked && fap4Checked ? ', cell_15 AS EE_4' : "";
+                                            cells += vfChecked && fap5Checked ? ', cell_16 AS VF_5' : "";
+                                            cells += o2Checked && fap5Checked ? ', cell_17 AS O2_5' : "";
+                                            cells += thChecked && fap5Checked ? ', cell_18 AS 3_5' : "";
+                                            cells += eeChecked && fap5Checked ? ', cell_19 AS EE_5' : "";
+                                            cells += vfChecked && fap6Checked ? ', cell_20 AS VF_6' : "";
+                                            cells += o2Checked && fap6Checked ? ', cell_21 AS O2_6' : "";
+                                            cells += thChecked && fap6Checked ? ', cell_22 AS 3_6' : "";
+                                            cells += eeChecked && fap6Checked ? ', cell_23 AS EE_6' : "";
+                                            cells += vfChecked && fap7Checked ? ', cell_24 AS VF_7' : "";
+                                            cells += o2Checked && fap7Checked ? ', cell_25 AS O2_7' : "";
+                                            cells += thChecked && fap7Checked ? ', cell_26 AS 3_7' : "";
+                                            cells += eeChecked && fap7Checked ? ', cell_27 AS EE_7' : "";
+                                            cells += vfChecked && fap8Checked ? ', cell_28 AS VF_8' : "";
+                                            cells += o2Checked && fap8Checked ? ', cell_29 AS O2_8' : "";
+                                            cells += thChecked && fap8Checked ? ', cell_30 AS 3_8' : "";
+                                            cells += eeChecked && fap8Checked ? ', cell_31 AS EE_8' : "";
+
+    //                                        query = "SELECT measurement_time" + cells + " FROM metrics." + metric.substring(6) +
+    //                                                " WHERE " + metric.substring(6) + ".site_id=(SELECT SwitchIP from `ranmate-femto`.customer_config where customer_config.Site='" + siteOnly + "' AND customer_config.SwitchLocation='" + floorOnly + "' GROUP BY SwitchIP) " +
+    //                                                "AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+    //                                                "GROUP BY measurement_time;";
+                                            query = "SELECT measurement_time" + cells + " FROM metrics." + metricName +
+                                                    //" WHERE " + metricName + ".site_name = '" + site.replace(" - ", "-") +
+                                                    " WHERE " + metricName + ".site_name = '" + site.replace(/ - ([^ ])/, "-$1") +
+                                                    "' AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+                                                    "GROUP BY measurement_time;";
                                         }
-                                    } else if (metricTypes[0] == "Ping") {
-                                        query = getSQL_Ping_MultiMetrics_SingleSite($('#metric').val(), site, startDateTime, endDateTime);
-                                    } else if (metricTypes[0] == "Counter") {
+                                        //console.log("showGraph() SQL is " + query);
+                                    }
+                                }
+                            } else { // Separate the Backhaul metrics into 1 Metrics : 1 Site, 1 Metrics : N Sites, N Metrics : 1 Site and N Metrics : N Sites
+                                //console.log("#metrics=" + $('#metric').val().length + ", and #sites=" + $('#site').val().length)
+                                // 1 Metric : 1 Site
+                                if (($('#metric').val().length == 1) && ($('#site').val().length == 1) ) { 
+                                    if (metric.substring(0,6) == "Buddy-") { 
+                                        query = getSQL_Buddy_SingleMetric_SingleSite(metric, site, startDateTime, endDateTime);
+                                        console.log("Buddy SQL is " + query);
+                                    } else if (metric.substring(0,5) == "Ping-"){  // Backhaul Counter Metric
+                                        query = getSQL_Ping_SingleMetric_SingleSite(metric, site, startDateTime, endDateTime);
+                                        //console.log("Ping SQL is " + query);
+                                    } else if (metric.substring(0,8) == "Counter-"){  // Backhaul Counter Metric
                                         var interface = document.getElementById("interface").value;
                                         if (interface == "") {
                                             alert("An interface must be selected");
                                             return;
                                         } else {
-                                            query = getSQL_Counter_MultiMetrics_SingleSite($('#metric').val(), site, interface, startDateTime, endDateTime);
-                                            console.log("Counter SQL is " + query);
+                                            query = getSQL_Counter_SingleMetric_SingleSite(metric, site, interface, startDateTime, endDateTime);
                                         }
+                                        //console.log("Counter SQL is " + query);
                                     }
-                                } else {
-                                    query = getSQL_Mixed_MultiMetrics_SingleSite($('#metric').val(), site, startDateTime, endDateTime);
-                                    if (query === null) { return; }
-                                    console.log("Mixed SQL is " + query);
-                                }
-                            // N Metrics : N Sites
-                            } else if (($('#metric').val().length > 1) && ($('#site').val().length > 1) ) {
-                                alert("Graphing multiple metrics for multiple sites is not supported");
-                                return;
-                            }
-                        }
-
-                        if (window.XMLHttpRequest) {
-                            xmlhttp = new XMLHttpRequest();                     // code for IE7+, Firefox, Chrome, Opera, Safari
-                        } else {
-                            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");   // code for IE6, IE5
-                        }
-                        xmlhttp.onreadystatechange = function() {
-                            if (this.readyState == 4 && this.status == 200) {
-                                var d = new Date();
-                                var endMillis = d.getTime();
-                                console.log(endMillis - startMillis + " millis taken to run query");
-                                console.log("showGraph() data=" + this.responseText.substring(0,500));
-                                // alert(this.responseText.substring(0,1000));
-                                // response string
-                                // [{"time":"2016-11-05 03:55:00","VF_1":"152","O2_1":"90"},{"time":"2016-11-05 04:00:00","VF_1":"157","O2_1":"90"},{"tim...
-                                // console.log("The index is " + this.responseText.indexOf("<data>(No data available for query"));
-                                // disable the graph button
-                                //console.log("Enabling the graph button");
-                                document.getElementById("graphButton").disabled = false;
-                                document.getElementById("graphButton").value = 'Graph';
-                                //gb.display = 'block';
-                                // var g = document.getElementById("graph");
-                                // g.display = 'block';
-                                if (this.responseText.indexOf("No data available for query") > -1) {
-                                    alert("Metrics data does not exist for this interval at this site");
-                                } else {
-                                    var metrics = JSON.parse(this.responseText);
-                                    var graphTimes = new Array();
-                                    var graphValues = new Map(); // one entry for each metric
-                                    for (var key in metrics) {
-                                        var measurement = metrics[key];
-                                        var dataPoints;
-                                        for (var entry in measurement) {
-                                            if (entry === 'time') {
-                                                graphTimes.push(measurement[entry]);
-    //                                            console.log("Adding time " + measurement[entry]);
+                                // 1 Metric : N Sites
+                                } else if (($('#metric').val().length == 1) && ($('#site').val().length > 1) ) {
+                                    if (metric.substring(0,5) == "Ping-") { // Router to Router Ping
+                                        query = getSQL_Ping_SingleMetric_MultiSites(metric, $('#site').val(), startDateTime, endDateTime);
+                                        console.log("Ping SQL is " + query + " for " + $('#site').val());
+                                    } else if (metric.substring(0,6) == "Buddy-") { 
+                                        query = getSQL_Buddy_SingleMetric_MultiSites(metric, $('#site').val(), startDateTime, endDateTime);
+                                        console.log("Buddy SQL is " + query);
+                                    } else if (metric.substring(0,8) == "Counter-"){  // Backhaul Counter Metric
+                                        query = getSQL_Counter_SingleMetric_MultiSites(metric, $('#site').val(), startDateTime, endDateTime);
+                                        console.log("Counter SQL is " + query);                                    
+                                    } else {
+                                        //alert("Multiple Sites are not yet supported for Counter metrics");
+                                        alert("Unexpected Metric Group");
+                                        return;
+                                    }
+                                // N Metrics : 1 Site
+                                } else if (($('#metric').val().length > 1) && ($('#site').val().length == 1) ) {
+                                    // if metrics all the same type
+                                    metricTypes = getMetricTypes($('#metric').val());
+                                    if (metricTypes.length == 1) {
+                                        console.log("Only " + metricTypes[0] + " metrics required");
+                                        if (metricTypes[0] == "Buddy") {
+                                            if ($('#metric').val().length > 3) {
+                                                alert("The maximum number of Buddy metrics that can be displayed on the same graph is 3");
+                                                return;
                                             } else {
-                                                // add the data point to a Map, null or missing values will get "spanned" (spanGap)
-                                                if (graphValues.has(entry)) {
-                                                    graphValues.get(entry).push(measurement[entry]);
-    //                                                console.log("   Adding measurement " + entry + "=" + measurement[entry]);
+                                                query = getSQL_Buddy_MultiMetrics_SingleSite($('#metric').val(), site, startDateTime, endDateTime);
+                                                if (query === null) { return; }
+                                                console.log("Buddy SQL is " + query);
+                                            }
+                                        } else if (metricTypes[0] == "Ping") {
+                                            query = getSQL_Ping_MultiMetrics_SingleSite($('#metric').val(), site, startDateTime, endDateTime);
+                                        } else if (metricTypes[0] == "Counter") {
+                                            var interface = document.getElementById("interface").value;
+                                            if (interface == "") {
+                                                alert("An interface must be selected");
+                                                return;
+                                            } else {
+                                                query = getSQL_Counter_MultiMetrics_SingleSite($('#metric').val(), site, interface, startDateTime, endDateTime);
+                                                console.log("Counter SQL is " + query);
+                                            }
+                                        }
+                                    } else {
+                                        query = getSQL_Mixed_MultiMetrics_SingleSite($('#metric').val(), site, startDateTime, endDateTime);
+                                        if (query === null) { return; }
+                                        console.log("Mixed SQL is " + query);
+                                    }
+                                // N Metrics : N Sites
+                                } else if (($('#metric').val().length > 1) && ($('#site').val().length > 1) ) {
+                                    alert("Graphing multiple metrics for multiple sites is not supported");
+                                    return;
+                                }
+                            }
+
+                            if (window.XMLHttpRequest) {
+                                xmlhttp = new XMLHttpRequest();                     // code for IE7+, Firefox, Chrome, Opera, Safari
+                            } else {
+                                xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");   // code for IE6, IE5
+                            }
+                            xmlhttp.onreadystatechange = function() {
+                                if (this.readyState == 4 && this.status == 200) {
+                                    var d = new Date();
+                                    var endMillis = d.getTime();
+                                    console.log(endMillis - startMillis + " millis taken to run query");
+                                    console.log("showGraph() data=" + this.responseText.substring(0,500));
+                                    // alert(this.responseText.substring(0,1000));
+                                    // response string
+                                    // [{"time":"2016-11-05 03:55:00","VF_1":"152","O2_1":"90"},{"time":"2016-11-05 04:00:00","VF_1":"157","O2_1":"90"},{"tim...
+                                    // console.log("The index is " + this.responseText.indexOf("<data>(No data available for query"));
+                                    // disable the graph button
+                                    //console.log("Enabling the graph button");
+                                    document.getElementById("graphButton").disabled = false;
+                                    document.getElementById("graphButton").value = 'Graph';
+                                    //gb.display = 'block';
+                                    // var g = document.getElementById("graph");
+                                    // g.display = 'block';
+                                    if (this.responseText.indexOf("No data available for query") > -1) {
+                                        alert("Metrics data does not exist for this interval at this site");
+                                    } else {
+                                        var metrics = JSON.parse(this.responseText);
+                                        var graphTimes = new Array();
+                                        var graphValues = new Map(); // one entry for each metric
+                                        for (var key in metrics) {
+                                            var measurement = metrics[key];
+                                            var dataPoints;
+                                            for (var entry in measurement) {
+                                                if (entry === 'time') {
+                                                    graphTimes.push(measurement[entry]);
+        //                                            console.log("Adding time " + measurement[entry]);
                                                 } else {
-    //                                                console.log("   How is measurement " + entry + "=" + measurement[entry] + " being stored?");
-                                                    graphValues.set(entry, new Array(measurement[entry]));
+                                                    // add the data point to a Map, null or missing values will get "spanned" (spanGap)
+                                                    if (graphValues.has(entry)) {
+                                                        graphValues.get(entry).push(measurement[entry]);
+        //                                                console.log("   Adding measurement " + entry + "=" + measurement[entry]);
+                                                    } else {
+        //                                                console.log("   How is measurement " + entry + "=" + measurement[entry] + " being stored?");
+                                                        graphValues.set(entry, new Array(measurement[entry]));
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-                                    if ($('#site').val().length > 1) {
-                                        siteLabel = $('#site').val().toString();
-                                    } else {
-                                        siteLabel = site;
-                                    }
-                                    if ($('#metric').val().length > 1) {
-                                        metricLabel = $('#metric').val().toString();
-                                    } else {
-                                        metricLabel = metric;
-                                    }
-                                    var graphLines = new Array();
-                                    // add the collection to graphLines
-                                    for (var [key, value] of graphValues) {
-                                        // console.log("Processing " + key + " value=" + value);
-                                        graphLines.push(formatGraphLine(key, value));
-                                    }
-        //                                        alert(entry + ' ' + measurement[entry]);
-
-    //                                var ctx = document.getElementById("graph");
-                                    var canvas = document.getElementById("graph");
-                                    var ctx = canvas.getContext("2d"); // Get the context to draw on.
-                                    if (typeof myChart !== 'undefined') {
-                                        myChart.destroy();
-                                    }
-                                    myChart = new Chart(ctx, {
-                                        type: 'line',
-                                        data: {
-    //                                        labels: ["16:00", "16:05", "16:10", "16:15", "16:20", "16:25", "16:30", "16:35"],
-                                            labels: graphTimes,
-    //                                        datasets: [
-    //                                            {
-    //                                                label: 'VF_1',
-    //                                                fill: false,
-    //                                                lineTension: 0,
-    //                                                borderColor: "rgba(75,192,192,1)",
-    //                                                pointBorderWidth: 0.5,
-    //                                                data: [13.5, 15, 13, 16, 16, 15.5, 14, 15],
-    //                                            },
-    //                                            {
-    //                                                label: 'O2_1',
-    //                                                fill: false,
-    //                                                lineTension: 0,
-    //                                                borderColor: "rgba(250,92,157,1)",
-    //                                                pointBorderWidth: 0.5,
-    //                                                data: [6.5, 6, 6, 5.5, 7, 6.5, 6.5, 7],
-    //                                            }
-    //                                        ]
-                                            datasets: graphLines
-                                        },
-                                        options: {
-                                            title: {
-                                                display: true,
-                                                //text: site + " :: " + metric,
-                                                text: siteLabel + " :: " + metricLabel,
-                                                fontSize: 20,
-                                                position: 'bottom'
-                                            },
-                                            scales: {
-                                                yAxes: [{
-                                                    ticks: {
-                                                        beginAtZero:true
-                                                    },
-                                                    scaleLabel: {
-                                                        display: true,
-                                                        labelString: yLabelTitle
-                                                    }
-                                                }]
-                                            },
-                                            legend: {
-                                                width: 15,
-                                            }
+                                        if ($('#site').val().length > 1) {
+                                            siteLabel = $('#site').val().toString();
+                                        } else {
+                                            siteLabel = site;
                                         }
-                                    });
-                                    d = new Date();
-                                    var endMillis2 = d.getTime();
-                                    console.log(endMillis2 - endMillis + " millis taken to create Graph");
+                                        if ($('#metric').val().length > 1) {
+                                            metricLabel = $('#metric').val().toString();
+                                        } else {
+                                            metricLabel = metric;
+                                        }
+                                        var graphLines = new Array();
+                                        // add the collection to graphLines
+                                        for (var [key, value] of graphValues) {
+                                            // console.log("Processing " + key + " value=" + value);
+                                            graphLines.push(formatGraphLine(key, value));
+                                        }
+            //                                        alert(entry + ' ' + measurement[entry]);
+
+        //                                var ctx = document.getElementById("graph");
+                                        var canvas = document.getElementById("graph");
+                                        var ctx = canvas.getContext("2d"); // Get the context to draw on.
+                                        if (typeof myChart !== 'undefined') {
+                                            myChart.destroy();
+                                        }
+                                        myChart = new Chart(ctx, {
+                                            type: 'line',
+                                            data: {
+        //                                        labels: ["16:00", "16:05", "16:10", "16:15", "16:20", "16:25", "16:30", "16:35"],
+                                                labels: graphTimes,
+        //                                        datasets: [
+        //                                            {
+        //                                                label: 'VF_1',
+        //                                                fill: false,
+        //                                                lineTension: 0,
+        //                                                borderColor: "rgba(75,192,192,1)",
+        //                                                pointBorderWidth: 0.5,
+        //                                                data: [13.5, 15, 13, 16, 16, 15.5, 14, 15],
+        //                                            },
+        //                                            {
+        //                                                label: 'O2_1',
+        //                                                fill: false,
+        //                                                lineTension: 0,
+        //                                                borderColor: "rgba(250,92,157,1)",
+        //                                                pointBorderWidth: 0.5,
+        //                                                data: [6.5, 6, 6, 5.5, 7, 6.5, 6.5, 7],
+        //                                            }
+        //                                        ]
+                                                datasets: graphLines
+                                            },
+                                            options: {
+                                                title: {
+                                                    display: true,
+                                                    //text: site + " :: " + metric,
+                                                    text: siteLabel + " :: " + metricLabel,
+                                                    fontSize: 20,
+                                                    position: 'bottom'
+                                                },
+                                                scales: {
+                                                    yAxes: [{
+                                                        ticks: {
+                                                            beginAtZero:true
+                                                        },
+                                                        scaleLabel: {
+                                                            display: true,
+                                                            labelString: yLabelTitle
+                                                        }
+                                                    }]
+                                                },
+                                                legend: {
+                                                    width: 15,
+                                                }
+                                            }
+                                        });
+                                        d = new Date();
+                                        var endMillis2 = d.getTime();
+                                        console.log(endMillis2 - endMillis + " millis taken to create Graph");
+                                    }
                                 }
+                            };
+                            // disable the graph button
+                            // console.log("Disabling the graph button");
+                            document.getElementById("graphButton").value = 'Wait...';
+                            document.getElementById("graphButton").disabled = true;
+                            // gb.display = 'none';
+                            //var g = document.getElementById("graph");
+                            //g.display = 'none';
+                            if (typeof myChart !== 'undefined') {
+                                myChart.destroy();
                             }
-                        };
-                        // disable the graph button
-                        // console.log("Disabling the graph button");
-                        document.getElementById("graphButton").value = 'Wait...';
-                        document.getElementById("graphButton").disabled = true;
-                        // gb.display = 'none';
-                        //var g = document.getElementById("graph");
-                        //g.display = 'none';
-                        if (typeof myChart !== 'undefined') {
-                            myChart.destroy();
+                            var d = new Date();
+                            startMillis = d.getTime();
+                            // xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+query,true); 
+                            xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+encodeURIComponent(query),true);
+                            xmlhttp.send();
+
+                            // construct a suitable query
+                            // do some clever xmlhttp stuff
+
+    //                        var img = document.getElementById(id);
+    //                        img.style.visibility = (visible ? 'visible' : 'hidden');
                         }
-                        var d = new Date();
-                        startMillis = d.getTime();
-                        // xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+query,true); 
-                        xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+encodeURIComponent(query),true);
-                        xmlhttp.send();
-
-                        // construct a suitable query
-                        // do some clever xmlhttp stuff
-
-//                        var img = document.getElementById(id);
-//                        img.style.visibility = (visible ? 'visible' : 'hidden');
                     }
                 }
             }
@@ -1098,7 +1106,37 @@ function metricsToString(metrics, length) {
 /**************************************************/
 
 function getSQL_Ping_SingleMetric_SingleSite(metric, site, startDateTime, endDateTime) {
-    return getSQL_Ping_AllScenarios(metric.substring(5), site, startDateTime, endDateTime);
+    // if  it's a "5 worst sites" selection, then get the 5 worst sites before calling getSQL_Ping_SingleMetric_MultiSites() with them
+    
+    if (site.length > 1 && site.startsWith(" 5 Worst")) {
+        //alert("\"5 Worst Sites\" functionality not yet activated");
+        if (site.endsWith("24 hours)")) {
+            xmlhttp.open("GET","RANMateMetrics_WorstSiteList.php?group=" + metric + "&days=1",false);
+            endDateTime = document.getElementById("endTime").value = getNow();
+            startDateTime = document.getElementById("startTime").value = getEarlier(24);   
+        } else if (site.endsWith("7 days)")) {
+            xmlhttp.open("GET","RANMateMetrics_WorstSiteList.php?group=" + metric + "&days=7",false);
+            endDateTime = document.getElementById("endTime").value = getNow();
+            startDateTime = document.getElementById("startTime").value = getEarlier(168);            
+        } else {
+            console.log("Unsupported server timeframe " + site);
+        }
+        xmlhttp.send();
+
+        if (xmlhttp.status === 200) {
+            console.log("RANMateMetrics_WorstSiteList.php response is " + xmlhttp.responseText);
+            // strip off the surplus ',', ugly I know...
+            var worstSites = xmlhttp.responseText.substring(0, xmlhttp.responseText.length - 1).split(",");
+            query = getSQL_Ping_SingleMetric_MultiSites(metric, worstSites, startDateTime, endDateTime);
+            console.log("query is " + query);
+            return query;
+            //return getSQL_Ping_SingleMetric_MultiSites(metric, worstSites, startDateTime, endDateTime);
+        } else {
+            console.log("Error invoking RANMateReset_WorstSiteList.php: " + xmlhttp.status);
+        }
+    } else {            
+        return getSQL_Ping_AllScenarios(metric.substring(5), site, startDateTime, endDateTime);
+    }
 }
 
 function getSQL_Ping_MultiMetrics_SingleSite(metrics, site, startDateTime, endDateTime) {
@@ -1115,6 +1153,7 @@ function getSQL_Ping_AllScenarios(metric, site, startDateTime, endDateTime) {
 
 function getSQL_Ping_SingleMetric_MultiSites(metric, sites, startDateTime, endDateTime) {
     // console.log("cellList has " + cellList.length + " entries which are " + cellList.toString());
+    console.log("getSQL_Ping_SingleMetric_MultiSites() sites has " + sites.length + " entries which are " + sites.toString());
     var columnsStr = "";
     var metricName = metric.substring(5);
     var tableName = 'ping'; // all ping metrics are columns in the ping table
