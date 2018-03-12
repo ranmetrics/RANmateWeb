@@ -18,8 +18,8 @@ if ($MetricGroup == 'Counter') {
     $sql = "Select DISTINCT site_name from metrics.router_counters_sites ORDER BY site_name";
     //$sql = "Select DISTINCT Site from `ranmate-femto`.customer_config WHERE SwitchIP LIKE '10.%' ORDER BY Site";
 } else if ($MetricGroup == 'Ping') {
-    $sql = "Select ' 5 Worst Sites (last 24 hours)' as 'site_name' from metrics.router_counters_sites union "
-            . "Select ' 5 Worst Sites (last 7 days)' as 'site_name' from metrics.router_counters_sites union "
+    $sql = "Select ' Worst m..n Sites (last 24 hours)' as 'site_name' from metrics.router_counters_sites union "
+            . "Select ' Worst m..n Sites (last 7 days)' as 'site_name' from metrics.router_counters_sites union "
             . "Select DISTINCT site_name from metrics.router_counters_sites ORDER BY site_name";
 } else if ($MetricGroup == 'Buddy') {
     $sql = "Select DISTINCT site_name from metrics.buddy where NOT exclude ORDER BY site_name";
@@ -33,6 +33,13 @@ if ($MetricGroup == 'Counter') {
 } else if ($MetricGroup == 'Mixed') {
     $sql = "Select DISTINCT router_counters_sites.site_name from metrics.router_counters_sites INNER JOIN metrics.buddy ON "
             . "router_counters_sites.site_name = buddy.site_name where NOT exclude ORDER BY router_counters_sites.site_name";
+} else if ($MetricGroup == 'Traffic') {
+//    $sql = "Select ' Network (Chart)' as 'site_name' from metrics.router_counters_sites union "
+//            . "Select ' All Sites (Table)' as 'site_name' from metrics.router_counters_sites union "
+//    $sql = "Select ' All Sites' as 'site_name' from metrics.router_counters_sites union "
+//            . "Select DISTINCT site_name from metrics.router_counters_sites ORDER BY site_name";
+    $sql = "Select ' All Sites' as 'site_name' from metrics.jflow_sites union "
+            . "Select DISTINCT site_name from metrics.jflow_sites ORDER BY site_name";
 } else {
     echo "Unexpected Metric Group " . $MetricGroup . "\n";
 }
@@ -43,7 +50,7 @@ if ($result->num_rows > 0) {
     // output data of each row
     while($row = $result->fetch_assoc()) {
 //        echo $row["Site"] . " - " . $row["SwitchLocation"] . " (" . $row["SwitchIP"] . ")\n";
-        if (($MetricGroup == 'Counter') || ($MetricGroup == 'Buddy') || ($MetricGroup == 'Ping') || ($MetricGroup == 'Mixed')) {
+        if (($MetricGroup == 'Counter') || ($MetricGroup == 'Buddy') || ($MetricGroup == 'Ping') || ($MetricGroup == 'Mixed') || ($MetricGroup == 'Traffic')) {
             $site = $row["site_name"];
         } else if ($MetricGroup == 'Femto') {
             $site = $row["Site"] . " - " . $row["SwitchLocation"];

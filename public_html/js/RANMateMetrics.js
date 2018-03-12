@@ -14,10 +14,12 @@
  * https://github.com/chartjs/Chart.js/blob/master/LICENSE.md
  */
 var myChart;
+var chart1upper, chart2upper, chart3upper, chart4upper, chart1lower, chart2lower, chart3lower, chart4lower;
 var startMillis;
 var liveCells;
 var currentMetricType;
 var yLabelTitle = '';
+var trafficTableOutput = false;
 
 function getNow() {
     return getDateTimeString(new Date());
@@ -96,7 +98,7 @@ function showSites(justNowSelected, siteToBeSelected) {
         xmlhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status === 200) {
                 if (this.responseText.startsWith("<!DOCTYPE html>")) {
-                    console.log("showSites() received response from server: " + this.responseText);
+                    //console.log("showSites() received response from server: " + this.responseText);
                     //console.log("Site List rebuilt because thisMetricType=" + thisMetricType + " and currentMetricType=" + currentMetricType);
                     console.log("Site List rebuilt: thisMetricType=" + thisMetricType + " and currentMetricType=" + currentMetricType);
                     document.getElementById("site").innerHTML = this.responseText;
@@ -121,7 +123,29 @@ function showSites(justNowSelected, siteToBeSelected) {
         previousMetricTypes = null;
         for (i = 0; i < $('#metric').val().length; i++) {
             selectedMetric = $('#metric').val()[i];
-            if (selectedMetric.startsWith('Counter-')) {
+            if (selectedMetric.startsWith('Traffic-')) {
+                $('#worstwrapper').hide();
+                if (previousMetricTypes === null) { 
+                    thisMetricType = "Traffic";
+                    pingOrCounterMetricSelected = false;
+                    // console.log("Metric Types is now Traffic");
+                    document.getElementById("PerDay").disabled = true;
+                    document.getElementById("PerSite").disabled = true;
+                    document.getElementById("Chart").checked = true;                    
+                    if ($('#metric').val().length > 1) {
+                        alert("Multiple Traffic Metrics not yet supported, please deselect one or more metrics");
+                        return;
+                    }                   
+                } else {
+                    alert("Traffic metrics cannot be selected with any other metric");
+                    document.getElementById("site").innerHTML = "<!DOCTYPE html><html><body></body></html>";
+                    document.getElementById("site").selectedIndex = -1;
+                    $('#site').multiselect('rebuild');
+                    thisMetricType = "";
+                    return;                    
+                }
+            } else if (selectedMetric.startsWith('Counter-')) {
+                $('#worstwrapper').hide();
                 if (previousMetricTypes === 'Femto') { 
                     alert("Femto and non-Femto metrics cannot be selected together");
                     document.getElementById("site").innerHTML = "<!DOCTYPE html><html><body></body></html>";
@@ -146,6 +170,7 @@ function showSites(justNowSelected, siteToBeSelected) {
                      pingOrCounterMetricSelected = true;
                 }
             } else if (selectedMetric.startsWith('Buddy-')) {
+                $('#worstwrapper').hide();
                 if (previousMetricTypes === 'Femto') { 
                     alert("Femto and non-Femto metrics cannot be selected together");
                     document.getElementById("site").innerHTML = "<!DOCTYPE html><html><body></body></html>";
@@ -158,7 +183,8 @@ function showSites(justNowSelected, siteToBeSelected) {
                     buddyMetricSelected = true;                
                 }
             } else if (selectedMetric.startsWith('Femto-')) {
-               thisMetricType = "Femto";
+                thisMetricType = "Femto";
+                $('#worstwrapper').hide();
                 //console.log("Processing " + selectedMetric + ". thisMetricType=" + thisMetricType);
                 if (previousMetricTypes != null) {
                     // if all the metrics are not either all Femto-metrics or all non-Femto metrics
@@ -199,7 +225,9 @@ function showSites(justNowSelected, siteToBeSelected) {
                    thisMetricType = "Buddy";
                 } else if (justNowSelected.startsWith('Femto-')) {
                    thisMetricType = "Femto";
-                } 
+                } else if (justNowSelected.startsWith('Traffic-')) {
+                   thisMetricType = "Traffic";
+                }
             }
 
             // Determine what components should be displayed
@@ -209,13 +237,32 @@ function showSites(justNowSelected, siteToBeSelected) {
                 iface.style.margin = "10px 0px 0px 0px";    // no idea why we now need a 10px top border instead of 5px to keep it inline
                 ifaceLabel.style.display = "block";            
                 $('#interfacewrapper').show();
+                $('#worstwrapper').hide();
             } else {
                 iface.style.display = 'none';
                 ifaceLabel.style.display = 'none';            
                 $('#interfacewrapper').hide();
             }
-            if (((thisMetricType === "Counter") || (thisMetricType === "Ping")) && ((currentMetricType !== "Counter") && (currentMetricType !== "Ping"))) { 
-                console.log("Need to rebuild Site list for Counter/Ping metric");
+
+            if (thisMetricType === "Traffic") {
+                //iface.style.display = "block";
+                //iface.style.margin = "10px 0px 0px 0px";    // no idea why we now need a 10px top border instead of 5px to keep it inline
+                //ifaceLabel.style.display = "block";            
+                $('#trafficwrapper').show();
+                $('#worstwrapper').hide();
+                document.getElementById("PerDay").checked = false;
+                document.getElementById("PerSite").checked = false;
+                //document.getElementById("Chart").checked = false;
+                //document.getElementById("Table").checked = false;
+            } else {
+                //iface.style.display = 'none';
+                //ifaceLabel.style.display = 'none';            
+                $('#trafficwrapper').hide();
+            }
+            // if (((thisMetricType === "Counter") || (thisMetricType === "Ping")) && ((currentMetricType !== "Counter") && (currentMetricType !== "Ping"))) {  // pre Traffic entry
+            if ((((thisMetricType === "Counter") || (thisMetricType === "Ping")) && ((currentMetricType !== "Counter") && (currentMetricType !== "Ping"))) ||
+                 ((thisMetricType === "Traffic") && (currentMetricType !== "Traffic"))) { 
+                console.log("Need to rebuild Site list for Counter/Ping/Traffic metric");
                 clearTickBoxes();
                 cellNum.style.display = 'none';
                 opCoName.style.display = 'none';
@@ -432,41 +479,32 @@ function updateOpCoCells(str, operatorToBeChecked, femtoToBeChecked, initSite) {
     }
 }
 
-// pointless checkboxes are more complex to do this for than radio boxes
-function opcoSelected(opco) {
-//    if (opco == "") {
-//        return;
-//    } else {
-////        console.log("OpCo " + opco + " selected");
-//        selectedOpCo = opco;
-//        var cellSet = liveCells.get(parseInt(opco));
-//        var fap1 = document.getElementById('FAP1');
-//        var fap2 = document.getElementById('FAP2');
-//        var fap3 = document.getElementById('FAP3');
-//        var fap4 = document.getElementById('FAP4');
-//        var fap5 = document.getElementById('FAP5');
-//        var fap6 = document.getElementById('FAP6');
-//        var fap7 = document.getElementById('FAP7');
-//        var fap8 = document.getElementById('FAP8');
-//        if (cellSet.has(0)) { fap1.style.visibility = 'visible'; } else { fap1.style.visibility = 'hidden'; }
-//        if (cellSet.has(1)) { fap2.style.visibility = 'visible'; } else { fap2.style.visibility = 'hidden'; }
-//        if (cellSet.has(2)) { fap3.style.visibility = 'visible'; } else { fap3.style.visibility = 'hidden'; }
-//        if (cellSet.has(3)) { fap4.style.visibility = 'visible'; } else { fap4.style.visibility = 'hidden'; }
-//        if (cellSet.has(4)) { fap5.style.visibility = 'visible'; } else { fap5.style.visibility = 'hidden'; }
-//        if (cellSet.has(5)) { fap6.style.visibility = 'visible'; } else { fap6.style.visibility = 'hidden'; }
-//        if (cellSet.has(6)) { fap7.style.visibility = 'visible'; } else { fap7.style.visibility = 'hidden'; }
-//        if (cellSet.has(7)) { fap8.style.visibility = 'visible'; } else { fap8.style.visibility = 'hidden'; }
-//        document.getElementById("resetButton").disabled = true;
-//        document.getElementById('Femto1').checked = false;
-//        document.getElementById('Femto2').checked = false;
-//        document.getElementById('Femto3').checked = false;
-//        document.getElementById('Femto4').checked = false;
-//        document.getElementById('Femto5').checked = false;
-//        document.getElementById('Femto6').checked = false;
-//        document.getElementById('Femto7').checked = false;
-//        document.getElementById('Femto8').checked = false;
-//    }
+function populateUpperLimitWorst(min) {
+    var nSelect = document.getElementById('nSelect');
+    var n = nSelect.options[nSelect.selectedIndex].value;            
+    // delete all the existing options
+    removeOptions(nSelect);
+    // recreate all valid options preserving the selected option if valid
+    for (var i = min; i<=10; i++) {
+        var opt = document.createElement('option');
+        opt.value = i;
+        opt.innerHTML = i;
+        nSelect.appendChild(opt);
+    }
+    if (n > min) {
+        nSelect.value = n;
+    } else {
+        nSelect.value = min;        
+    }
 }
+
+function removeOptions(selectbox) {
+    var i;
+    for(i = selectbox.options.length - 1 ; i >= 0 ; i--) {
+        selectbox.remove(i);
+    }
+}
+//using the function:
 
 function showInterfaces(str) {
     console.log("showInterfaces called with " + str);
@@ -476,8 +514,19 @@ function showInterfaces(str) {
         var metric = document.getElementById("metric").value;
         if (metric.substring(0,6) == "Femto-") {
             //console.log("Will update the OpCo cells");
+//            console.log("Hiding the worst selection boxes, pos a");
+            $('#worstwrapper').hide();
             updateOpCoCells(str);
         } else {
+            
+            if ($('#site').val().length == 1 && $('#site').val()[0].startsWith(" Worst m")) {
+                //console.log("Showing the worst selection boxes, pos b");
+                $('#worstwrapper').show();
+            } else {
+                //console.log("Hiding the worst selection boxes, pos c");
+                $('#worstwrapper').hide();
+            }
+            
             if (window.XMLHttpRequest) {
                 // code for IE7+, Firefox, Chrome, Opera, Safari
                 xmlhttp = new XMLHttpRequest();
@@ -581,6 +630,16 @@ function clearTickBoxes() {
     document.getElementById('Femto8').checked = false;
 }
 
+function outputFormatSelected(format) {
+    if (format == "") {
+        return;
+    } else if (format == "Table") {
+        trafficTableOutput = true;
+    } else {
+        trafficTableOutput = false;
+    }        
+}
+
 function isValidDateTimeString(day) {
     var dateTimeRegExp = new RegExp("^([1-2]\\d{3}-([0]?[1-9]|1[0-2])-([0-2]?[0-9]|3[0-1])) (20|21|22|23|[0-1]?\\d{1}):([0-5]?\\d{1})$");
     return dateTimeRegExp.test(day);
@@ -588,6 +647,63 @@ function isValidDateTimeString(day) {
 
 function showGraph(id, visible) {
     showGraph(id, visible, null);
+}
+
+// getTrafficCommonSQL(metricName, startDateTime, endDateTime);
+function getTrafficSQL(metricName, startDateTime, endDateTime, allSites, perDay, perSite) {
+    var sitesWhereClause = "";
+    if (!allSites) {
+        for (i = 0; i < $('#site').val().length; i++) {
+            if ($('#site').val()[i].startsWith("Fora -")) {
+                selectedSite = $('#site').val()[i];
+            } else {
+                selectedSite = $('#site').val()[i].replace(" - ", "-");                
+            }
+            if (i == 0) {
+                //siteFloorStr = '\'' + selectedSite + '\'';
+                siteFloorStr = '\'' + selectedSite;
+            } else {
+                //siteFloorStr += ',\'' + selectedSite + '\'';
+                siteFloorStr += '|' + selectedSite;
+            }
+        }
+        siteFloorStr += '\'';
+        // REGEXP '1740|1938|1940'; 
+        //sitesWhereClause = " AND packets.site_name IN (" + siteFloorStr + ") ";    
+        sitesWhereClause = " AND packets.site_name REGEXP " + siteFloorStr + " ";    
+    }
+    return getTrafficCommonSQL("packets", startDateTime, endDateTime, "", "", sitesWhereClause, "");
+}
+
+//#select DATE(measurement_time) AS Date, sites.node_id AS SiteId,
+function getTrafficCommonSQL(metricName, startDateTime, endDateTime, additionalFields, additionalFrom, additionalWhereClause, additionalGroupBy) {
+    return "select DATE(measurement_time) AS Date, " +
+    additionalFields +
+    "ROUND(((SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28)/ " +
+    "SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + " +
+    "cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29 + cell_2 + cell_6 + " +
+    "cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30 + cell_3 + cell_7 + cell_11 + cell_15 + " +
+    "cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS 'VF', " +
+    "ROUND(((SUM(cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29)/" +
+    "SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + " +
+    "cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29 + cell_2 + cell_6 + " +
+    "cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30 + cell_3 + cell_7 + cell_11 + cell_15 + " +
+    "cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS 'O2', " +
+    "ROUND(((SUM(cell_2 + cell_6 + cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30)/" +
+    "SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + " +
+    "cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29 + cell_2 + cell_6 + " +
+    "cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30 + cell_3 + cell_7 + cell_11 + cell_15 + " +
+    "cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS 'THREE', " +
+    "ROUND(((SUM(cell_3 + cell_7 + cell_11 + cell_15 + cell_19 + cell_23 + cell_27 + cell_31)/" +
+    "SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + " +
+    "cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29 + cell_2 + cell_6 + " +
+    "cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30 + cell_3 + cell_7 + cell_11 + cell_15 + " +
+    "cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS 'EE' " + 
+    "FROM metrics." + metricName +
+    additionalFrom +
+    " WHERE measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+    additionalWhereClause +
+    additionalGroupBy;
 }
 
 function showGraph(id, visible, siteParam) {
@@ -608,6 +724,8 @@ function showGraph(id, visible, siteParam) {
         } else {
             if ($('#site').val().length > 1 && $('#site').val()[0].startsWith(" 5 Worst")) {
                 alert("The \"5 Worst Sites\" cannot be selected with any other sites");
+            } else if ($('#site').val().length > 1 && $('#site').val()[0].startsWith(" All Sites")) {
+                alert("\"All Sites\" cannot be selected with any other sites");
             } else {            
                 var startDateTime = document.getElementById("startTime").value;
                 if (!isValidDateTimeString(startDateTime)) {
@@ -619,6 +737,7 @@ function showGraph(id, visible, siteParam) {
                         alert("The End Date (" + endDateTime + ") is not correctly specified (YYYY-MM-DD hh:mm)")
                     } else {
                         // check that the start time is before the end time
+                        var metricTypesForPhp = new HashSet();                            
                         if (endDateTime <= startDateTime) {
                             alert("The End Date-Time is before the Start Date-Time")
                         } else {
@@ -850,17 +969,41 @@ function showGraph(id, visible, siteParam) {
                                         //console.log("showGraph() SQL is " + query);
                                     }
                                 }
+                            } else if (metric.substring(0,8) == "Traffic-") {
+                                metricTypesForPhp.add("Traffic");
+                                query = getTrafficSQL(metricName, startDateTime, endDateTime, ($('#site').val()[0] == " All Sites"), false, false);
+                                console.log("Traffic SQL is " + query);                                
+//                                if (metric.substring(metric.length - 7) == "(Daily)") {
+//                                    if ($('#site').val()[0] == " All Sites") {
+//                                        query = getTrafficCommonSQL(metricName, startDateTime, endDateTime);                                        
+//                                    } else {
+//                                        query = getTrafficCommonSQL(metricName, startDateTime, endDateTime);
+//                                    }                                
+//                                } else {
+//                                    if ($('#site').val()[0] == " All Sites") {
+//                                        query = getTrafficCommonSQL(metricName, startDateTime, endDateTime);
+//                                        
+//                                    } else {
+//                                        query = getTrafficCommonSQL(metricName, startDateTime, endDateTime);
+//                                    }                                                                   
+//                                } 
+//                              // [MW] THIS IS THE IMPORTANT ONE TO UNCOMMENT FOR TRACING
+                                //console.log("Traffic SQL is " + query);
+                                //console.log("Metric Type is " + metricTypes.values()[0]);
                             } else { // Separate the Backhaul metrics into 1 Metrics : 1 Site, 1 Metrics : N Sites, N Metrics : 1 Site and N Metrics : N Sites
                                 //console.log("#metrics=" + $('#metric').val().length + ", and #sites=" + $('#site').val().length)
                                 // 1 Metric : 1 Site
                                 if (($('#metric').val().length == 1) && ($('#site').val().length == 1) ) { 
                                     if (metric.substring(0,6) == "Buddy-") { 
+                                        metricTypesForPhp.add("Buddy");
                                         query = getSQL_Buddy_SingleMetric_SingleSite(metric, site, startDateTime, endDateTime);
-                                        console.log("Buddy SQL is " + query);
+                                        //console.log("Buddy SQL is " + query);
                                     } else if (metric.substring(0,5) == "Ping-"){  // Backhaul Counter Metric
+                                        metricTypesForPhp.add("Ping");
                                         query = getSQL_Ping_SingleMetric_SingleSite(metric, site, startDateTime, endDateTime);
                                         //console.log("Ping SQL is " + query);
                                     } else if (metric.substring(0,8) == "Counter-"){  // Backhaul Counter Metric
+                                        metricTypesForPhp.add("Counter");
                                         var interface = document.getElementById("interface").value;
                                         if (interface == "") {
                                             alert("An interface must be selected");
@@ -873,12 +1016,15 @@ function showGraph(id, visible, siteParam) {
                                 // 1 Metric : N Sites
                                 } else if (($('#metric').val().length == 1) && ($('#site').val().length > 1) ) {
                                     if (metric.substring(0,5) == "Ping-") { // Router to Router Ping
+                                        metricTypesForPhp.add("Ping");
                                         query = getSQL_Ping_SingleMetric_MultiSites(metric, $('#site').val(), startDateTime, endDateTime);
                                         console.log("Ping SQL is " + query + " for " + $('#site').val());
                                     } else if (metric.substring(0,6) == "Buddy-") { 
+                                        metricTypesForPhp.add("Buddy");
                                         query = getSQL_Buddy_SingleMetric_MultiSites(metric, $('#site').val(), startDateTime, endDateTime);
                                         console.log("Buddy SQL is " + query);
                                     } else if (metric.substring(0,8) == "Counter-"){  // Backhaul Counter Metric
+                                        metricTypesForPhp.add("Counter");
                                         query = getSQL_Counter_SingleMetric_MultiSites(metric, $('#site').val(), startDateTime, endDateTime);
                                         console.log("Counter SQL is " + query);                                    
                                     } else {
@@ -893,6 +1039,7 @@ function showGraph(id, visible, siteParam) {
                                     if (metricTypes.length == 1) {
                                         console.log("Only " + metricTypes[0] + " metrics required");
                                         if (metricTypes[0] == "Buddy") {
+                                            metricTypesForPhp.add("Buddy");
                                             if ($('#metric').val().length > 3) {
                                                 alert("The maximum number of Buddy metrics that can be displayed on the same graph is 3");
                                                 return;
@@ -902,8 +1049,10 @@ function showGraph(id, visible, siteParam) {
                                                 console.log("Buddy SQL is " + query);
                                             }
                                         } else if (metricTypes[0] == "Ping") {
+                                            metricTypesForPhp.add("Ping");
                                             query = getSQL_Ping_MultiMetrics_SingleSite($('#metric').val(), site, startDateTime, endDateTime);
                                         } else if (metricTypes[0] == "Counter") {
+                                            metricTypesForPhp.add("Counter");
                                             var interface = document.getElementById("interface").value;
                                             if (interface == "") {
                                                 alert("An interface must be selected");
@@ -915,6 +1064,7 @@ function showGraph(id, visible, siteParam) {
                                         }
                                     } else {
                                         query = getSQL_Mixed_MultiMetrics_SingleSite($('#metric').val(), site, startDateTime, endDateTime);
+                                        metricTypesForPhp.add("Mixed");
                                         if (query === null) { return; }
                                         console.log("Mixed SQL is " + query);
                                     }
@@ -943,7 +1093,7 @@ function showGraph(id, visible, siteParam) {
                                     // disable the graph button
                                     //console.log("Enabling the graph button");
                                     document.getElementById("graphButton").disabled = false;
-                                    document.getElementById("graphButton").value = 'Graph';
+                                    document.getElementById("graphButton").value = 'Show';
                                     //gb.display = 'block';
                                     // var g = document.getElementById("graph");
                                     // g.display = 'block';
@@ -951,26 +1101,81 @@ function showGraph(id, visible, siteParam) {
                                         alert("Metrics data does not exist for this interval at this site");
                                     } else {
                                         var metrics = JSON.parse(this.responseText);
-                                        var graphTimes = new Array();
-                                        var graphValues = new Map(); // one entry for each metric
-                                        for (var key in metrics) {
-                                            var measurement = metrics[key];
-                                            var dataPoints;
-                                            for (var entry in measurement) {
-                                                if (entry === 'time') {
-                                                    graphTimes.push(measurement[entry]);
-        //                                            console.log("Adding time " + measurement[entry]);
-                                                } else {
-                                                    // add the data point to a Map, null or missing values will get "spanned" (spanGap)
-                                                    if (graphValues.has(entry)) {
-                                                        graphValues.get(entry).push(measurement[entry]);
-        //                                                console.log("   Adding measurement " + entry + "=" + measurement[entry]);
+                                        if (metric.substring(0,8) !== "Traffic-") {
+                                            var graphTimes = new Array();
+                                            var graphValues = new Map(); // one entry for each metric
+                                            for (var key in metrics) {
+                                                var measurement = metrics[key];
+                                                var dataPoints;
+                                                for (var entry in measurement) {
+                                                    if (entry === 'time') {
+                                                        graphTimes.push(measurement[entry]);
+            //                                            console.log("Adding time " + measurement[entry]);
                                                     } else {
-        //                                                console.log("   How is measurement " + entry + "=" + measurement[entry] + " being stored?");
-                                                        graphValues.set(entry, new Array(measurement[entry]));
+                                                        // add the data point to a Map, null or missing values will get "spanned" (spanGap)
+                                                        if (graphValues.has(entry)) {
+                                                            graphValues.get(entry).push(measurement[entry]);
+                                                            //console.log("   Adding measurement " + entry + "=" + measurement[entry]);
+                                                        } else {
+            //                                                console.log("   How is measurement " + entry + "=" + measurement[entry] + " being stored?");
+                                                            graphValues.set(entry, new Array(measurement[entry]));
+                                                        }
                                                     }
                                                 }
                                             }
+                                        } else {                                            
+                                            // prepare the chart
+                                            var trafficTableDef ="<table align=\"center\" style=\"width:90%\">"; // ;table-layout:auto had no effect
+                                            var trafficTableCols = "";
+                                            var trafficTableRows = "";
+                                            
+// <tr><td><nobr>2017-12-22 11:41</nobr></td><td><nobr>Ladbroke Grove - South Comms Room (2nd FL)</nobr></td><td>EE</td><td>6</td><td><nobr>Musawar Sandhu</nobr></td><td>1hr</td><td>- It is during business hours</td></tr>                                                
+// From PHP won't need the <nobr> for the numbers
+// echo "<table align=\"center\" style=\"width:90%\">";
+// echo "<tr><th>Reset Time</th><th>Switch</th><th>Operator</th><th>FAP</th><th>User</th><th>User Comment</th><th>RANmate Note</th></tr>";
+// if ($result->num_rows > 0) {
+//     while($row = $result->fetch_assoc()) {
+//         $time = "<nobr>" . substr($row["reset_time"],  0, -3) . "</nobr>";
+//         $site = "<nobr>" . $row["site_id"] . "</nobr>";
+//         $user = "<nobr>" . $row["user"] . "</nobr>";
+//         echo '<tr><td>'.$time.'</td><td>'.$site.'</td><td>'.$row["opco"].'</td><td>'.$row["femto_no"].'</td><td>'.$user.'</td><td>'.$row["comment"].'</td><td>'.$row["note"].'</td></tr>';
+//     }
+// } 
+// echo "</table>";
+                                            // prepare the chart
+                                            var chartLabels = new Array();
+                                            var chartValues = new Array();
+                                            var chartColours = ['rgba(255,36,36,1)','rgba(42,137,192,1)','rgba(182,95,194,1)','rgba(43,172,177, 1)'];
+                                            for (var kpi in metrics) {
+                                                //console.log("JS: KPI is " + kpi); // Output says it's 0
+                                                var measurement = metrics[kpi];
+                                                var dataPoints;
+                                                var trafficTableRow = "";
+                                                for (var entry in measurement) {
+                                                    if (entry !== 'time') {
+                                                        //console.log("   Adding measurement " + entry + "=" + measurement[entry]);
+                                                        chartLabels.push(entry);
+                                                        trafficTableCols += "<th>" + entry + "</th>"
+                                                        chartValues.push(measurement[entry]);
+                                                        trafficTableRow += "<td>" + measurement[entry] + "</td>"
+                                                    } else {
+                                                        trafficTableCols = "<th>Date</th>" + trafficTableCols;
+                                                        trafficTableRow = "<td>" + measurement[entry] + "</td>" + trafficTableRow;
+                                                    }
+                                                }
+                                                // dirty fix for only getting 1 row back from the server due to raw data being unavailable
+                                                trafficTableCols = "<th>Metric</th>" + trafficTableCols;
+                                                trafficTableRows += "<tr>" + "<td>CS Inbound</td>" + trafficTableRow + "</tr>";
+                                                trafficTableRows += "<tr>" + "<td>PS Inbound</td>" + trafficTableRow + "</tr>";
+                                                trafficTableRows += "<tr>" + "<td>Signalling Inbound</td>" + trafficTableRow + "</tr>";
+                                                trafficTableRows += "<tr>" + "<td>Total Inbound</td>" + trafficTableRow + "</tr>";
+                                                trafficTableRows += "<tr>" + "<td>CS Outbound</td>" + trafficTableRow + "</tr>";
+                                                trafficTableRows += "<tr>" + "<td>PS Outbound</td>" + trafficTableRow + "</tr>";
+                                                trafficTableRows += "<tr>" + "<td>Signalling Outbound</td>" + trafficTableRow + "</tr>";
+                                                trafficTableRows += "<tr>" + "<td>Total Outbound</td>" + trafficTableRow + "</tr>";
+                                            }
+                                            trafficTableCols += "</tr>";             
+                                            trafficTableRows += "</table>";
                                         }
                                         if ($('#site').val().length > 1) {
                                             siteLabel = $('#site').val().toString();
@@ -982,12 +1187,6 @@ function showGraph(id, visible, siteParam) {
                                         } else {
                                             metricLabel = metric;
                                         }
-                                        var graphLines = new Array();
-                                        // add the collection to graphLines
-                                        for (var [key, value] of graphValues) {
-                                            // console.log("Processing " + key + " value=" + value);
-                                            graphLines.push(formatGraphLine(key, value));
-                                        }
             //                                        alert(entry + ' ' + measurement[entry]);
 
         //                                var ctx = document.getElementById("graph");
@@ -996,55 +1195,305 @@ function showGraph(id, visible, siteParam) {
                                         if (typeof myChart !== 'undefined') {
                                             myChart.destroy();
                                         }
-                                        myChart = new Chart(ctx, {
-                                            type: 'line',
-                                            data: {
-        //                                        labels: ["16:00", "16:05", "16:10", "16:15", "16:20", "16:25", "16:30", "16:35"],
-                                                labels: graphTimes,
-        //                                        datasets: [
-        //                                            {
-        //                                                label: 'VF_1',
-        //                                                fill: false,
-        //                                                lineTension: 0,
-        //                                                borderColor: "rgba(75,192,192,1)",
-        //                                                pointBorderWidth: 0.5,
-        //                                                data: [13.5, 15, 13, 16, 16, 15.5, 14, 15],
-        //                                            },
-        //                                            {
-        //                                                label: 'O2_1',
-        //                                                fill: false,
-        //                                                lineTension: 0,
-        //                                                borderColor: "rgba(250,92,157,1)",
-        //                                                pointBorderWidth: 0.5,
-        //                                                data: [6.5, 6, 6, 5.5, 7, 6.5, 6.5, 7],
-        //                                            }
-        //                                        ]
-                                                datasets: graphLines
-                                            },
-                                            options: {
-                                                title: {
-                                                    display: true,
-                                                    //text: site + " :: " + metric,
-                                                    text: siteLabel + " :: " + metricLabel,
-                                                    fontSize: 20,
-                                                    position: 'bottom'
-                                                },
-                                                scales: {
-                                                    yAxes: [{
-                                                        ticks: {
-                                                            beginAtZero:true
-                                                        },
-                                                        scaleLabel: {
+                                        if (metric.substring(0,8) == "Traffic-") {
+                                            $('#GraphWrap').hide();
+                                            if (trafficTableOutput) {
+                                                console.log("Outputting metrics data in table format");
+                                                $('#TrafficTableWrap').show();
+                                                $('#TrafficChartWrap').hide();
+                                                console.log("Table HTML is " + trafficTableDef + trafficTableCols + trafficTableRows);
+                                                document.getElementById("TrafficTableWrap").innerHTML = trafficTableDef + trafficTableCols + trafficTableRows;
+                                            } else {
+                                                console.log("Outputting metrics data in chart format");
+                                                $('#TrafficChartWrap').show();
+                                                $('#TrafficTableWrap').hide();
+                                            
+                                                var canvas1upper = document.getElementById("chart1upper");
+                                                var ctx1upper = canvas1upper.getContext("2d"); // Get the context to draw on.
+                                                if (typeof chart1upper !== 'undefined') { chart1upper.destroy(); }
+
+                                                var canvas2upper = document.getElementById("chart2upper");
+                                                var ctx2upper = canvas2upper.getContext("2d"); // Get the context to draw on.
+                                                if (typeof chart2upper !== 'undefined') { chart2upper.destroy(); }
+
+                                                var canvas3upper = document.getElementById("chart3upper");
+                                                var ctx3upper = canvas3upper.getContext("2d"); // Get the context to draw on.
+                                                if (typeof chart3upper !== 'undefined') {  chart3upper.destroy(); }
+
+                                                var canvas4upper = document.getElementById("chart4upper");
+                                                var ctx4upper = canvas4upper.getContext("2d"); // Get the context to draw on.
+                                                if (typeof chart4upper !== 'undefined') { chart4upper.destroy(); }
+
+                                                var canvas1lower = document.getElementById("chart1lower");
+                                                var ctx1lower = canvas1lower.getContext("2d"); // Get the context to draw on.
+                                                if (typeof chart1lower !== 'undefined') { chart1lower.destroy(); }
+
+                                                var canvas2lower = document.getElementById("chart2lower");
+                                                var ctx2lower = canvas2lower.getContext("2d"); // Get the context to draw on.
+                                                if (typeof chart2lower !== 'undefined') { chart2lower.destroy(); }
+
+                                                var canvas3lower = document.getElementById("chart3lower");
+                                                var ctx3lower = canvas3lower.getContext("2d"); // Get the context to draw on.
+                                                if (typeof chart3lower !== 'undefined') { chart3lower.destroy(); }
+
+                                                var canvas4lower = document.getElementById("chart4lower");
+                                                var ctx4lower = canvas4lower.getContext("2d"); // Get the context to draw on.
+                                                if (typeof chart4lower !== 'undefined') { chart4lower.destroy(); }
+
+                                                chart1upper = new Chart(ctx1upper, {
+                                                    type: 'pie',
+                                                    data: {
+                                                        //labels: ["VF", "O2", "THREE", "EE"],
+                                                        labels: chartLabels,
+                                                        datasets: [{
+                                                            //data: [38.8, 26.5, 15.4, 19.2],
+                                                            data: chartValues,
+                                                            //backgroundColor: ['rgba(255,36,36,1)','rgba(42,137,192,1)','rgba(182,95,194,1)','rgba(43,172,177, 1)']
+                                                            backgroundColor: chartColours
+                                                        }],                                                    
+                                                     },
+                                                   options: {
+                                                        title: {
                                                             display: true,
-                                                            labelString: yLabelTitle
+                                                            text: "CS Inbound",
+                                                            fontSize: 20,
+                                                            position: 'bottom'
+                                                        },
+                                                        legend: {
+                                                            width: 15,
+                                                            labels: { boxWidth: 25 }
                                                         }
-                                                    }]
-                                                },
-                                                legend: {
-                                                    width: 15,
-                                                }
+                                                    }
+                                                });                                            
+                                                chart2upper = new Chart(ctx2upper, {
+                                                    type: 'pie',
+                                                    data: {
+                                                        // labels: ["VF", "O2", "THREE", "EE"],
+                                                        labels: chartLabels,
+                                                        datasets: [{
+                                                            //data: [28.8, 26.5, 25.4, 19.2],
+                                                            data: chartValues,
+                                                            backgroundColor: chartColours
+                                                        }],                                                    
+                                                     },
+                                                   options: {
+                                                        title: {
+                                                            display: true,
+                                                            text: "PS Inbound",
+                                                            fontSize: 20,
+                                                            position: 'bottom'
+                                                        },
+                                                        legend: {
+                                                            width: 15,
+                                                            labels: { boxWidth: 25 }
+                                                        }
+                                                    }
+                                                });                                                                                        
+                                                chart3upper = new Chart(ctx3upper, {
+                                                    type: 'pie',
+                                                    data: {
+                                                        // labels: ["VF", "O2", "THREE", "EE"],
+                                                        labels: chartLabels,
+                                                        datasets: [{
+                                                            //data: [48.8, 21.5, 5.4, 24.2],
+                                                            data: chartValues,
+                                                            backgroundColor: chartColours
+                                                        }],                                                    
+                                                     },
+                                                   options: {
+                                                        title: {
+                                                            display: true,
+                                                            text: "Signalling Inbound",
+                                                            fontSize: 20,
+                                                            position: 'bottom'
+                                                        },
+                                                        legend: {
+                                                            width: 15,
+                                                            labels: { boxWidth: 25 }
+                                                        }
+                                                    }
+                                                });                                                                                        
+                                                chart4upper = new Chart(ctx4upper, {
+                                                    type: 'pie',
+                                                    data: {
+                                                        // labels: ["VF", "O2", "THREE", "EE"],
+                                                        labels: chartLabels,
+                                                        datasets: [{
+                                                            //data: [42.8, 27.5, 10.4, 19.2],
+                                                            data: chartValues,
+                                                            backgroundColor: chartColours
+                                                        }],                                                    
+                                                     },
+                                                   options: {
+                                                        title: {
+                                                            display: true,
+                                                            text: "Total Inbound",
+                                                            fontSize: 20,
+                                                            position: 'bottom'
+                                                        },
+                                                        legend: {
+                                                            width: 15,
+                                                            labels: { boxWidth: 25 }
+                                                        }
+                                                    }
+                                                });                                                                                        
+                                                chart1lower = new Chart(ctx1lower, {
+                                                    type: 'pie',
+                                                    data: {
+                                                        // labels: ["VF", "O2", "THREE", "EE"],
+                                                        labels: chartLabels,
+                                                        datasets: [{
+                                                            //data: [38.8, 26.5, 15.4, 19.2],
+                                                            data: chartValues,
+                                                            backgroundColor: chartColours
+                                                        }],                                                    
+                                                     },
+                                                   options: {
+                                                        title: {
+                                                            display: true,
+                                                            text: "CS Outbound",
+                                                            fontSize: 20,
+                                                            position: 'bottom'
+                                                        },
+                                                        legend: {
+                                                            width: 15,
+                                                            labels: { boxWidth: 25 }
+                                                        }
+                                                    }
+                                                });                                            
+                                                chart2lower = new Chart(ctx2lower, {
+                                                    type: 'pie',
+                                                    data: {
+                                                        //labels: ["VF", "O2", "THREE", "EE"],
+                                                        labels: chartLabels,
+                                                        datasets: [{
+                                                            //data: [8.8, 56.5, 10.4, 24.2],
+                                                            data: chartValues,
+                                                            backgroundColor: chartColours
+                                                        }],                                                    
+                                                     },
+                                                   options: {
+                                                        title: {
+                                                            display: true,
+                                                            text: "PS Outbound",
+                                                            fontSize: 20,
+                                                            position: 'bottom'
+                                                        },
+                                                        legend: {
+                                                            width: 15,
+                                                            labels: { boxWidth: 25 }
+                                                        }
+                                                    }
+                                                });                                            
+                                                chart3lower = new Chart(ctx3lower, {
+                                                    type: 'pie',
+                                                    data: {
+                                                        // labels: ["VF", "O2", "THREE", "EE"],
+                                                        labels: chartLabels,
+                                                        datasets: [{
+                                                            //data: [38.8, 36.5, 15.4, 9.2],
+                                                            data: chartValues,
+                                                            backgroundColor: chartColours
+                                                        }],                                                    
+                                                     },
+                                                   options: {
+                                                        title: {
+                                                            display: true,
+                                                            text: "Signalling Outbound",
+                                                            fontSize: 20,
+                                                            position: 'bottom'
+                                                        },
+                                                        legend: {
+                                                            width: 15,
+                                                            labels: { boxWidth: 25 }
+                                                        }
+                                                    }
+                                                });                                            
+                                                chart4lower = new Chart(ctx4lower, {
+                                                    type: 'pie',
+                                                    data: {
+                                                        //labels: ["VF", "O2", "THREE", "EE"],
+                                                        labels: chartLabels,
+                                                        datasets: [{
+                                                            //data: [28.8, 26.5, 25.4, 19.2],
+                                                            data: chartValues,
+                                                            backgroundColor: chartColours
+                                                        }],                                                    
+                                                     },
+                                                   options: {
+                                                        title: {
+                                                            display: true,
+                                                            text: "Total Outbound",
+                                                            fontSize: 20,
+                                                            position: 'bottom'
+                                                        },
+                                                        legend: {
+                                                            width: 15,
+                                                            labels: { boxWidth: 25 }
+                                                        }
+                                                    }
+                                                });
                                             }
-                                        });
+                                        } else {
+                                            var graphLines = new Array();
+                                            // add the collection to graphLines
+                                            for (var [key, value] of graphValues) {
+                                                // console.log("Processing " + key + " value=" + value);
+                                                graphLines.push(formatGraphLine(key, value));
+                                            }
+                                            $('#TrafficChartWrap').hide();
+                                            $('#TrafficTableWrap').hide();
+                                            $('#GraphWrap').show();
+                                            myChart = new Chart(ctx, {
+                                                type: 'line',
+                                                data: {
+            //                                        labels: ["16:00", "16:05", "16:10", "16:15", "16:20", "16:25", "16:30", "16:35"],
+                                                    labels: graphTimes,
+            //                                        datasets: [
+            //                                            {
+            //                                                label: 'VF_1',
+            //                                                fill: false,
+            //                                                lineTension: 0,
+            //                                                borderColor: "rgba(75,192,192,1)",
+            //                                                pointBorderWidth: 0.5,
+            //                                                data: [13.5, 15, 13, 16, 16, 15.5, 14, 15],
+            //                                            },
+            //                                            {
+            //                                                label: 'O2_1',
+            //                                                fill: false,
+            //                                                lineTension: 0,
+            //                                                borderColor: "rgba(250,92,157,1)",
+            //                                                pointBorderWidth: 0.5,
+            //                                                data: [6.5, 6, 6, 5.5, 7, 6.5, 6.5, 7],
+            //                                            }
+            //                                        ]
+                                                    datasets: graphLines
+                                                },
+                                                options: {
+                                                    title: {
+                                                        display: true,
+                                                        //text: site + " :: " + metric,
+                                                        text: siteLabel + " :: " + metricLabel,
+                                                        fontSize: 20,
+                                                        position: 'bottom'
+                                                    },
+                                                    scales: {
+                                                        yAxes: [{
+                                                            ticks: {
+                                                                beginAtZero:true
+                                                            },
+                                                            scaleLabel: {
+                                                                display: true,
+                                                                labelString: yLabelTitle
+                                                            }
+                                                        }]
+                                                    },
+                                                    legend: {
+                                                        width: 15,
+                                                    }
+                                                }
+                                            });
+                                        }
                                         d = new Date();
                                         var endMillis2 = d.getTime();
                                         console.log(endMillis2 - endMillis + " millis taken to create Graph");
@@ -1064,7 +1513,7 @@ function showGraph(id, visible, siteParam) {
                             var d = new Date();
                             startMillis = d.getTime();
                             // xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+query,true); 
-                            xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+encodeURIComponent(query),true);
+                            xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+encodeURIComponent(query)+"&metrictype="+metricTypesForPhp.values()[0],true);
                             xmlhttp.send();
 
                             // construct a suitable query
@@ -1108,14 +1557,24 @@ function metricsToString(metrics, length) {
 function getSQL_Ping_SingleMetric_SingleSite(metric, site, startDateTime, endDateTime) {
     // if  it's a "5 worst sites" selection, then get the 5 worst sites before calling getSQL_Ping_SingleMetric_MultiSites() with them
     
-    if (site.length > 1 && site.startsWith(" 5 Worst")) {
+//    console.log("getSQL_Ping_SingleMetric_SingleSite() site=" + site);
+    if (site.length > 1 && site.startsWith(" Worst")) {
         //alert("\"5 Worst Sites\" functionality not yet activated");
+        var mSel = document.getElementById("mSelect");
+        var m = mSel.options[mSel.selectedIndex].value;            
+        var nSel = document.getElementById("nSelect");
+        var n = nSel.options[nSel.selectedIndex].value;            
+//        console.log("m=" + m, "n=" + n);
         if (site.endsWith("24 hours)")) {
-            xmlhttp.open("GET","RANMateMetrics_WorstSiteList.php?group=" + metric + "&days=1",false);
+//            console.log("getSQL_Ping_SingleMetric_SingleSite() 24 hours");
+            xmlhttp.open("GET","RANMateMetrics_WorstSiteList.php?group=" + metric + "&days=1&m=" + m + "&n=" + n,false);
+            //xmlhttp.open("GET","RANMateMetrics_WorstSiteList.php?group=" + metric + "&days=1",false);
             endDateTime = document.getElementById("endTime").value = getNow();
             startDateTime = document.getElementById("startTime").value = getEarlier(24);   
         } else if (site.endsWith("7 days)")) {
-            xmlhttp.open("GET","RANMateMetrics_WorstSiteList.php?group=" + metric + "&days=7",false);
+//            console.log("getSQL_Ping_SingleMetric_SingleSite() 7 days");
+            xmlhttp.open("GET","RANMateMetrics_WorstSiteList.php?group=" + metric + "&days=7&m=" + m + "&n=" + n,false);
+            //xmlhttp.open("GET","RANMateMetrics_WorstSiteList.php?group=" + metric + "&days=7",false);
             endDateTime = document.getElementById("endTime").value = getNow();
             startDateTime = document.getElementById("startTime").value = getEarlier(168);            
         } else {
@@ -1134,7 +1593,8 @@ function getSQL_Ping_SingleMetric_SingleSite(metric, site, startDateTime, endDat
         } else {
             console.log("Error invoking RANMateReset_WorstSiteList.php: " + xmlhttp.status);
         }
-    } else {            
+    } else { 
+        console.log("Not a worst metric");
         return getSQL_Ping_AllScenarios(metric.substring(5), site, startDateTime, endDateTime);
     }
 }
@@ -1144,7 +1604,13 @@ function getSQL_Ping_MultiMetrics_SingleSite(metrics, site, startDateTime, endDa
 }
 
 function getSQL_Ping_AllScenarios(metric, site, startDateTime, endDateTime) {
-    yLabelTitle = 'milliseconds';
+    if (metric.endsWith("packet_loss")) {
+        console.log("packet_loss detected for " + metric);
+        yLabelTitle = 'percent';
+    } else {
+        console.log("packet_loss NOT detected for " + metric);
+        yLabelTitle = 'milliseconds';
+    }
 //    return "SELECT measurement_time, " + metric + " FROM `metrics`.ping WHERE ping.site_name='" + site +
 //        "' AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' GROUP BY measurement_time;";
     return "SELECT measurement_time, " + metric + " FROM metrics.ping WHERE ping.site_name='" + site +
@@ -1154,6 +1620,13 @@ function getSQL_Ping_AllScenarios(metric, site, startDateTime, endDateTime) {
 function getSQL_Ping_SingleMetric_MultiSites(metric, sites, startDateTime, endDateTime) {
     // console.log("cellList has " + cellList.length + " entries which are " + cellList.toString());
     console.log("getSQL_Ping_SingleMetric_MultiSites() sites has " + sites.length + " entries which are " + sites.toString());
+    if (metric.endsWith("packet_loss")) {
+        console.log("packet_loss detected for " + metric);
+        yLabelTitle = 'percent';
+    } else {
+        console.log("packet_loss NOT detected for " + metric);
+        yLabelTitle = 'milliseconds';
+    }
     var columnsStr = "";
     var metricName = metric.substring(5);
     var tableName = 'ping'; // all ping metrics are columns in the ping table
@@ -1661,6 +2134,8 @@ function getMetricType(theMetric) {
        thisMetricType = "Femto";
     } else if (theMetric.startsWith('RPM-')) {
        thisMetricType = "RPM";
+    } else if (theMetric.startsWith('Traffic-')) {
+       thisMetricType = "Traffic";
     } else {
         alert("Unknown metric type: " + theMetric);
     }

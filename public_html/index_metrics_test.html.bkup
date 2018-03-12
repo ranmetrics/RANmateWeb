@@ -6,7 +6,7 @@ and open the template in the editor.
 -->
 <html>
     <head>
-        <title>RANMate Metrics</title>
+        <title>RANMate Metrics Test</title>
         <meta charset="UTF-8">
 <!--        <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
 
@@ -23,7 +23,7 @@ and open the template in the editor.
         <link rel="stylesheet" href="css/bootstrap-multiselect.css" type="text/css"/>        
 
         <link rel="stylesheet" href="css/RANMateMetrics.css">
-        <script src="js/RANMateMetrics.js"></script>
+        <script src="js/RANMateMetrics_test.js"></script>
         <script src="js/moment.min.js"></script>            
         <script src="js/Chart.min.js"></script>            
         
@@ -32,7 +32,7 @@ and open the template in the editor.
         <!-- Header-->
         <div id="LogoWrap">        
 <!--            <a><img class="main" src="./img/RANmetricsLogoSmall.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>-->
-            <a href="index_metrics.html"><img class="main" src="./img/RANmetricsLogoTransparent.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>
+            <a href="index_metrics_test.html"><img class="main" src="./img/RANmetricsLogoTransparent.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>
         </div>
 
         <!-- Gather Inputs-->
@@ -140,48 +140,6 @@ and open the template in the editor.
                             </select> 
                         </div>
 
-                        <div  id="worstwrapper" style="float:left;margin-right:30px;">
-                            <label for="name" id="Worst">Worst m..n</label>            
-<!--                            <script type="text/javascript">
-                                $(document).ready(function() {
-                                    $('#site').multiselect({                                        
-                                        maxHeight: 200,
-                                        buttonWidth: '420px',
-                                        numberDisplayed: 2,
-                                        width: 'auto'
-                                    });
-                                });
-                            </script>-->
-
-                            <select id="mSelect" style="min-width: 1px;" onchange="populateUpperLimitWorst(this.value);" >
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                                <option value="9">9</option>
-                            </select> 
-                            <b>. .</b>
-                            <select id="nSelect" style="min-width: 1px;" >
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5" selected="selected">5</option>
-                                <option value="6">6</option>
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                                <option value="9">9</option>
-                                <option value="10">10</option>
-                            </select> 
-                            <script>
-                                $('#worstwrapper').hide();
-                            </script>
-                        </div>
-                        
-                        
                         <div id="interfacewrapper" style="float:left;margin-right:30px;">
                             <label for="name" id="IfaceName">Interface</label>            
                             <script type="text/javascript">

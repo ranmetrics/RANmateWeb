@@ -97,8 +97,36 @@ label {
 /*    vertical-align: middle;  Fixes any weird issues in Firefox and IE */
 }
 
+.output-format input,
+.output-format label {
+    display: block;
+    margin: 0px ;
+    font-size: 12px;
+    color: black;
+    text-align: left;
+}
+
 input[type=checkbox] {
     margin: 0px 2px; 
+}
+
+table {
+    font-family: arial, sans-serif;
+    font-size:	12px;
+    border-collapse: collapse;
+    overflow: auto; 
+/*    table-layout: auto; */ /* No effect */
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: center;
+    padding: 8px;
+/*    table-layout: auto;*/  /* No effect */
+}
+
+tr:nth-child(even) {
+    background-color: rgb(245,245,245);
 }
 
 // The bootstrap multi-select look

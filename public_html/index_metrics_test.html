@@ -32,188 +32,316 @@ and open the template in the editor.
         <!-- Header-->
         <div id="LogoWrap">        
 <!--            <a><img class="main" src="./img/RANmetricsLogoSmall.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>-->
-            <a><img class="main" src="./img/RANmetricsLogoTransparent.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>
+            <a href="index_metrics_test.html"><img class="main" src="./img/RANmetricsLogoTransparent.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>
         </div>
 
         <!-- Gather Inputs-->
-        <div id="MetricsWrap" style=" text-align: center; ">        
-        <div id="MetricsInner" style=" display: inline-block; ">        
+        <div id="MetricsOuterWrap" style="width:100%">        
+            <div id="MetricsWrap" style=" text-align: center; ">
+                <div id="MetricsInner" style=" display: inline-block; ">        
 
-                <section>
+                    <section>
 
-                    <div style="float:left;margin-right:30px;">
-                        <label for="name">Metric</label>
-                        <script type="text/javascript">
-                            $(document).ready(function() {
-                                $('#metric').multiselect({                                        
-                                    maxHeight: 200,
-                                    buttonWidth: '250px',
-                                    numberDisplayed: 2,
-                                    width: 'auto'
+                        <div style="float:left;margin-right:30px;">
+                            <label for="name">Metric</label>
+                            <script type="text/javascript">
+                                $(document).ready(function() {
+                                    $('#metric').multiselect({                                        
+                                        maxHeight: 200,
+                                        buttonWidth: '250px',
+                                        numberDisplayed: 2,
+                                        width: 'auto'
+                                    });
                                 });
-                            });
-                        </script>
-                        <select id="metric" multiple="multiple" onchange="showSites(this.value);" style="width:100%;">
-<!--                        <select id="metric" multiple="multiple">-->
-<!--                            <option disabled>── Femto Metrics ──</option>-->
-                            <optgroup label="Femto&nbsp;Metrics">
-                                <option value="Femto-packets">Packets</option>
-                                <option value="Femto-poe">PoE</option>
-                            </optgroup>                            
-<!--                            <option disabled>── Router Ping ──</option>-->
-                            <optgroup label="Router Buddy">
-                                <option value="Buddy-bandwidth_loss_pct">Bandwidth Loss</option>
-                                <option value="Buddy-tcp-bandwidth_bandwidth">Bandwidth Headroom</option>
-                                <option value="Buddy-jitter_jitter">Jitter</option>
-                                <option value="Buddy-latency_rtt_min">Min Latency</option>
-                                <option value="Buddy-latency_rtt_max">Max Latency</option>
-                                <option value="Buddy-latency_rtt_avg">Avg Latency</option>
-                                <option value="Buddy-latency_rtt_mdev">Max Latency Deviation</option>
-                            </optgroup>
-                            <optgroup label="Router Ping">
-                                <option value="Ping-min">Min Ping Latency</option>
-                                <option value="Ping-max">Max Ping Latency</option>
-                                <option value="Ping-avg">Average Ping Latency</option>
-                                <option value="Ping-mdev">Max Ping Deviation</option>
-                            </optgroup>
-<!--                            <option disabled>── Router RPM ──</option>-->
-                            <optgroup label="Router RPM">
-                                <option value="RPM-latency" disabled>Latency</option>
-                                <option value="RPM-jitter" disabled>Jitter</option>
-                                <option value="RPM-bandwidth" disabled>Bandwidth</option>
-                            </optgroup>
-<!--                            <option disabled>─ Router Counters ─</option>-->
-                            <optgroup label="Router Counters">                                
-                                <option value="Counter-input_bytes">Bytes In</option>
-                                <option value="Counter-input_bps">Bit/s In</option>
-                                <option value="Counter-input_packets">Packets In</option>
-                                <option value="Counter-input_pps">Packet/s In</option>
-                                <option value="Counter-output_bytes">Bytes Out</option>
-                                <option value="Counter-output_bps">Bit/s Out</option>
-                                <option value="Counter-output_packets">Packets Out</option>
-                                <option value="Counter-output_pps">Packet/s Out</option>
-                                <option value="Counter-input_errors">Input Errors</option>
-                                <option value="Counter-input_drops">Input Drops</option>
-                                <option value="Counter-framing_errors">Framing Errors In</option>
-                                <option value="Counter-input_l2_channel_errors">Input L2 Channel Errors</option>
-                                <option value="Counter-carrier_transitions">Carrier Transitions Out</option>
-                                <option value="Counter-output_errors">Output Errors</option>
-                                <option value="Counter-output_drops">Output Drops</option>
-                                <option value="Counter-aged_packets">Aged Packets Out</option>
-                                <option value="Counter-hs_link_crc_errors">HS Link CRC Errors Out</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    
-                    <div style="float:left;margin-right:30px;">
-                        <label for="name" id="SiteLabel">Site</label>            
-                        <script type="text/javascript">
-                            $(document).ready(function() {
-                                $('#site').multiselect({                                        
-                                    maxHeight: 200,
-                                    buttonWidth: '420px',
-                                    numberDisplayed: 2,
-                                    width: 'auto'
+                            </script>
+                            <select id="metric" multiple="multiple" onchange="showSites(this.value);" style="width:100%;">
+    <!--                        <select id="metric" multiple="multiple">-->
+    <!--                            <option disabled>── Femto Metrics ──</option>-->
+                                <optgroup label="Traffic&nbsp;Analysis">
+                                    <option value="Traffic-all">All Traffic</option>
+    <!--                                <option value="Traffic-in_CS">CS Traffic Inbound</option>
+                                    <option value="Traffic-out_CS">CS Traffic Outbound</option>
+                                    <option value="Traffic-in_PS">PS Traffic Inbound</option>
+                                    <option value="Traffic-out_PS">PS Traffic Outbound</option>
+                                    <option value="Traffic-in_Sig">Signalling Traffic Inbound</option>
+                                    <option value="Traffic-out_Sig">Signalling Traffic Outbound</option>-->
+                                </optgroup>                            
+                                <optgroup label="Femto&nbsp;Metrics">
+                                    <option value="Femto-packets">Packets</option>
+                                    <option value="Femto-poe">PoE</option>
+                                </optgroup>                            
+    <!--                            <option disabled>── Router Ping ──</option>-->
+    <!--                            <optgroup label="Router Buddy">-->
+                                <optgroup label="Site Probe">
+                                    <option value="Buddy-bandwidth_loss_pct">Packet Loss (@ 20Mb/s)</option>
+                                    <option value="Buddy-tcp-bandwidth_bandwidth">Max BW Available (tcp)</option>
+                                    <option value="Buddy-jitter_jitter_to">Jitter (To)</option>
+                                    <option value="Buddy-jitter_jitter_from">Jitter (From)</option>
+                                    <option value="Buddy-latency_rtt_min">Min Latency</option>
+                                    <option value="Buddy-latency_rtt_max">Max Latency</option>
+                                    <option value="Buddy-latency_rtt_avg">Avg Latency</option>
+                                    <option value="Buddy-latency_rtt_mdev">Max Latency Deviation</option>
+                                </optgroup>
+                                <optgroup label="Router Ping">
+                                    <option value="Ping-min">Min Ping Latency</option>
+                                    <option value="Ping-max">Max Ping Latency</option>
+                                    <option value="Ping-avg">Average Ping Latency</option>
+                                    <option value="Ping-mdev">Max Ping Deviation</option>
+                                    <option value="Ping-packet_loss">Packet Loss %age</option>
+                                </optgroup>
+    <!--                            <option disabled>── Router RPM ──</option>-->
+                                <optgroup label="Router RPM">
+                                    <option value="RPM-latency" disabled>Latency</option>
+                                    <option value="RPM-jitter" disabled>Jitter</option>
+                                    <option value="RPM-bandwidth" disabled>Bandwidth</option>
+                                </optgroup>
+    <!--                            <option disabled>─ Router Counters ─</option>-->
+                                <optgroup label="Router Counters">                                
+                                    <option value="Counter-input_Mbytes">MBytes In</option>
+                                    <option value="Counter-input_Mbps">MBit/s In</option>
+                                    <option value="Counter-input_packets">Packets In</option>
+                                    <option value="Counter-input_pps">Packet/s In</option>
+                                    <option value="Counter-output_Mbytes">MBytes Out</option>
+                                    <option value="Counter-output_Mbps">MBit/s Out</option>
+                                    <option value="Counter-output_packets">Packets Out</option>
+                                    <option value="Counter-output_pps">Packet/s Out</option>
+                                    <option value="Counter-input_errors">Input Errors</option>
+                                    <option value="Counter-input_drops">Input Drops</option>
+                                    <option value="Counter-framing_errors">Framing Errors In</option>
+                                    <option value="Counter-input_l2_channel_errors">Input L2 Channel Errors</option>
+                                    <option value="Counter-carrier_transitions">Carrier Transitions Out</option>
+                                    <option value="Counter-output_errors">Output Errors</option>
+                                    <option value="Counter-output_drops">Output Drops</option>
+                                    <option value="Counter-aged_packets">Aged Packets Out</option>
+                                    <option value="Counter-hs_link_crc_errors">HS Link CRC Errors Out</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div style="float:left;margin-right:30px;">
+                            <label for="name" id="SiteLabel">Site</label>            
+                            <script type="text/javascript">
+                                $(document).ready(function() {
+                                    $('#site').multiselect({                                        
+                                        maxHeight: 200,
+                                        buttonWidth: '420px',
+                                        numberDisplayed: 2,
+                                        width: 'auto'
+                                    });
                                 });
-                            });
-                        </script>
-                        <select id="site" multiple="multiple" style="min-width: 130px;" onchange="showInterfaces(this.value); ">
-<!--                            <option value="Gerrards Cross - First Floor">Gerrards Cross - First Floor</option>
-                            <option value="Gorkana - 8th Floor Comms Room">Gorkana - 8th Floor Comms Room</option>
-                            <option value="Hilton Bankside - Basement 1">Hilton Bankside - Basement 1</option>
-                            <option value="Hilton Bankside - Basement 2">Hilton Bankside - Basement 2</option>
-                            <option value="Hilton Bankside - Ground ">Hilton Bankside - Ground </option>
-                            <option value="Holland House - 4th FL IT Cabinet">Holland House - 4th FL IT Cabinet</option>-->
-                        </select> 
-                    </div>
+                            </script>
+                            <select id="site" multiple="multiple" style="min-width: 130px;" onchange="showInterfaces(this.value); ">
+    <!--                            <option value="Gerrards Cross - First Floor">Gerrards Cross - First Floor</option>
+                                <option value="Gorkana - 8th Floor Comms Room">Gorkana - 8th Floor Comms Room</option>
+                                <option value="Hilton Bankside - Basement 1">Hilton Bankside - Basement 1</option>
+                                <option value="Hilton Bankside - Basement 2">Hilton Bankside - Basement 2</option>
+                                <option value="Hilton Bankside - Ground ">Hilton Bankside - Ground </option>
+                                <option value="Holland House - 4th FL IT Cabinet">Holland House - 4th FL IT Cabinet</option>-->
+                            </select> 
+                        </div>
 
-                    <div id="interfacewrapper" style="float:left;margin-right:30px;">
-                        <label for="name" id="IfaceName">Interface</label>            
-                        <script type="text/javascript">
-                            $(document).ready(function() {
-                                $('#interface').multiselect({                                        
-                                    maxHeight: 200,
-                                    buttonWidth: '200px',
-                                    numberDisplayed: 1,
-                                    width: 'auto'
+                        <div  id="worstwrapper" style="float:left;margin-right:30px;">
+                            <label for="name" id="Worst">Worst m..n</label>            
+<!--                            <script type="text/javascript">
+                                $(document).ready(function() {
+                                    $('#site').multiselect({                                        
+                                        maxHeight: 200,
+                                        buttonWidth: '420px',
+                                        numberDisplayed: 2,
+                                        width: 'auto'
+                                    });
                                 });
-                            });
-                        </script>
-                        <select id="interface" style="min-width: 130px;">
-                        </select> 
-                        <script>
-                            $('#interfacewrapper').hide();
-                            document.getElementById("interface").style.display = 'none';
-                            document.getElementById("IfaceName").style.display = 'none';
-                        </script>
-                    </div>
-                    
-<!--                    The original way
-                    <div id="operators" style="float:left;margin-right:30px;">
-                        <label for="name" id="OpCoName" style="margin-left:0px;">Operator</label>            
-                        <div class="block-field" id="V"><label for="checkbox" style="margin: 0px 2px;">V</label><input type="checkbox" id="Vodafone"></div>                        
-                        <div class="block-field" id="O"><label for="checkbox" style="margin: 0px 2px;">O</label><input type="checkbox" id="O2"></div>                        
-                        <div class="block-field" id="T"><label for="checkbox" style="margin: 0px 2px;">T</label><input type="checkbox" id="Three"></div>                        
-                        <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input type="checkbox" id="EE"></div>                        
-                    </div>-->
+                            </script>-->
 
-                    <div id="operators" style="float:left;margin-right:30px;">
-                        <label for="name" id="OpCoName" style="margin-left:0px;">Operator</label>            
-                        <div class="block-field" id="V"><label for="checkbox" style="margin: 0px 2px;">V</label><input type="checkbox" id=0 onChange="opcoSelected(this.id)"></div>                        
-                        <div class="block-field" id="O"><label for="checkbox" style="margin: 0px 2px;">O</label><input type="checkbox" id=1 onChange="opcoSelected(this.id)"></div>                        
-                        <div class="block-field" id="T"><label for="checkbox" style="margin: 0px 2px;">T</label><input type="checkbox" id=2 onChange="opcoSelected(this.id)"></div>                        
-                        <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input type="checkbox" id=3 onChange="opcoSelected(this.id)"></div>                        
-                    </div>
-                    
-                    
-                    <div id="cells" style="float:left;margin-right:30px;">
-                        <label for="name" id="CellNum">Femto Number</label>            
-<!--                        <div style="float:left;margin-right:0px;"><input type="checkbox" name="FemtoNumber" value="1" style="font-family: Arial; font-size: 60%"> 1<br></div>-->
-                        <div class="block-field" id="FAP1" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">1</label><input type="checkbox" id="Femto1"></div>                        
-                        <div class="block-field" id="FAP2" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">2</label><input type="checkbox" id="Femto2"></div>                        
-                        <div class="block-field" id="FAP3" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">3</label><input type="checkbox" id="Femto3"></div>                        
-                        <div class="block-field" id="FAP4" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">4</label><input type="checkbox" id="Femto4"></div>                        
-                        <div class="block-field" id="FAP5" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">5</label><input type="checkbox" id="Femto5"></div>                        
-                        <div class="block-field" id="FAP6" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">6</label><input type="checkbox" id="Femto6"></div>                        
-                        <div class="block-field" id="FAP7" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">7</label><input type="checkbox" id="Femto7"></div>                        
-                        <div class="block-field" id="FAP8" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">8</label><input type="checkbox" id="Femto8"></div>                        
-                    </div>
-                    
-                    <div style="float:left;margin-right:30px;">
-                        <label for="name">Start Date/Time</label>            
-                        <input id="startTime" title="YYYY-MM-DD hh:mm" type="datetime" name="Start"><br>
-                        <script>
-                            document.getElementById("startTime").value =
-                            document.getElementById("startTime").defaultValue = getYesterday();
-                        </script>
-                    </div>
+                            <select id="mSelect" style="min-width: 1px;" onchange="populateUpperLimitWorst(this.value);" >
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                            </select> 
+                            <b>. .</b>
+                            <select id="nSelect" style="min-width: 1px;" >
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5" selected="selected">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                            </select> 
+                            <script>
+                                $('#worstwrapper').hide();
+                            </script>
+                        </div>
+                        
+                        
+                        <div id="interfacewrapper" style="float:left;margin-right:30px;">
+                            <label for="name" id="IfaceName">Interface</label>            
+                            <script type="text/javascript">
+                                $(document).ready(function() {
+                                    $('#interface').multiselect({                                        
+                                        maxHeight: 200,
+                                        buttonWidth: '200px',
+                                        numberDisplayed: 1,
+                                        width: 'auto'
+                                    });
+                                });
+                            </script>
+                            <select id="interface" style="min-width: 130px;">
+                            </select> 
+                            <script>
+                                $('#interfacewrapper').hide();
+                                document.getElementById("interface").style.display = 'none';
+                                document.getElementById("IfaceName").style.display = 'none';
+                            </script>
+                        </div>
 
-                    <div style="float:left;margin-right:30px;">
-                        <label for="name">End Date/Time</label>            
-<!--                        <input title="YYYY-MM-DD hh:mm:ssZ" type="datetime" name="End" value="2016-10-13 18:00:00Z"><br>-->
-                        <input id="endTime" title="YYYY-MM-DD hh:mm" type="datetime" name="End" ><br>
-                        <script>
-                            document.getElementById("endTime").value =
-                            document.getElementById("endTime").defaultValue = getNow();
-                        </script>
-                    </div>
-                    
-                    <div style="float:left">
-                        <br>   
-                            <input id="graphButton" type="submit" value="Graph" onclick="showGraph('graph', true); ">           
-                    </div>
-                </section>
-        </div>
+    <!--                    The original way
+                        <div id="operators" style="float:left;margin-right:30px;">
+                            <label for="name" id="OpCoName" style="margin-left:0px;">Operator</label>            
+                            <div class="block-field" id="V"><label for="checkbox" style="margin: 0px 2px;">V</label><input type="checkbox" id="Vodafone"></div>                        
+                            <div class="block-field" id="O"><label for="checkbox" style="margin: 0px 2px;">O</label><input type="checkbox" id="O2"></div>                        
+                            <div class="block-field" id="T"><label for="checkbox" style="margin: 0px 2px;">T</label><input type="checkbox" id="Three"></div>                        
+                            <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input type="checkbox" id="EE"></div>                        
+                        </div>-->
+
+                        <div id="operators" style="float:left;margin-right:30px;">
+                            <label for="name" id="OpCoName" style="margin-left:0px;">Operator</label>            
+                            <div class="block-field" id="V"><label for="checkbox" style="margin: 0px 2px;">V</label><input type="checkbox" id=0 onChange="opcoSelected(this.id)"></div>                        
+                            <div class="block-field" id="O"><label for="checkbox" style="margin: 0px 2px;">O</label><input type="checkbox" id=1 onChange="opcoSelected(this.id)"></div>                        
+                            <div class="block-field" id="T"><label for="checkbox" style="margin: 0px 2px;">T</label><input type="checkbox" id=2 onChange="opcoSelected(this.id)"></div>                        
+                            <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input type="checkbox" id=3 onChange="opcoSelected(this.id)"></div>                        
+                        </div>
+
+
+                        <div id="cells" style="float:left;margin-right:30px;">
+                            <label for="name" id="CellNum">Femto Number</label>            
+    <!--                        <div style="float:left;margin-right:0px;"><input type="checkbox" name="FemtoNumber" value="1" style="font-family: Arial; font-size: 60%"> 1<br></div>-->
+                            <div class="block-field" id="FAP1" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">1</label><input type="checkbox" id="Femto1"></div>                        
+                            <div class="block-field" id="FAP2" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">2</label><input type="checkbox" id="Femto2"></div>                        
+                            <div class="block-field" id="FAP3" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">3</label><input type="checkbox" id="Femto3"></div>                        
+                            <div class="block-field" id="FAP4" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">4</label><input type="checkbox" id="Femto4"></div>                        
+                            <div class="block-field" id="FAP5" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">5</label><input type="checkbox" id="Femto5"></div>                        
+                            <div class="block-field" id="FAP6" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">6</label><input type="checkbox" id="Femto6"></div>                        
+                            <div class="block-field" id="FAP7" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">7</label><input type="checkbox" id="Femto7"></div>                        
+                            <div class="block-field" id="FAP8" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">8</label><input type="checkbox" id="Femto8"></div>                        
+                        </div>
+
+                        <div id="trafficwrapper" style="float:left;margin-right:30px;">
+                            <div id="breakdown" style="float:left;margin-right:30px;">
+                                <label for="name" id="BreakdownLabel">Breakdown</label>            
+                                <div class="block-field" id="Breakdown" style="float:left;margin-right:0px;">
+                                    <input type="checkbox" id="PerDay" style="margin: 4px 3px 5px 3px;" onChange="perDayOrSiteChecked(this.id)">
+                                    <input type="checkbox" id="PerSite" style="margin: 5px 3px;" onChange="perDayOrSiteChecked(this.id)">
+                                </div>
+                                <div class="block-field" id="BreakdownOptionLabels" style="float:left;margin-right:0px;">
+<!--                                    <label for="PerDay" style="margin: -1px 3px;color:lightgrey;">Per Day</label>
+                                    <label for="PerSite" style="margin: -1px 3px;color:lightgrey;">Per Site</label>-->
+                                    <label for="PerDay" style="margin: -1px 3px;">Per Day</label>
+                                    <label for="PerSite" style="margin: -1px 3px;">Per Site</label>
+                                </div>
+                            </div>
+
+                            <div id="format" style="float:left;margin-right:30px;">
+                                <label for="name" id="FormatLabel">Format</label>            
+
+                                <div class="output-format" id="Format" style="float:left;margin-right:0px;">
+                                    <input type="radio" name="format" id="Bar" onChange="outputFormatSelected(this.id)" style="margin: 0px 3px 0px 3px;">
+                                    <input type="radio" name="format" id="Pie" checked="checked" onChange="outputFormatSelected(this.id)" style="margin: 1px 3px 0px 3px;">
+                                    <input type="radio" name="format" id="Table" onChange="outputFormatSelected(this.id)" style="margin: 1px 3px 0px 3px;">
+                                </div>
+                                <div class="output-format" id="FormatOptionLabels" style="float:left;margin-right:0px;">
+                                    <label for="Bar" style="margin: -3px 3px;">Bar Chart</label>
+                                    <label for="Pie" style="margin: -3px 3px;">Pie Chart</label>
+<!--                                <option value="5" selected="selected">5</option>-->
+                                    <label for="Table" style="margin: -3px 3px;">Table</label>
+                                </div>
+                            </div>
+                            <script>
+                                $('#trafficwrapper').hide();
+    //                            document.getElementById("interface").style.display = 'none';
+    //                            document.getElementById("IfaceName").style.display = 'none';
+                            </script>
+
+                        </div>
+
+                        <div style="float:left;margin-right:30px;">
+                            <label for="name">Start Date/Time</label>            
+                            <input id="startTime" title="YYYY-MM-DD hh:mm" type="datetime" name="Start"><br>
+                            <script>
+                                document.getElementById("startTime").value =
+                                document.getElementById("startTime").defaultValue = getYesterday();
+                            </script>
+                        </div>
+
+                        <div style="float:left;margin-right:30px;">
+                            <label for="name">End Date/Time</label>            
+    <!--                        <input title="YYYY-MM-DD hh:mm:ssZ" type="datetime" name="End" value="2016-10-13 18:00:00Z"><br>-->
+                            <input id="endTime" title="YYYY-MM-DD hh:mm" type="datetime" name="End" ><br>
+                            <script>
+                                document.getElementById("endTime").value =
+                                document.getElementById("endTime").defaultValue = getNow();
+                            </script>
+                        </div>
+
+                        <div style="float:left">
+                            <br>   
+                                <input id="graphButton" type="submit" value="Show" onclick="showGraph('graph', true); ">           
+                        </div>
+                    </section>
+            </div>
+            </div>
         </div>
             
         <!-- Display the Graph-->
-<!--        <div id="GraphWrap" style="width:500px; height:300px; padding: 100px 100px 100px 100px;">        -->
-        <div id="GraphWrap" style="width:90%; height:90%;">        
-                <canvas id="graph" width=800 height=400></canvas>
-            
-<!--            <a><img id="graph" class="main" src="./img/Graph2.png" style=" display: block; margin: auto; vertical-align: middle; visibility: hidden;"></a>-->
+        <div id="GraphWrap" style="width:85%; height:85%;">        
+                <canvas id="graph" width=800 height=400></canvas>            
         </div>
-            
+
+        <!-- Display the Traffic Table-->
+<!--        <div id="TrafficTableWrap" style="width:1600px; height:500px; margin:100px auto 0px auto; overflow: auto;">   -->
+        <div id="TrafficTableWrap" style="width:800px; height:500px; margin:100px auto 0px auto; overflow: auto;">   
+        </div>        
+
+<!--        <div id="TrafficChartWrap" style="width:100%; height:60%; padding: 10px 0px 0px 0px; display:inline-block;"> -->
+        <div id="TrafficChartWrap" style="width:100%; height:60%; padding: 10px 0px 0px 0px; text-align: center;"> 
+            <div id="TrafficChartUpperWrap" style="padding: 10px 0px 0px 0px; display:inline-block;">
+                <div id="Chart1UpperWrap" style="float:left;margin-right:30px">
+                    <canvas id="chart1upper" width=400 height=350></canvas>
+                </div>
+                <div id="Chart2UpperWrap" style="float:left;margin-right:30px">
+                    <canvas id="chart2upper" width=400 height=350></canvas>            
+                </div>
+                <div id="Chart3UpperWrap" style="float:left;margin-right:30px">
+                    <canvas id="chart3upper" width=400 height=350></canvas>
+                </div>
+                <div id="Chart4UpperWrap" style="float:left;margin-right:30px">
+                    <canvas id="chart4upper" width=400 height=350></canvas>            
+                </div>
+            </div>
+            <div id="TrafficChartLowerWrap" style="padding: 30px 0px 0px 0px;">
+                <div id="Chart1LowerWrap" style="display:inline-block;margin-right:30px">
+                    <canvas id="chart1lower" width=400 height=350></canvas>
+                </div>
+                <div id="Chart2LowerWrap" style="display:inline-block;margin-right:30px">
+                    <canvas id="chart2lower" width=400 height=350></canvas>            
+                </div>
+                <div id="Chart3LowerWrap" style="display:inline-block;margin-right:30px">
+                    <canvas id="chart3lower" width=400 height=350></canvas>
+                </div>
+                <div id="Chart4LowerWrap" style="display:inline-block;margin-right:30px">
+                    <canvas id="chart4lower" width=400 height=350></canvas>            
+                </div>
+            </div>
+        </div>
+        
     </body>
 </html>
  

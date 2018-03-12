@@ -103,7 +103,7 @@ function initWithParams(siteParam) {
     }
     if ((userParam != null) && (userParam.length > 2)) {
         username = caesarShift(decodeURIComponent(userParam).replace(/\+/g, " ").replace(/%28/g, '(').replace(/%29/g,')'), -5).replace(/([A-Z])/g, " $1").trim();
-        console.log("Encoded username " + userParam + " is decoded as " + username);
+        //console.log("Encoded username " + userParam + " is decoded as " + username);
     }
 }
 
@@ -145,7 +145,7 @@ function updateLogDisplay() {
     xmlhttp.onreadystatechange = function() {
         // console.log("Received " + this.responseText);
         if (this.readyState == 4 && this.status == 200) {
-            //console.log("Log Contents\n" + this.responseText);
+            console.log("Log Contents\n" + this.responseText.substring(1000));
             document.getElementById("TableWrap").innerHTML = this.responseText;
         }
     };
@@ -445,8 +445,8 @@ function resetFemto() {
             alert(opcos[parseInt(selectedOpCo)] + "_" + femtoNum + " at " + site + " has been successfully reset (char)");
         } else if (parseInt(response) === 0) {
             alert(opcos[parseInt(selectedOpCo)] + "_" + femtoNum + " at " + site + " has been successfully reset (int)");
-        }else {
-            alert("\t\t" + opcos[parseInt(selectedOpCo)] + "_" + femtoNum + " at " + site + " has NOT been successfully reset\More details may be available in /opt/RANmate/logs/RANmateReset.log on the RANmate server");
+        } else {
+            alert("\t\t" + opcos[parseInt(selectedOpCo)] + "_" + femtoNum + " at " + site + " has NOT been successfully reset\nMore details may be available in /opt/RANmate/logs/RANmateReset.log on the RANmate server");
         }
 
     }
