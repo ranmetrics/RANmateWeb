@@ -34,12 +34,10 @@ if ($MetricGroup == 'Counter') {
     $sql = "Select DISTINCT router_counters_sites.site_name from metrics.router_counters_sites INNER JOIN metrics.buddy ON "
             . "router_counters_sites.site_name = buddy.site_name where NOT exclude ORDER BY router_counters_sites.site_name";
 } else if ($MetricGroup == 'Traffic') {
-//    $sql = "Select ' Network (Chart)' as 'site_name' from metrics.router_counters_sites union "
-//            . "Select ' All Sites (Table)' as 'site_name' from metrics.router_counters_sites union "
-//    $sql = "Select ' All Sites' as 'site_name' from metrics.router_counters_sites union "
-//            . "Select DISTINCT site_name from metrics.router_counters_sites ORDER BY site_name";
-    $sql = "Select ' All Sites' as 'site_name' from metrics.jflow_sites union "
-            . "Select DISTINCT site_name from metrics.jflow_sites ORDER BY site_name";
+//    $sql = "Select ' All Sites' as 'site_name' from metrics.jflow_sites union "
+//            . "Select DISTINCT site_name from metrics.jflow_sites ORDER BY site_name";
+    $sql = "Select ' All Sites' as 'site_name' from metrics.routers union "
+            . "Select DISTINCT site_name from metrics.routers ORDER BY site_name";
 } else {
     echo "Unexpected Metric Group " . $MetricGroup . "\n";
 }

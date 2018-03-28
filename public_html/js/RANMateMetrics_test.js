@@ -29,8 +29,11 @@ var yLabelTitle = '';
 var trafficTableOutput = false;
 var trafficBarOutput = false;
 var trafficPieOutput = true; // selected by default
-var trafficGroupBySQL = "";
-var maxMBytesToChart = 500;
+var perDay = false;
+var perSite = false;
+var trafficGroupBySQL = "GROUP BY metric_name ";
+var trafficOrderBySQL = "";
+var maxMBytesToChart = 0;
 
 function getNow() {
     return getDateTimeString(new Date());
@@ -669,34 +672,49 @@ function outputFormatSelected(format) {
 }
 
 function perDayOrSiteChecked(checkBox) {
-    console.log(checkBox + " dicing selected");
-    if ((document.getElementById("PerDay").checked) || (document.getElementById("PerSite").checked)) {
-        trafficTableOutput = true;
-        trafficPieOutput = false;
-        trafficBarOutput = false;        
-        document.getElementById("Pie").disabled = true;
-        document.getElementById("Bar").disabled = true;
-        document.getElementById("Table").disabled = false;
-        document.getElementById("Table").checked = true;
-    } else {
-        trafficTableOutput = false;
-        trafficPieOutput = true;
-        trafficBarOutput = false;                
-        document.getElementById("Pie").disabled = false;
-        document.getElementById("Bar").disabled = false;
-    }
-    if ((document.getElementById('PerDay').checked) && (document.getElementById('PerSite').checked)) {
-        trafficGroupBySQL = 'GROUP BY measurement_time, site';        
-    } else if ((document.getElementById('PerDay').checked)) {
-        trafficGroupBySQL = 'GROUP BY measurement_time';
-    } else if ((document.getElementById('PerDay').checked)) {
-        trafficGroupBySQL = 'GROUP BY site';
-    } else {
-        trafficGroupBySQL = "";        
-    }
+//    if (document.getElementById("PerDay") != null) {
+        if ((document.getElementById("PerDay").checked) || (document.getElementById("PerSite").checked)) {
+            trafficTableOutput = true;
+            trafficPieOutput = false;
+            trafficBarOutput = false;        
+            document.getElementById("Pie").disabled = true;
+            document.getElementById("Bar").disabled = true;
+            document.getElementById("BarLabel").style.color = "lightgrey";
+            document.getElementById("PieLabel").style.color = "lightgrey";
+            document.getElementById("Table").disabled = false;
+            document.getElementById("Table").checked = true;
+        } else {
+            trafficTableOutput = false;
+            trafficPieOutput = true;
+            trafficBarOutput = false;                
+            document.getElementById("Pie").disabled = false;
+            document.getElementById("Bar").disabled = false;
+            document.getElementById("BarLabel").style.color = "black";
+            document.getElementById("PieLabel").style.color = "black";
+        }
+        if ((document.getElementById('PerDay').checked) && (document.getElementById('PerSite').checked)) {
+            trafficGroupBySQL = "GROUP BY measurement_time, site_name, metric_name ";        
+            trafficOrderBySQL = "ORDER BY site_name, measurement_time;\n";
+            perDay = true;
+            perSite = true;
+        } else if ((document.getElementById('PerDay').checked)) {
+            trafficGroupBySQL = "GROUP BY measurement_time, metric_name ";
+            trafficOrderBySQL = "ORDER BY NULL;\n";
+            perDay = true;
+            perSite = false;
+        } else if ((document.getElementById('PerSite').checked)) {
+            trafficGroupBySQL = "GROUP BY site_name, metric_name ";
+            trafficOrderBySQL = "ORDER BY site_name;\n";
+            perDay = false;
+            perSite = true;
+        } else {
+            trafficGroupBySQL = "GROUP BY metric_name ";
+            trafficOrderBySQL = "ORDER BY NULL;\n";
+            perDay = false;
+            perSite = false;
+        }
+//    }
 }
-
-perDayOrSiteChecked(this.id)
 
 function isValidDateTimeString(day) {
     var dateTimeRegExp = new RegExp("^([1-2]\\d{3}-([0]?[1-9]|1[0-2])-([0-2]?[0-9]|3[0-1])) (20|21|22|23|[0-1]?\\d{1}):([0-5]?\\d{1})$");
@@ -731,7 +749,7 @@ function getTrafficSQL(metricName, startDateTime, endDateTime, allSites, perDay,
         //sitesWhereClause = " AND packets.site_name REGEXP " + siteFloorStr + " ";    
         sitesWhereClause = " AND jflow.site_name REGEXP " + siteFloorStr + " ";    
     }
-    return getTrafficCommonSql("jflow", startDateTime, endDateTime, "", "", sitesWhereClause, "group by operator_id ", "order by operator_id");
+    return getTrafficCommonSql("jflow", startDateTime, endDateTime, "", "", sitesWhereClause, trafficGroupBySQL, trafficOrderBySQL);
 }
 
 function getTrafficCommonSqlFull(metricName, startDateTime, endDateTime, additionalFields, additionalFrom, additionalWhereClause, additionalGroupBy, additionalOrderBy) {
@@ -739,11 +757,12 @@ function getTrafficCommonSqlFull(metricName, startDateTime, endDateTime, additio
     if (trafficPieOutput) {
         mergeSQLtoUse = getTrafficMergePercentageSql();
     } else {
-        mergeSQLtoUse = getTrafficMergeSql();
+        mergeSQLtoUse = getTrafficMergeSql(additionalGroupBy, additionalOrderBy);
     }
     return "DELETE FROM metrics.jflow_viewer_output_aggregated;\n" +
             "INSERT INTO metrics.jflow_viewer_output_aggregated (" +
-                "SELECT MAX(measurement_time), site_name, operator_id, " +
+//                "SELECT MAX(measurement_time), site_name, operator_id, " +
+                "SELECT DATE(measurement_time), site_name, operator_id, " +
                 "SUM(cs_inbound) AS 'Calls Inbound', SUM(ps_inbound) AS 'Data Inbound', SUM(signalling_inbound) AS 'Remainder Inbound',  SUM(total_inbound) AS 'Total Inbound'," +
                 "SUM(cs_outbound) AS 'Calls Outbound', SUM(ps_outbound) AS 'Data Outbound', SUM(signalling_outbound) AS 'Remainder Outbound',  SUM(total_outbound) AS 'Total Outbound'" +
 //                "from jflow " +
@@ -755,8 +774,8 @@ function getTrafficCommonSqlFull(metricName, startDateTime, endDateTime, additio
                 additionalFrom +
                 " WHERE measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
                 additionalWhereClause +
-                additionalGroupBy +
-                additionalOrderBy +
+                "GROUP BY DATE(measurement_time), site_name, operator_id " +
+                "order by measurement_time, site_name, operator_id" +
             ");\n" + 
             getTrafficPivotSqlAll() +
             mergeSQLtoUse;
@@ -771,11 +790,12 @@ function getTrafficCommonSql(metricName, startDateTime, endDateTime, additionalF
     if (trafficPieOutput) {
         mergeSQLtoUse = getTrafficMergePercentageSql();
     } else {
-        mergeSQLtoUse = getTrafficMergeSql();
+        mergeSQLtoUse = getTrafficMergeSql(additionalGroupBy, additionalOrderBy);
     }
     return "DELETE FROM metrics.jflow_viewer_output_aggregated;\n" +
             "INSERT INTO metrics.jflow_viewer_output_aggregated (" +
-                "SELECT MAX(measurement_time), site_name, operator_id, " +
+//                "SELECT MAX(measurement_time), site_name, operator_id, " +
+                "SELECT DATE(measurement_time), site_name, operator_id, " +
                 "SUM(cs_inbound) AS 'Calls Inbound', SUM(ps_inbound) AS 'Data Inbound', SUM(signalling_inbound) AS 'Remainder Inbound',  SUM(total_inbound) AS 'Total Inbound'," +
                 "SUM(cs_outbound) AS 'Calls Outbound', SUM(ps_outbound) AS 'Data Outbound', SUM(signalling_outbound) AS 'Remainder Outbound',  SUM(total_outbound) AS 'Total Outbound'" +
 //                "from jflow " +
@@ -787,8 +807,8 @@ function getTrafficCommonSql(metricName, startDateTime, endDateTime, additionalF
                 additionalFrom +
                 " WHERE measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
                 additionalWhereClause +
-                additionalGroupBy +
-                additionalOrderBy +
+                "GROUP BY DATE(measurement_time), site_name, operator_id " +
+                "order by measurement_time, site_name, operator_id" +
             ");\n" + 
             getTrafficPivotSqlAll() +
             mergeSQLtoUse;
@@ -806,15 +826,21 @@ function getTrafficPivotSqlAll() {
             getTrafficPivotSqlSingle("Total Outbound", "total_outbound");
  }
  
-function getTrafficMergeSql () {
+function getTrafficMergeSql (additionalGroupBy, additionalOrderBy) {
     console.log("Using absolute SQL");
-    return "SELECT DATE(measurement_time) AS measurement_time, metric_name, " +
+    var siteField = "";
+    if (perSite) {
+        siteField = "site_name, ";
+    }
+    return "SELECT (DATE(measurement_time)) AS measurement_time, " + siteField + " metric_name, " +
         "COALESCE(ROUND(SUM(operator1)/1048576),0) AS VF, " +
         "COALESCE(ROUND(SUM(operator2)/1048576),0) AS O2, " +
         "COALESCE(ROUND(SUM(operator3)/1048576),0) AS THREE, " +
         "COALESCE(ROUND(SUM(operator4)/1048576),0) AS EE " +
         "FROM jflow_viewer_output_pivoted " +
-        "GROUP BY metric_name ORDER BY NULL;\n";
+//        "GROUP BY metric_name " +
+        additionalGroupBy +
+        "ORDER BY NULL;\n";
 }
 
 function getTrafficMergePercentageSql () {
@@ -829,7 +855,7 @@ function getTrafficMergePercentageSql () {
 }
 
 function getTrafficPivotSqlSingle(metricTitle, metricCol) {
-    return "INSERT INTO metrics.jflow_viewer_output_pivoted (SELECT measurement_time, '" + metricTitle + "' AS Metric, case when operator_id = 1 then " + metricCol + " end, " +
+    return "INSERT INTO metrics.jflow_viewer_output_pivoted (SELECT DATE(measurement_time), '" + metricTitle + "' AS Metric, site_name, case when operator_id = 1 then " + metricCol + " end, " +
             "case when operator_id = 2 then " + metricCol + " end,case when operator_id = 3 then " + metricCol + " end, case when operator_id = 4 then " + metricCol + " end " +
             "FROM metrics.jflow_viewer_output_aggregated);\n";
 }
@@ -1275,7 +1301,7 @@ function showGraph(id, visible, siteParam) {
                                                 for (var entry in measurement) {
                                                     if (entry === 'time') {
                                                         graphTimes.push(measurement[entry]);
-                                                        console.log("Adding time " + measurement[entry]);
+                                                        //console.log("Adding time " + measurement[entry]);
                                                     } else {
                                                         // add the data point to a Map, null or missing values will get "spanned" (spanGap)
                                                         if (graphValues.has(entry)) {
@@ -1303,6 +1329,7 @@ function showGraph(id, visible, siteParam) {
                                             }
                                             trafficCharts[0] = new Array();
                                             var chartColours = ['rgba(255,36,36,1)','rgba(42,137,192,1)','rgba(182,95,194,1)','rgba(43,172,177, 1)'];
+                                            maxMBytesToChart = 0;
                                             for (var kpi in metrics) {
                                                 //console.log("JS: 'kpi in metrics' is " + kpi); // Output says it's 0
                                                 var chartValues = new Array();
@@ -1316,27 +1343,35 @@ function showGraph(id, visible, siteParam) {
                                                             trafficChartTitles.push(measurement[entry]);
                                                             date = measurement[entry];
                                                             //console.log("Adding metric " + measurement[entry]);                                                            
+                                                        } else if (entry === 'site_name') {
+                                                            console.log("site_name filtered out");
                                                         } else {
-                                                            //console.log("   Adding measurement " + entry + "=" + measurement[entry]);
+                                                            // console.log("   Adding measurement " + entry + "=" + measurement[entry]);
                                                             if (kpi == 0) {
                                                                 chartLabels.push(entry);
                                                                 trafficTableCols += "<th>" + entry + "</th>"
                                                             }
-                                                            trafficCharts[kpi].push(measurement[entry]);
-                                                            chartValues.push(measurement[entry]);
-                                                            if (measurement[entry] > maxMBytesToChart) {
-                                                                console.log("New max for Y axis is " + maxBytesToChart);    
-                                                                maxMBytesToChart = measurement[entry];
-                                                            } else {
-                                                                console.log(measurement[entry] + " is less than the existing Y Max");                                                                
+                                                            // GROUP BY SQL required by table output format generates more rows than can be anticipated for charts
+                                                            if (!trafficTableOutput) {
+                                                                trafficCharts[kpi].push(measurement[entry]);
                                                             }
+                                                            chartValues.push(measurement[entry]);
+                                                            var numMbytes = parseFloat(measurement[entry]);
+                                                            if (numMbytes > maxMBytesToChart) {
+                                                                maxMBytesToChart = numMbytes;
+                                                                console.log("maxMBytesToChart is now " + maxMBytesToChart);
+                                                            } 
                                                         }
                                                     } 
                                                     trafficTableRow += "<td>" + measurement[entry] + "</td>"
                                                 }
                                                 trafficTableRows += "<tr>" + trafficTableRow + "</tr>";
                                             }
-                                            trafficTableCols = "<tr><th>Date</th><th>Metric</th>" + trafficTableCols + "</tr>";
+                                            if (perSite) {
+                                                trafficTableCols = "<tr><th>Date</th><th>Site</th><th>Metric</th>" + trafficTableCols + "</tr>";
+                                            } else {
+                                                trafficTableCols = "<tr><th>Date</th><th>Metric</th>" + trafficTableCols + "</tr>";                                                
+                                            }
                                             trafficTableRows += "</table>";
                                         }
                                         if ($('#site').val().length > 1) {
@@ -1363,7 +1398,7 @@ function showGraph(id, visible, siteParam) {
                                                 //console.log("Outputting metrics data in table format");
                                                 $('#TrafficTableWrap').show();
                                                 $('#TrafficChartWrap').hide();
-                                                console.log("Table HTML is " + trafficTableDef + trafficTableCols + trafficTableRows);
+                                                // console.log("Table HTML is " + trafficTableDef + trafficTableCols + trafficTableRows);
                                                 document.getElementById("TrafficTableWrap").innerHTML = trafficTableDef + trafficTableCols + trafficTableRows;
                                             } else {
                                                 var chartType, legendDisplay;
@@ -1378,6 +1413,44 @@ function showGraph(id, visible, siteParam) {
                                                 $('#TrafficChartWrap').show();
                                                 $('#TrafficTableWrap').hide();
 
+                                                var inc = 10;
+                                                if (maxMBytesToChart < 100) {
+                                                   inc = 10; 
+                                                } else if (maxMBytesToChart < 200) {
+                                                    inc = 20;
+                                                } else if (maxMBytesToChart < 500) {
+                                                    inc = 50;
+                                                } else if (maxMBytesToChart < 1000) {
+                                                    inc = 100;
+                                                } else if (maxMBytesToChart < 2000) {
+                                                    inc = 200;
+                                                } else if (maxMBytesToChart < 5000) {
+                                                    inc = 500;
+                                                } else if (maxMBytesToChart < 10000) {
+                                                    inc = 1000;
+                                                } else if (maxMBytesToChart < 20000) {
+                                                    inc = 2000;
+                                                } else if (maxMBytesToChart < 50000) {
+                                                    inc = 5000;
+                                                } else if (maxMBytesToChart < 100000) {
+                                                    inc = 10000;
+                                                } else if (maxMBytesToChart < 200000) {
+                                                    inc = 20000;
+                                                } else if (maxMBytesToChart < 500000) {
+                                                    inc = 50000;
+                                                } else if (maxMBytesToChart < 1000000) {
+                                                    inc = 100000;
+                                                } else { // MW - extend this with more clauses if necessary
+                                                    inc = 200000;
+                                                }                                                            
+                                                var r1 = Math.round(maxMBytesToChart / inc) * inc;
+                                                if (r1 > maxMBytesToChart) {
+                                                    //console.log("The upper range should be " + r1);
+                                                } else {
+                                                    r1 += inc;
+                                                    //console.log("The upper range should be " + r1);  
+                                                }
+
                                                 for (row = 0; row < 2; row++) {
                                                     for (col = 0; col < 4; col++) {
                                                         //console.log("chartNames[" + row + "][" + col + "] is " + document.getElementById(chartNames[row][col]));
@@ -1386,6 +1459,8 @@ function showGraph(id, visible, siteParam) {
                                                         if (typeof gridCharts[row][col] !== 'undefined') { gridCharts[row][col].destroy(); }
 
                                                         //console.log("trafficCharts[" + (col + (4 * row)) + "] = " + trafficCharts[(col + (4 * row))]);
+                                                        //console.log("The typeof maxMBytesToChart is " + typeof maxMBytesToChart + " and value is " + maxMBytesToChart);
+                                                         
                                                         gridCharts[row][col] = new Chart(gridCtx[row][col], {
                                                             type: chartType,
                                                             data: {
@@ -1409,7 +1484,10 @@ function showGraph(id, visible, siteParam) {
                                                                     yAxes: [{
                                                                         display:!legendDisplay,
                                                                         gridLines: { display:!legendDisplay },
-                                                                        ticks: { beginAtZero:true, max: maxMBytesToChart },
+//                                                                        ticks: { beginAtZero:true },
+//                                                                        ticks: { beginAtZero:true, max: maxMBytesToChart },
+                                                                        ticks: { beginAtZero:true, max: r1 },
+//                                                                        ticks: { beginAtZero:true, max: 500 },
                                                                         scaleLabel: {
                                                                             display: true,
                                                                             labelString: 'MBytes'
