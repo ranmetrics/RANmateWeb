@@ -72,7 +72,9 @@ function initPage() {
 
     var siteParam = getURLParameter('site');
     if (siteParam != null) {
-        initWithParams(decodeURIComponent(siteParam).replace(/\+/g, " ").replace(/%28/g, '(').replace(/%29/g,')'));
+        console.log("Original  siteParam is " + siteParam);    
+        //var siteParam = decodeURIComponent(getURLParameter('site').replace(/%2B/g, '^')).replace(/\+/g, " ").replace(/%28/g, '(').replace(/%29/g,')').replace(/\^/g, '+');        
+        initWithParams(decodeURIComponent(siteParam.replace(/%2B/g, '^')).replace(/\+/g, " ").replace(/%28/g, '(').replace(/%29/g,')').replace(/\^/g, '+'));
     } else {
         console.log("site name is not specified, ignoring any other URL params");
     }
@@ -89,7 +91,7 @@ function initWithParams(siteParam) {
     var userParam = getURLParameter('checksum');
     //siteParam = siteParam.replace(/([a-zA-Z0-9])-([a-zA-Z0-9])([a-zA-Z0-9]* - )/g, "$1 - $2");
     siteParam = siteParam.replace(/([a-zA-Z0-9])-([a-zA-Z0-9]* - )/g, "$1 - $2");
-    //console.log("Correcting " + siteParam + " to " + testSiteParam);
+    console.log("Corrected siteParam to " + siteParam);
     if (opcoParam != null) {
         if (femtoParam != null) {
             updateOpCoCells(siteParam, decodeURIComponent(opcoParam), decodeURIComponent(femtoParam), siteParam);
@@ -368,7 +370,6 @@ function getRecentResets(site, cellNum) {
     return resetsMsg;
 }
 
-
 function resetFemto() {
 
     if (window.XMLHttpRequest) {
@@ -387,6 +388,12 @@ function resetFemto() {
     var site = document.getElementById("site").value;
     var femtoNum = parseInt(selectedFemto.slice(-1));
     var cellNum = parseInt(selectedOpCo) + ((femtoNum -1) * 4);
+    if (site.endsWith('+')) {
+        site = site.replace(/\+/g, "");
+        femtoNum += 8;
+        cellNum += 33;
+        alert("52 port switch (" + site + ") detected, resetting port " + cellNum);
+    }
     // check the time is between office hours
     var day = new Date().getDay();
     var hour = new Date().getHours();

@@ -11,11 +11,18 @@ if (!$conn) {
     die('Could not connect: ' . mysqli_error($conn));
 }
         
-$sql = "Select DISTINCT customer_config.SwitchIP, customer_config.Site, customer_config.SwitchLocation, customer_config.SiteRef "
-        . "from `ranmate-femto`.customer_config, `ranmate-femto`.sites "
-        . "WHERE SwitchIP LIKE '10.%' AND SwitchLocation != '' AND CONCAT(customer_config.Site,'-',customer_config.SwitchLocation) = sites.site_id "
-        . "AND sites.effective_to > NOW() ORDER BY Site, SwitchLocation";
-//        . "AND sites.exclude='0' and sites.effective_to > NOW() ORDER BY Site, SwitchLocation";
+//$sql = "Select DISTINCT customer_config.SwitchIP, customer_config.Site, customer_config.SwitchLocation, customer_config.SiteRef "
+//        . "from `ranmate-femto`.customer_config, `ranmate-femto`.sites "
+//        . "WHERE SwitchIP LIKE '10.%' AND SwitchLocation != '' AND CONCAT(customer_config.Site,'-',customer_config.SwitchLocation) = sites.site_id "
+//        . "AND sites.effective_to > NOW() ORDER BY Site, SwitchLocation";
+// //        . "AND sites.exclude='0' and sites.effective_to > NOW() ORDER BY Site, SwitchLocation";
+//    $sql = "Select DISTINCT customer_config.SwitchIP, customer_config.Site, customer_config.SwitchLocation, customer_config.SiteRef "
+//            . "from `ranmate-femto`.customer_config, `ranmate-femto`.sites "
+//            . "WHERE SwitchIP LIKE '10.%' AND SwitchLocation != '' AND CONCAT(customer_config.Site,'-',customer_config.SwitchLocation) = sites.site_id "
+//            . "AND sites.effective_to > NOW() ORDER BY Site, SwitchLocation";
+//  //            . "AND sites.exclude='0' and sites.effective_to > NOW() ORDER BY Site, SwitchLocation";
+    // added 19/7/18 to support virtual '+' switches
+    $sql = "Select DISTINCT '', (SUBSTRING_INDEX(site_id, '-', 1)) AS 'Site', (SUBSTRING_INDEX(site_id, '-', -1)) AS 'SwitchLocation', '' from `ranmate-femto`.sites ORDER BY Site, SwitchLocation";
 
 $result = $conn->query($sql);
 

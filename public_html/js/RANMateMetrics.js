@@ -14,12 +14,28 @@
  * https://github.com/chartjs/Chart.js/blob/master/LICENSE.md
  */
 var myChart;
-var chart1upper, chart2upper, chart3upper, chart4upper, chart1lower, chart2lower, chart3lower, chart4lower;
+//var chart1upper, chart2upper, chart3upper, chart4upper, chart1lower, chart2lower, chart3lower, chart4lower;
+var gridCharts = new Array(2); // a 2D array of charts charts[0][n] is the top row
+var gridCanvas = new Array(2); // a 2D array of canvases canvas[0][n] is the top row
+var gridCtx = new Array(2); // a 2D array of contexts txt[0][n] is the top row
+// maps the ids in the html to the 2D array design that allows us to programatically populate each one inside the same loop
+var volumeChartNames = [["chart1upper", "chart2upper", "chart3upper", "chart4upper"],["chart1lower", "chart2lower", "chart3lower", "chart4lower"]];
+var callsChartNames = [["chart1", "chart2", "chart3"]]; // we might add a 2nd row of graphs in the future of the total number of call minutes
+//var chartTitles = [["CS Inbound", "PS Inbound", "Signalling Inbound", "Total Inbound"],["CS Outbound", "PS Outbound", "Signalling Outbound", "Total Outbound"]];
+
 var startMillis;
 var liveCells;
 var currentMetricType;
 var yLabelTitle = '';
 var trafficTableOutput = false;
+var trafficBarOutput = false;
+var trafficPieOutput = true; // selected by default
+var perDay = false;
+var perSite = false;
+var trafficGroupBySQL = "GROUP BY metric_name ";
+var trafficOrderBySQL = "";
+var maxMBytesToChart = 0;
+var maxCallsToChart = 0;
 
 function getNow() {
     return getDateTimeString(new Date());
@@ -129,15 +145,53 @@ function showSites(justNowSelected, siteToBeSelected) {
                     thisMetricType = "Traffic";
                     pingOrCounterMetricSelected = false;
                     // console.log("Metric Types is now Traffic");
-                    document.getElementById("PerDay").disabled = true;
-                    document.getElementById("PerSite").disabled = true;
-                    document.getElementById("Chart").checked = true;                    
+                    // MW next 2 lines probably can be deleted
+                    //document.getElementById("PerDay").disabled = true;
+                    //document.getElementById("PerSite").disabled = true;
+                    document.getElementById("Pie").checked = true;                   // was 'Chart' previously
                     if ($('#metric').val().length > 1) {
                         alert("Multiple Traffic Metrics not yet supported, please deselect one or more metrics");
                         return;
-                    }                   
+                    }
+                    // now create the 2 inner part of the Traffic array charts
+                    for (var i = 0; i < 2; i++) {
+                        //console.log("Creating the 2nd dimension in the array for traffic metric");
+                        gridCharts[i] = new Array(4);
+                        gridCanvas[i] = new Array(4);
+                        gridCtx[i] = new Array(4);
+                    }                                        
                 } else {
                     alert("Traffic metrics cannot be selected with any other metric");
+                    document.getElementById("site").innerHTML = "<!DOCTYPE html><html><body></body></html>";
+                    document.getElementById("site").selectedIndex = -1;
+                    $('#site').multiselect('rebuild');
+                    thisMetricType = "";
+                    return;                    
+                }
+            } else if (selectedMetric.startsWith('Calls-')) {
+                $('#worstwrapper').hide();
+                if (previousMetricTypes === null) { 
+                    thisMetricType = "Calls";
+                    pingOrCounterMetricSelected = false;
+                    // console.log("Metric Types is now Traffic");
+                    // MW next 2 lines probably can be deleted
+                    //document.getElementById("PerDay").disabled = true;
+                    //document.getElementById("PerSite").disabled = true;
+                    document.getElementById("Bar").checked = true;                   // is 'Pie' for Traffic
+                    outputFormatSelected("Bar");
+                    if ($('#metric').val().length > 1) {
+                        alert("Multiple Traffic Metrics not yet supported, please deselect one or more metrics");
+                        return;
+                    }
+                    // now create the 2 inner part of the Traffic array charts
+                    for (var i = 0; i < 2; i++) {
+                        //console.log("Creating the 2nd dimension in the array for Calls metric");
+                        gridCharts[i] = new Array(4);
+                        gridCanvas[i] = new Array(4);
+                        gridCtx[i] = new Array(4);
+                    }                                        
+                } else {
+                    alert("Calls metrics cannot be selected with any other metric");
                     document.getElementById("site").innerHTML = "<!DOCTYPE html><html><body></body></html>";
                     document.getElementById("site").selectedIndex = -1;
                     $('#site').multiselect('rebuild');
@@ -227,6 +281,8 @@ function showSites(justNowSelected, siteToBeSelected) {
                    thisMetricType = "Femto";
                 } else if (justNowSelected.startsWith('Traffic-')) {
                    thisMetricType = "Traffic";
+                } else if (justNowSelected.startsWith('Calls-')) {
+                   thisMetricType = "Calls"; // will probably need to change this to 'Calls' to remove the Pie Chart option and lay out the grpahs properly
                 }
             }
 
@@ -244,7 +300,7 @@ function showSites(justNowSelected, siteToBeSelected) {
                 $('#interfacewrapper').hide();
             }
 
-            if (thisMetricType === "Traffic") {
+            if ((thisMetricType === "Traffic") || (thisMetricType === "Calls")) {
                 //iface.style.display = "block";
                 //iface.style.margin = "10px 0px 0px 0px";    // no idea why we now need a 10px top border instead of 5px to keep it inline
                 //ifaceLabel.style.display = "block";            
@@ -260,9 +316,10 @@ function showSites(justNowSelected, siteToBeSelected) {
                 $('#trafficwrapper').hide();
             }
             // if (((thisMetricType === "Counter") || (thisMetricType === "Ping")) && ((currentMetricType !== "Counter") && (currentMetricType !== "Ping"))) {  // pre Traffic entry
-            if ((((thisMetricType === "Counter") || (thisMetricType === "Ping")) && ((currentMetricType !== "Counter") && (currentMetricType !== "Ping"))) ||
-                 ((thisMetricType === "Traffic") && (currentMetricType !== "Traffic"))) { 
-                console.log("Need to rebuild Site list for Counter/Ping/Traffic metric");
+            if ((((thisMetricType === "Counter") || (thisMetricType === "Ping")) && 
+                 ((currentMetricType !== "Counter") && (currentMetricType !== "Ping"))) ||
+                 (((thisMetricType === "Traffic") || (thisMetricType === "Calls")) && ((currentMetricType !== "Traffic") && (currentMetricType !== "Calls")))) { 
+                console.log("Need to rebuild Site list for Counter/Ping/Traffic/Calls metric");
                 clearTickBoxes();
                 cellNum.style.display = 'none';
                 opCoName.style.display = 'none';
@@ -274,10 +331,10 @@ function showSites(justNowSelected, siteToBeSelected) {
                 //ifaceLabel.style.display = "block";
                 //$('#interfacewrapper').show();
                 if (pingOrCounterMetricSelected && buddyMetricSelected) {
-                    console.log("Calling RANMateMetrics_SiteList.php with group=Mixed");            
+                    //console.log("Calling RANMateMetrics_SiteList.php with group=Mixed");            
                     xmlhttp.open("GET","RANMateMetrics_SiteList.php?group=Mixed",true);
                 } else {
-                    console.log("Calling RANMateMetrics_SiteList.php with group=" + selectedMetric);            
+                    //console.log("Calling RANMateMetrics_SiteList.php with group=" + selectedMetric);            
                     xmlhttp.open("GET","RANMateMetrics_SiteList.php?group="+selectedMetric,true);
                 }
                 xmlhttp.send();
@@ -294,10 +351,10 @@ function showSites(justNowSelected, siteToBeSelected) {
                 //ifaceLabel.style.display = "block";
                 //$('#interfacewrapper').show();
                 if (pingOrCounterMetricSelected && buddyMetricSelected) {
-                    console.log("Calling RANMateMetrics_SiteList.php with group=Mixed");            
+                    //console.log("Calling RANMateMetrics_SiteList.php with group=Mixed");            
                     xmlhttp.open("GET","RANMateMetrics_SiteList.php?group=Mixed",true);
                 } else {
-                    console.log("Calling RANMateMetrics_SiteList.php with group=" + selectedMetric);            
+                    //console.log("Calling RANMateMetrics_SiteList.php with group=" + selectedMetric);            
                     xmlhttp.open("GET","RANMateMetrics_SiteList.php?group="+selectedMetric,true);
                 }
                 xmlhttp.send();
@@ -507,7 +564,7 @@ function removeOptions(selectbox) {
 //using the function:
 
 function showInterfaces(str) {
-    console.log("showInterfaces called with " + str);
+    //console.log("showInterfaces called with " + str);
     if (str == "") {
         return;
     } else {
@@ -569,9 +626,9 @@ function initPage() {
 function initWithParams(metricParam) {
     //console.log("metric name is " + metricParam);
     $('#metric').multiselect('select', metricParam, true);
-    var siteParam = decodeURIComponent(getURLParameter('site')).replace(/\+/g, " ").replace(/%28/g, '(').replace(/%29/g,')');
-    //showSites(metricParam, siteParam.replace("-", " - "));    
-    //                                                 " WHERE " + metricName + ".site_name = '" + site.replace(/ - ([^ ])/, "-$1") +
+    // temporarliy changing the %2B to a ^ before the pluses get URL decocded and then convert ^ back to + when we're finished
+    var siteParam = decodeURIComponent(getURLParameter('site').replace(/%2B/g, '^')).replace(/\+/g, " ").replace(/%28/g, '(').replace(/%29/g,')').replace(/\^/g, '+');
+    // console.log("Parsed site name is " + siteParam);
 
     showSites(metricParam, siteParam.replace(/([^ ])-([^ ])/, "$1 - $2"));    
     var opcoParam = getURLParameter('operator');
@@ -631,13 +688,67 @@ function clearTickBoxes() {
 }
 
 function outputFormatSelected(format) {
+    //console.log(format + " format selected");
     if (format == "") {
         return;
     } else if (format == "Table") {
         trafficTableOutput = true;
+        trafficPieOutput = false;
+        trafficBarOutput = false;
+    } else if (format == "Bar") {
+        trafficBarOutput = true;
+        trafficPieOutput = false;
+        trafficTableOutput = false;
     } else {
+        trafficPieOutput = true;
+        trafficBarOutput = false;
         trafficTableOutput = false;
     }        
+}
+
+function perDayOrSiteChecked(checkBox) {
+//    if (document.getElementById("PerDay") != null) {
+        if ((document.getElementById("PerDay").checked) || (document.getElementById("PerSite").checked)) {
+            trafficTableOutput = true;
+            trafficPieOutput = false;
+            trafficBarOutput = false;        
+            document.getElementById("Pie").disabled = true;
+            document.getElementById("Bar").disabled = true;
+            document.getElementById("BarLabel").style.color = "lightgrey";
+            document.getElementById("PieLabel").style.color = "lightgrey";
+            document.getElementById("Table").disabled = false;
+            document.getElementById("Table").checked = true;
+        } else {
+            //trafficTableOutput = false;
+            //trafficPieOutput = true;
+            //trafficBarOutput = false;                
+            document.getElementById("Pie").disabled = false;
+            document.getElementById("Bar").disabled = false;
+            document.getElementById("BarLabel").style.color = "black";
+            document.getElementById("PieLabel").style.color = "black";
+        }
+        if ((document.getElementById('PerDay').checked) && (document.getElementById('PerSite').checked)) {
+            trafficGroupBySQL = "GROUP BY measurement_time, site_name, metric_name ";        
+            trafficOrderBySQL = "ORDER BY site_name, measurement_time;\n";
+            perDay = true;
+            perSite = true;
+        } else if ((document.getElementById('PerDay').checked)) {
+            trafficGroupBySQL = "GROUP BY measurement_time, metric_name ";
+            trafficOrderBySQL = "ORDER BY NULL;\n";
+            perDay = true;
+            perSite = false;
+        } else if ((document.getElementById('PerSite').checked)) {
+            trafficGroupBySQL = "GROUP BY site_name, metric_name ";
+            trafficOrderBySQL = "ORDER BY site_name;\n";
+            perDay = false;
+            perSite = true;
+        } else {
+            trafficGroupBySQL = "GROUP BY metric_name ";
+            trafficOrderBySQL = "ORDER BY NULL;\n";
+            perDay = false;
+            perSite = false;
+        }
+//    }
 }
 
 function isValidDateTimeString(day) {
@@ -647,6 +758,80 @@ function isValidDateTimeString(day) {
 
 function showGraph(id, visible) {
     showGraph(id, visible, null);
+}
+
+function getCallsSQL(metricName, startDateTime, endDateTime, allSites, perDay, perSite) {
+    var sitesWhereClause = "";
+    if (!allSites) {
+        for (i = 0; i < $('#site').val().length; i++) {
+            if ($('#site').val()[i].startsWith("Fora -")) {
+                selectedSite = $('#site').val()[i];
+            } else {
+                selectedSite = $('#site').val()[i].replace(" - ", "-");                
+            }
+            if (i == 0) {
+                siteFloorStr = "\'^" + selectedSite;
+            } else {
+                siteFloorStr += "|^" + selectedSite;
+            }
+        }
+        siteFloorStr += '\''; // old version that incorrectly matched Bishopsgate with 15 Bishopsgate
+        //console.log("siteFloorStr=" + siteFloorStr);
+        sitesWhereClause = " AND jflow.site_name REGEXP " + siteFloorStr + " ";    
+    }
+    return getCallsCommonSql("jflow", startDateTime, endDateTime, "", "", sitesWhereClause, trafficGroupBySQL, trafficOrderBySQL);
+}
+
+function getCallsCommonSql(metricName, startDateTime, endDateTime, additionalFields, additionalFrom, additionalWhereClause, additionalGroupBy, additionalOrderBy) {
+    var mergeSQLtoUse = "";
+    if (trafficPieOutput) {
+        mergeSQLtoUse = getTrafficMergePercentageSql();
+    } else {
+        mergeSQLtoUse = getCallsMergeSql(additionalGroupBy, additionalOrderBy);
+    }
+    return "DELETE FROM metrics.jflow_viewer_output_aggregated;\n" +
+            "INSERT INTO metrics.jflow_viewer_output_aggregated (" +
+                "SELECT DATE(measurement_time), site_name, operator_id, " +
+                "SUM(cs_inbound) AS 'Calls Inbound', SUM(ps_inbound) AS 'Data Inbound', SUM(signalling_inbound) AS 'Remainder Inbound',  SUM(total_inbound) AS 'Total Inbound'," +
+                "SUM(cs_outbound) AS 'Calls Outbound', SUM(ps_outbound) AS 'Data Outbound', SUM(signalling_outbound) AS 'Remainder Outbound',  SUM(total_outbound) AS 'Total Outbound'" +
+                "FROM metrics." + metricName +
+                additionalFrom +
+                " WHERE measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+                additionalWhereClause +
+                "GROUP BY DATE(measurement_time), site_name, operator_id " +
+                "order by measurement_time, site_name, operator_id" +
+            ");\n" + 
+            getCallsPivotSqlAll() +
+            mergeSQLtoUse;
+}
+
+function getCallsPivotSqlAll() {
+    return "DELETE FROM metrics.jflow_viewer_output_pivoted;\n" +
+            getTrafficPivotSqlSingle("Num Calls Inbound", "cs_inbound") +
+            getTrafficPivotSqlSingle("Num Calls Outbound", "cs_outbound") +
+            getCallsTotalSql("Total Num Calls");
+ }
+
+function getCallsTotalSql() {
+    return "INSERT INTO metrics.jflow_viewer_output_pivoted (SELECT measurement_time, 'Total Num Calls ' AS Metric, site_name, " + 
+            "sum(operator1), sum(operator2), sum(operator3), sum(operator4) FROM metrics.jflow_viewer_output_pivoted);\n";
+ }
+
+function getCallsMergeSql (additionalGroupBy, additionalOrderBy) {
+    var siteField = "";
+    if (perSite) {
+        siteField = "site_name, ";
+    }
+    // added a multiplier (0.3) to convert Megabyte volumes into number of calls 
+    return "SELECT (DATE(measurement_time)) AS measurement_time, " + siteField + " metric_name, " +
+        "COALESCE(ROUND(SUM(operator1)/(1048576 * 0.3)),0) AS VF, " +
+        "COALESCE(ROUND(SUM(operator2)/(1048576 * 0.3)),0) AS O2, " +
+        "COALESCE(ROUND(SUM(operator3)/(1048576 * 0.3)),0) AS THREE, " +
+        "COALESCE(ROUND(SUM(operator4)/(1048576 * 0.3)),0) AS EE " +
+        "FROM jflow_viewer_output_pivoted " +
+//        "GROUP BY metric_name " +
+        additionalGroupBy +
+        "ORDER BY NULL;\n";
 }
 
 // getTrafficCommonSQL(metricName, startDateTime, endDateTime);
@@ -660,24 +845,130 @@ function getTrafficSQL(metricName, startDateTime, endDateTime, allSites, perDay,
                 selectedSite = $('#site').val()[i].replace(" - ", "-");                
             }
             if (i == 0) {
-                //siteFloorStr = '\'' + selectedSite + '\'';
-                siteFloorStr = '\'' + selectedSite;
+                siteFloorStr = "\'^" + selectedSite;
             } else {
-                //siteFloorStr += ',\'' + selectedSite + '\'';
-                siteFloorStr += '|' + selectedSite;
+                siteFloorStr += "|^" + selectedSite;
             }
         }
-        siteFloorStr += '\'';
-        // REGEXP '1740|1938|1940'; 
-        //sitesWhereClause = " AND packets.site_name IN (" + siteFloorStr + ") ";    
-        sitesWhereClause = " AND packets.site_name REGEXP " + siteFloorStr + " ";    
+        siteFloorStr += '\''; // old version that incorrectly matched Bishopsgate with 15 Bishopsgate
+        //console.log("siteFloorStr=" + siteFloorStr);
+        sitesWhereClause = " AND jflow.site_name REGEXP " + siteFloorStr + " ";    
     }
-    return getTrafficCommonSQL("packets", startDateTime, endDateTime, "", "", sitesWhereClause, "");
+    return getTrafficCommonSql("jflow", startDateTime, endDateTime, "", "", sitesWhereClause, trafficGroupBySQL, trafficOrderBySQL);
 }
 
+function getTrafficCommonSqlFull(metricName, startDateTime, endDateTime, additionalFields, additionalFrom, additionalWhereClause, additionalGroupBy, additionalOrderBy) {
+    var mergeSQLtoUse = "";
+    if (trafficPieOutput) {
+        mergeSQLtoUse = getTrafficMergePercentageSql();
+    } else {
+        mergeSQLtoUse = getTrafficMergeSql(additionalGroupBy, additionalOrderBy);
+    }
+    return "DELETE FROM metrics.jflow_viewer_output_aggregated;\n" +
+            "INSERT INTO metrics.jflow_viewer_output_aggregated (" +
+//                "SELECT MAX(measurement_time), site_name, operator_id, " +
+                "SELECT DATE(measurement_time), site_name, operator_id, " +
+                "SUM(cs_inbound) AS 'Calls Inbound', SUM(ps_inbound) AS 'Data Inbound', SUM(signalling_inbound) AS 'Remainder Inbound',  SUM(total_inbound) AS 'Total Inbound'," +
+                "SUM(cs_outbound) AS 'Calls Outbound', SUM(ps_outbound) AS 'Data Outbound', SUM(signalling_outbound) AS 'Remainder Outbound',  SUM(total_outbound) AS 'Total Outbound'" +
+//                "from jflow " +
+//                "WHERE measurement_time BETWEEN '2018-03-05 07:03' AND '2018-03-06 13:03' "+ 
+//                "AND jflow.site_name REGEXP '66 Chiltern St'  
+//                "group by operator_id" +
+//                "order by operator_id"; 
+                "FROM metrics." + metricName +
+                additionalFrom +
+                " WHERE measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+                additionalWhereClause +
+                "GROUP BY DATE(measurement_time), site_name, operator_id " +
+                "order by measurement_time, site_name, operator_id" +
+            ");\n" + 
+            getTrafficPivotSqlAll() +
+            mergeSQLtoUse;
+}
+
+function getTrafficCommonSqlTest(metricName, startDateTime, endDateTime, additionalFields, additionalFrom, additionalWhereClause, additionalGroupBy, additionalOrderBy) {
+    return getTrafficMergeSql();
+}
+
+function getTrafficCommonSql(metricName, startDateTime, endDateTime, additionalFields, additionalFrom, additionalWhereClause, additionalGroupBy, additionalOrderBy) {
+    var mergeSQLtoUse = "";
+    if (trafficPieOutput) {
+        mergeSQLtoUse = getTrafficMergePercentageSql();
+    } else {
+        mergeSQLtoUse = getTrafficMergeSql(additionalGroupBy, additionalOrderBy);
+    }
+    return "DELETE FROM metrics.jflow_viewer_output_aggregated;\n" +
+            "INSERT INTO metrics.jflow_viewer_output_aggregated (" +
+//                "SELECT MAX(measurement_time), site_name, operator_id, " +
+                "SELECT DATE(measurement_time), site_name, operator_id, " +
+                "SUM(cs_inbound) AS 'Calls Inbound', SUM(ps_inbound) AS 'Data Inbound', SUM(signalling_inbound) AS 'Remainder Inbound',  SUM(total_inbound) AS 'Total Inbound'," +
+                "SUM(cs_outbound) AS 'Calls Outbound', SUM(ps_outbound) AS 'Data Outbound', SUM(signalling_outbound) AS 'Remainder Outbound',  SUM(total_outbound) AS 'Total Outbound'" +
+//                "from jflow " +
+//                "WHERE measurement_time BETWEEN '2018-03-05 07:03' AND '2018-03-06 13:03' "+ 
+//                "AND jflow.site_name REGEXP '66 Chiltern St'  
+//                "group by operator_id" +
+//                "order by operator_id"; 
+                "FROM metrics." + metricName +
+                additionalFrom +
+                " WHERE measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
+                additionalWhereClause +
+                "GROUP BY DATE(measurement_time), site_name, operator_id " +
+                "order by measurement_time, site_name, operator_id" +
+            ");\n" + 
+            getTrafficPivotSqlAll() +
+            mergeSQLtoUse;
+}
+
+function getTrafficPivotSqlAll() {
+    return "DELETE FROM metrics.jflow_viewer_output_pivoted;\n" +
+            getTrafficPivotSqlSingle("Calls Inbound", "cs_inbound") +
+            getTrafficPivotSqlSingle("Data Inbound", "ps_inbound") +
+            getTrafficPivotSqlSingle("Remainder Inbound", "signalling_inbound") +
+            getTrafficPivotSqlSingle("Total Inbound", "total_inbound") +
+            getTrafficPivotSqlSingle("Calls Outbound", "cs_outbound") +
+            getTrafficPivotSqlSingle("Data Outbound", "ps_outbound") +
+            getTrafficPivotSqlSingle("Remainder Outbound", "signalling_outbound") +
+            getTrafficPivotSqlSingle("Total Outbound", "total_outbound");
+ }
+ 
+function getTrafficMergeSql (additionalGroupBy, additionalOrderBy) {
+    //console.log("Using absolute SQL");
+    var siteField = "";
+    if (perSite) {
+        siteField = "site_name, ";
+    }
+    return "SELECT (DATE(measurement_time)) AS measurement_time, " + siteField + " metric_name, " +
+        "COALESCE(ROUND(SUM(operator1)/1048576),0) AS VF, " +
+        "COALESCE(ROUND(SUM(operator2)/1048576),0) AS O2, " +
+        "COALESCE(ROUND(SUM(operator3)/1048576),0) AS THREE, " +
+        "COALESCE(ROUND(SUM(operator4)/1048576),0) AS EE " +
+        "FROM jflow_viewer_output_pivoted " +
+//        "GROUP BY metric_name " +
+        additionalGroupBy +
+        "ORDER BY NULL;\n";
+}
+
+function getTrafficMergePercentageSql () {
+    console.log("Using percentage SQL");
+    return "SELECT DATE(measurement_time) AS measurement_time, metric_name, " +
+        "COALESCE((SUM(operator1) * 100),0)/(COALESCE(SUM(operator1),0) + COALESCE(SUM(operator2),0) + COALESCE(SUM(operator3),0) + COALESCE(SUM(operator4),0)) AS VF, " +
+        "COALESCE((SUM(operator2) * 100),0)/(COALESCE(SUM(operator1),0) + COALESCE(SUM(operator2),0) + COALESCE(SUM(operator3),0) + COALESCE(SUM(operator4),0)) AS O2, " +
+        "COALESCE((SUM(operator3) * 100),0)/(COALESCE(SUM(operator1),0) + COALESCE(SUM(operator2),0) + COALESCE(SUM(operator3),0) + COALESCE(SUM(operator4),0)) AS THREE, " +
+        "COALESCE((SUM(operator4) * 100),0)/(COALESCE(SUM(operator1),0) + COALESCE(SUM(operator2),0) + COALESCE(SUM(operator3),0) + COALESCE(SUM(operator4),0)) AS EE " +
+        "FROM jflow_viewer_output_pivoted " +
+        "GROUP BY metric_name ORDER BY NULL;\n";
+}
+
+function getTrafficPivotSqlSingle(metricTitle, metricCol) {
+    return "INSERT INTO metrics.jflow_viewer_output_pivoted (SELECT DATE(measurement_time), '" + metricTitle + "' AS Metric, site_name, case when operator_id = 1 then " + metricCol + " end, " +
+            "case when operator_id = 2 then " + metricCol + " end,case when operator_id = 3 then " + metricCol + " end, case when operator_id = 4 then " + metricCol + " end " +
+            "FROM metrics.jflow_viewer_output_aggregated);\n";
+}
+    
 //#select DATE(measurement_time) AS Date, sites.node_id AS SiteId,
-function getTrafficCommonSQL(metricName, startDateTime, endDateTime, additionalFields, additionalFrom, additionalWhereClause, additionalGroupBy) {
-    return "select DATE(measurement_time) AS Date, " +
+function getTrafficCommonSqlOld(metricName, startDateTime, endDateTime, additionalFields, additionalFrom, additionalWhereClause, additionalGroupBy) {
+    //return "select DATE(measurement_time) AS Date, " +
+    return "select DATE(measurement_time) AS Date, 'CS Inbound' AS Metric, " +
     additionalFields +
     "ROUND(((SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28)/ " +
     "SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + " +
@@ -972,7 +1263,16 @@ function showGraph(id, visible, siteParam) {
                             } else if (metric.substring(0,8) == "Traffic-") {
                                 metricTypesForPhp.add("Traffic");
                                 query = getTrafficSQL(metricName, startDateTime, endDateTime, ($('#site').val()[0] == " All Sites"), false, false);
-                                console.log("Traffic SQL is " + query);                                
+                                //console.log("Traffic SQL is " + query);
+                            } else if (metric.substring(0,6) == "Calls-") {
+                                metricTypesForPhp.add("Calls");
+                                query = getCallsSQL(metricName, startDateTime, endDateTime, ($('#site').val()[0] == " All Sites"), false, false);
+                                //console.log("Calls SQL is " + query);
+                                                               
+                                
+//                                query += "UNION " + 
+//                                        "select DATE(measurement_time) AS Date, ROUND(((SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28)/ SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29 + cell_2 + cell_6 + cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30 + cell_3 + cell_7 + cell_11 + cell_15 + cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS 'VF', ROUND(((SUM(cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29)/SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29 + cell_2 + cell_6 + cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30 + cell_3 + cell_7 + cell_11 + cell_15 + cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS 'O2', ROUND(((SUM(cell_2 + cell_6 + cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30)/SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29 + cell_2 + cell_6 + cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30 + cell_3 + cell_7 + cell_11 + cell_15 + cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS 'THREE', ROUND(((SUM(cell_3 + cell_7 + cell_11 + cell_15 + cell_19 + cell_23 + cell_27 + cell_31)/SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29 + cell_2 + cell_6 + cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30 + cell_3 + cell_7 + cell_11 + cell_15 + cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS 'EE' " +
+//                                        "FROM metrics.packets WHERE measurement_time BETWEEN '2018-02-09 06:40' AND '2018-02-10 12:40'  AND packets.site_name REGEXP 'Aldwych';";
 //                                if (metric.substring(metric.length - 7) == "(Daily)") {
 //                                    if ($('#site').val()[0] == " All Sites") {
 //                                        query = getTrafficCommonSQL(metricName, startDateTime, endDateTime);                                        
@@ -1085,8 +1385,7 @@ function showGraph(id, visible, siteParam) {
                                     var d = new Date();
                                     var endMillis = d.getTime();
                                     console.log(endMillis - startMillis + " millis taken to run query");
-                                    console.log("showGraph() data=" + this.responseText.substring(0,500));
-                                    // alert(this.responseText.substring(0,1000));
+                                    //console.log("showGraph() data=" + this.responseText.substring(0,5000));
                                     // response string
                                     // [{"time":"2016-11-05 03:55:00","VF_1":"152","O2_1":"90"},{"time":"2016-11-05 04:00:00","VF_1":"157","O2_1":"90"},{"tim...
                                     // console.log("The index is " + this.responseText.indexOf("<data>(No data available for query"));
@@ -1101,7 +1400,7 @@ function showGraph(id, visible, siteParam) {
                                         alert("Metrics data does not exist for this interval at this site");
                                     } else {
                                         var metrics = JSON.parse(this.responseText);
-                                        if (metric.substring(0,8) !== "Traffic-") {
+                                        if ((metric.substring(0,8) !== "Traffic-") && (metric.substring(0,6) !== "Calls-"))  {
                                             var graphTimes = new Array();
                                             var graphValues = new Map(); // one entry for each metric
                                             for (var key in metrics) {
@@ -1110,7 +1409,7 @@ function showGraph(id, visible, siteParam) {
                                                 for (var entry in measurement) {
                                                     if (entry === 'time') {
                                                         graphTimes.push(measurement[entry]);
-            //                                            console.log("Adding time " + measurement[entry]);
+                                                        //console.log("Adding time " + measurement[entry]);
                                                     } else {
                                                         // add the data point to a Map, null or missing values will get "spanned" (spanGap)
                                                         if (graphValues.has(entry)) {
@@ -1129,52 +1428,64 @@ function showGraph(id, visible, siteParam) {
                                             var trafficTableCols = "";
                                             var trafficTableRows = "";
                                             
-// <tr><td><nobr>2017-12-22 11:41</nobr></td><td><nobr>Ladbroke Grove - South Comms Room (2nd FL)</nobr></td><td>EE</td><td>6</td><td><nobr>Musawar Sandhu</nobr></td><td>1hr</td><td>- It is during business hours</td></tr>                                                
-// From PHP won't need the <nobr> for the numbers
-// echo "<table align=\"center\" style=\"width:90%\">";
-// echo "<tr><th>Reset Time</th><th>Switch</th><th>Operator</th><th>FAP</th><th>User</th><th>User Comment</th><th>RANmate Note</th></tr>";
-// if ($result->num_rows > 0) {
-//     while($row = $result->fetch_assoc()) {
-//         $time = "<nobr>" . substr($row["reset_time"],  0, -3) . "</nobr>";
-//         $site = "<nobr>" . $row["site_id"] . "</nobr>";
-//         $user = "<nobr>" . $row["user"] . "</nobr>";
-//         echo '<tr><td>'.$time.'</td><td>'.$site.'</td><td>'.$row["opco"].'</td><td>'.$row["femto_no"].'</td><td>'.$user.'</td><td>'.$row["comment"].'</td><td>'.$row["note"].'</td></tr>';
-//     }
-// } 
-// echo "</table>";
                                             // prepare the chart
                                             var chartLabels = new Array();
-                                            var chartValues = new Array();
+                                            var trafficChartTitles = new Array();
+                                            if (metric.substring(0,8) == "Traffic-") {
+                                                var numCharts = 8;                                               
+                                            } else if (metric.substring(0,6) == "Calls-") {
+                                                var numCharts = 3;
+                                            }
+                                            console.log(numCharts + " traffic charts being initialised");
+                                            var trafficCharts = new Array(numCharts);
+                                            for (nero=0; nero < numCharts; nero++) {
+                                                trafficCharts[nero] = new Array();
+                                            }
+                                            trafficCharts[0] = new Array();
                                             var chartColours = ['rgba(255,36,36,1)','rgba(42,137,192,1)','rgba(182,95,194,1)','rgba(43,172,177, 1)'];
+                                            maxMBytesToChart = 0;
                                             for (var kpi in metrics) {
-                                                //console.log("JS: KPI is " + kpi); // Output says it's 0
+                                                //console.log("JS: 'kpi in metrics' is " + kpi); // Output says it's 0
+                                                var chartValues = new Array();
                                                 var measurement = metrics[kpi];
                                                 var dataPoints;
                                                 var trafficTableRow = "";
+                                                var date;
                                                 for (var entry in measurement) {
                                                     if (entry !== 'time') {
-                                                        //console.log("   Adding measurement " + entry + "=" + measurement[entry]);
-                                                        chartLabels.push(entry);
-                                                        trafficTableCols += "<th>" + entry + "</th>"
-                                                        chartValues.push(measurement[entry]);
-                                                        trafficTableRow += "<td>" + measurement[entry] + "</td>"
-                                                    } else {
-                                                        trafficTableCols = "<th>Date</th>" + trafficTableCols;
-                                                        trafficTableRow = "<td>" + measurement[entry] + "</td>" + trafficTableRow;
-                                                    }
+                                                        if (entry === 'metric_name') {
+                                                            trafficChartTitles.push(measurement[entry]);
+                                                            date = measurement[entry];
+                                                            //console.log("Adding metric " + measurement[entry]);                                                            
+                                                        } else if (entry === 'site_name') {
+                                                            console.log("site_name filtered out");
+                                                        } else {
+                                                            // console.log("   Adding measurement " + entry + "=" + measurement[entry]);
+                                                            if (kpi == 0) {
+                                                                chartLabels.push(entry);
+                                                                trafficTableCols += "<th>" + entry + "</th>"
+                                                            }
+                                                            // GROUP BY SQL required by table output format generates more rows than can be anticipated for charts
+                                                            if (!trafficTableOutput) {
+                                                                trafficCharts[kpi].push(measurement[entry]);
+                                                            }
+                                                            chartValues.push(measurement[entry]);
+                                                            var numMbytes = parseFloat(measurement[entry]);
+                                                            if (numMbytes > maxMBytesToChart) {
+                                                                maxMBytesToChart = numMbytes;
+                                                                //console.log("maxMBytesToChart is now " + maxMBytesToChart);
+                                                            } 
+                                                        }
+                                                    } 
+                                                    trafficTableRow += "<td>" + measurement[entry] + "</td>"
                                                 }
-                                                // dirty fix for only getting 1 row back from the server due to raw data being unavailable
-                                                trafficTableCols = "<th>Metric</th>" + trafficTableCols;
-                                                trafficTableRows += "<tr>" + "<td>CS Inbound</td>" + trafficTableRow + "</tr>";
-                                                trafficTableRows += "<tr>" + "<td>PS Inbound</td>" + trafficTableRow + "</tr>";
-                                                trafficTableRows += "<tr>" + "<td>Signalling Inbound</td>" + trafficTableRow + "</tr>";
-                                                trafficTableRows += "<tr>" + "<td>Total Inbound</td>" + trafficTableRow + "</tr>";
-                                                trafficTableRows += "<tr>" + "<td>CS Outbound</td>" + trafficTableRow + "</tr>";
-                                                trafficTableRows += "<tr>" + "<td>PS Outbound</td>" + trafficTableRow + "</tr>";
-                                                trafficTableRows += "<tr>" + "<td>Signalling Outbound</td>" + trafficTableRow + "</tr>";
-                                                trafficTableRows += "<tr>" + "<td>Total Outbound</td>" + trafficTableRow + "</tr>";
+                                                trafficTableRows += "<tr>" + trafficTableRow + "</tr>";
                                             }
-                                            trafficTableCols += "</tr>";             
+                                            if (perSite) {
+                                                trafficTableCols = "<tr><th>Date</th><th>Site</th><th>Metric</th>" + trafficTableCols + "</tr>";
+                                            } else {
+                                                trafficTableCols = "<tr><th>Date</th><th>Metric</th>" + trafficTableCols + "</tr>";                                                
+                                            }
                                             trafficTableRows += "</table>";
                                         }
                                         if ($('#site').val().length > 1) {
@@ -1192,247 +1503,230 @@ function showGraph(id, visible, siteParam) {
         //                                var ctx = document.getElementById("graph");
                                         var canvas = document.getElementById("graph");
                                         var ctx = canvas.getContext("2d"); // Get the context to draw on.
-                                        if (typeof myChart !== 'undefined') {
-                                            myChart.destroy();
-                                        }
-                                        if (metric.substring(0,8) == "Traffic-") {
+                                        destroyOldCharts();
+//                                        if (typeof myChart !== 'undefined') {
+//                                            console.log("Destroying the Single Graph Chart");
+//                                            myChart.destroy();
+//                                        } else {
+//                                            try {
+//                                                myChart.destroy();                                                                 
+//                                            } catch (err) {
+//                                                console.log("Error destroying the single graph chart, " + err.message);
+//                                            }                                            
+//                                        }
+                                        if ((metric.substring(0,8) == "Traffic-") || (metric.substring(0,6) == "Calls-")) {
                                             $('#GraphWrap').hide();
                                             if (trafficTableOutput) {
-                                                console.log("Outputting metrics data in table format");
+                                                //console.log("Outputting metrics data in table format");
                                                 $('#TrafficTableWrap').show();
                                                 $('#TrafficChartWrap').hide();
-                                                console.log("Table HTML is " + trafficTableDef + trafficTableCols + trafficTableRows);
+                                                $('#CallsChartWrap').hide();
+                                                // console.log("Table HTML is " + trafficTableDef + trafficTableCols + trafficTableRows);
                                                 document.getElementById("TrafficTableWrap").innerHTML = trafficTableDef + trafficTableCols + trafficTableRows;
-                                            } else {
-                                                console.log("Outputting metrics data in chart format");
+                                            } else if (metric.substring(0,8) == "Traffic-") {
+                                                var chartType, legendDisplay;
+                                                if (trafficBarOutput) {
+                                                    chartType = 'bar';
+                                                    legendDisplay = false;
+                                                } else {
+                                                    chartType = 'pie';
+                                                    legendDisplay = true;
+                                                }                                                    
+                                                //console.log("Outputting metrics data in chart format");
                                                 $('#TrafficChartWrap').show();
                                                 $('#TrafficTableWrap').hide();
-                                            
-                                                var canvas1upper = document.getElementById("chart1upper");
-                                                var ctx1upper = canvas1upper.getContext("2d"); // Get the context to draw on.
-                                                if (typeof chart1upper !== 'undefined') { chart1upper.destroy(); }
+                                                $('#CallsChartWrap').hide();
 
-                                                var canvas2upper = document.getElementById("chart2upper");
-                                                var ctx2upper = canvas2upper.getContext("2d"); // Get the context to draw on.
-                                                if (typeof chart2upper !== 'undefined') { chart2upper.destroy(); }
+                                                var inc = 10;
+                                                if (maxMBytesToChart < 100) {            inc = 10; 
+                                                } else if (maxMBytesToChart < 200) {     inc = 20;
+                                                } else if (maxMBytesToChart < 500) {     inc = 50;
+                                                } else if (maxMBytesToChart < 1000) {    inc = 100;
+                                                } else if (maxMBytesToChart < 2000) {    inc = 200;
+                                                } else if (maxMBytesToChart < 5000) {    inc = 500;
+                                                } else if (maxMBytesToChart < 10000) {   inc = 1000;
+                                                } else if (maxMBytesToChart < 20000) {   inc = 2000;
+                                                } else if (maxMBytesToChart < 50000) {   inc = 5000;
+                                                } else if (maxMBytesToChart < 100000) {  inc = 10000;
+                                                } else if (maxMBytesToChart < 200000) {  inc = 20000;
+                                                } else if (maxMBytesToChart < 500000) {  inc = 50000;
+                                                } else if (maxMBytesToChart < 1000000) { inc = 100000;
+                                                } else { inc = 200000;
+                                                }
+                                                // MW - extend this with more clauses if necessary
+                                                var r1 = Math.round(maxMBytesToChart / inc) * inc;
+                                                if (r1 > maxMBytesToChart) {
+                                                    //console.log("The upper range should be " + r1);
+                                                } else {
+                                                    r1 += inc;
+                                                    //console.log("The upper range should be " + r1);  
+                                                }
 
-                                                var canvas3upper = document.getElementById("chart3upper");
-                                                var ctx3upper = canvas3upper.getContext("2d"); // Get the context to draw on.
-                                                if (typeof chart3upper !== 'undefined') {  chart3upper.destroy(); }
+                                                destroyOldCharts();
+                                                for (row = 0; row < 2; row++) {
+                                                    for (col = 0; col < 4; col++) {
+//                                                        console.log("volumeChartNames[" + row + "][" + col + "] is " + document.getElementById(volumeChartNames[row][col]));
+                                                        gridCanvas[row][col] = document.getElementById(volumeChartNames[row][col]);
+                                                        gridCtx[row][col] = gridCanvas[row][col].getContext("2d"); // Get the context to draw on.
+                                                        
+//                                                        if (typeof gridCharts[row][col] !== 'undefined') { 
+//                                                            console.log("Destroying the multiple (2d) Traffic Charts");
+//                                                            gridCharts[row][col].destroy(); 
+//                                                        } else {
+//                                                            try {
+//                                                                gridCharts[row][col].destroy();                                                                 
+//                                                            } catch (err) {
+//                                                                console.log("Error destroying one of multiple traffic charts [" + row + "][" + col + "], " + err.message);
+//                                                            }                                                            
+//                                                        }
 
-                                                var canvas4upper = document.getElementById("chart4upper");
-                                                var ctx4upper = canvas4upper.getContext("2d"); // Get the context to draw on.
-                                                if (typeof chart4upper !== 'undefined') { chart4upper.destroy(); }
+                                                        //console.log("trafficCharts[" + (col + (4 * row)) + "] = " + trafficCharts[(col + (4 * row))]);
+                                                        //console.log("The typeof maxMBytesToChart is " + typeof maxMBytesToChart + " and value is " + maxMBytesToChart);
+                                                         
+                                                        gridCharts[row][col] = new Chart(gridCtx[row][col], {
+                                                            type: chartType,
+                                                            data: {
+                                                                labels: chartLabels,
+//                                                                datasets: [{ data: chartValues, backgroundColor: chartColours }],                                                    
+                                                                datasets: [{ 
+                                                                        data: trafficCharts[(col + (4 * row))],
+                                                                        //data: [38.8, 26.5, 15.4, 19.2],                                                                        
+                                                                        backgroundColor: chartColours }],                                                    
+                                                             },
+                                                           options: {
+                                                                title: {
+                                                                    display: true,
+//                                                                    text: chartTitles[row][col],
+                                                                    text: trafficChartTitles[col + (4 * row)],
+                                                                    fontSize: 20,
+                                                                    position: 'bottom'
+                                                                },
+                                                                scales: {
+                                                                    xAxes: [{ display:!legendDisplay, gridLines: { display: false } }],
+                                                                    yAxes: [{
+                                                                        display:!legendDisplay,
+                                                                        gridLines: { display:!legendDisplay },
+//                                                                        ticks: { beginAtZero:true },
+//                                                                        ticks: { beginAtZero:true, max: maxMBytesToChart },
+                                                                        ticks: { beginAtZero:true, max: r1 },
+//                                                                        ticks: { beginAtZero:true, max: 500 },
+                                                                        scaleLabel: {
+                                                                            display: true,
+                                                                            labelString: 'MBytes'
+                                                                        }
+                                                                    }]
+                                                                },                                                                
+                                                                legend: {
+                                                                    display: legendDisplay,
+                                                                    width: 15,
+                                                                    labels: { boxWidth: 25 }
+                                                                }
+                                                            }
+                                                        });                                            
+                                                    }                                                    
+                                                }                                                                                                
+                                            } else { // metric.substring(0,6) == "Calls-")
+                                                var chartType, legendDisplay;
+                                                if (trafficBarOutput) {
+                                                    chartType = 'bar';
+                                                    legendDisplay = false;
+                                                } else {
+                                                    chartType = 'pie';
+                                                    legendDisplay = true;
+                                                }                                                    
+                                                $('#CallsChartWrap').show();
+                                                $('#TrafficChartWrap').hide();
+                                                $('#TrafficTableWrap').hide();
 
-                                                var canvas1lower = document.getElementById("chart1lower");
-                                                var ctx1lower = canvas1lower.getContext("2d"); // Get the context to draw on.
-                                                if (typeof chart1lower !== 'undefined') { chart1lower.destroy(); }
+                                                var inc = 10;
+                                                if (maxMBytesToChart < 100) {            inc = 10; 
+                                                } else if (maxMBytesToChart < 200) {     inc = 20;
+                                                } else if (maxMBytesToChart < 500) {     inc = 50;
+                                                } else if (maxMBytesToChart < 1000) {    inc = 100;
+                                                } else if (maxMBytesToChart < 2000) {    inc = 200;
+                                                } else if (maxMBytesToChart < 5000) {    inc = 500;
+                                                } else if (maxMBytesToChart < 10000) {   inc = 1000;
+                                                } else if (maxMBytesToChart < 20000) {   inc = 2000;
+                                                } else if (maxMBytesToChart < 50000) {   inc = 5000;
+                                                } else if (maxMBytesToChart < 100000) {  inc = 10000;
+                                                } else if (maxMBytesToChart < 200000) {  inc = 20000;
+                                                } else if (maxMBytesToChart < 500000) {  inc = 50000;
+                                                } else if (maxMBytesToChart < 1000000) { inc = 100000;
+                                                } else { inc = 200000;
+                                                }
+                                                // MW - extend this with more clauses if necessary
+                                                var r1 = Math.round(maxMBytesToChart / inc) * inc;
+                                                if (r1 > maxMBytesToChart) {
+                                                    //console.log("The upper range should be " + r1);
+                                                } else {
+                                                    r1 += inc;
+                                                    //console.log("The upper range should be " + r1);  
+                                                }
 
-                                                var canvas2lower = document.getElementById("chart2lower");
-                                                var ctx2lower = canvas2lower.getContext("2d"); // Get the context to draw on.
-                                                if (typeof chart2lower !== 'undefined') { chart2lower.destroy(); }
+                                                destroyOldCharts();
+                                                row = 0;
+                                                //for (row = 0; row < 2; row++) { // not needed unless we adopt Keith's idea
+                                                    for (col = 0; col < 3; col++) {
+                                                        //console.log("volumeChartNames[" + row + "][" + col + "] is " + document.getElementById(callsChartNames[row][col]));
+                                                        gridCanvas[row][col] = document.getElementById(callsChartNames[row][col]);
+                                                        gridCtx[row][col] = gridCanvas[row][col].getContext("2d"); // Get the context to draw on.
 
-                                                var canvas3lower = document.getElementById("chart3lower");
-                                                var ctx3lower = canvas3lower.getContext("2d"); // Get the context to draw on.
-                                                if (typeof chart3lower !== 'undefined') { chart3lower.destroy(); }
+//                                                        if (typeof gridCharts[row][col] !== 'undefined') { 
+//                                                            console.log("Destroying the multiple (1d) Calls Charts");
+//                                                            gridCharts[row][col].destroy(); 
+//                                                        } else { // let's destroy it anyway
+//                                                            try {
+//                                                                gridCharts[row][col].destroy();                                                                 
+//                                                            } catch (err) {
+//                                                                console.log("Error destroying one of multiple calls charts [" + row + "][" + col + "], " + err.message);
+//                                                            }
+//                                                        }
 
-                                                var canvas4lower = document.getElementById("chart4lower");
-                                                var ctx4lower = canvas4lower.getContext("2d"); // Get the context to draw on.
-                                                if (typeof chart4lower !== 'undefined') { chart4lower.destroy(); }
-
-                                                chart1upper = new Chart(ctx1upper, {
-                                                    type: 'pie',
-                                                    data: {
-                                                        //labels: ["VF", "O2", "THREE", "EE"],
-                                                        labels: chartLabels,
-                                                        datasets: [{
-                                                            //data: [38.8, 26.5, 15.4, 19.2],
-                                                            data: chartValues,
-                                                            //backgroundColor: ['rgba(255,36,36,1)','rgba(42,137,192,1)','rgba(182,95,194,1)','rgba(43,172,177, 1)']
-                                                            backgroundColor: chartColours
-                                                        }],                                                    
-                                                     },
-                                                   options: {
-                                                        title: {
-                                                            display: true,
-                                                            text: "CS Inbound",
-                                                            fontSize: 20,
-                                                            position: 'bottom'
-                                                        },
-                                                        legend: {
-                                                            width: 15,
-                                                            labels: { boxWidth: 25 }
-                                                        }
-                                                    }
-                                                });                                            
-                                                chart2upper = new Chart(ctx2upper, {
-                                                    type: 'pie',
-                                                    data: {
-                                                        // labels: ["VF", "O2", "THREE", "EE"],
-                                                        labels: chartLabels,
-                                                        datasets: [{
-                                                            //data: [28.8, 26.5, 25.4, 19.2],
-                                                            data: chartValues,
-                                                            backgroundColor: chartColours
-                                                        }],                                                    
-                                                     },
-                                                   options: {
-                                                        title: {
-                                                            display: true,
-                                                            text: "PS Inbound",
-                                                            fontSize: 20,
-                                                            position: 'bottom'
-                                                        },
-                                                        legend: {
-                                                            width: 15,
-                                                            labels: { boxWidth: 25 }
-                                                        }
-                                                    }
-                                                });                                                                                        
-                                                chart3upper = new Chart(ctx3upper, {
-                                                    type: 'pie',
-                                                    data: {
-                                                        // labels: ["VF", "O2", "THREE", "EE"],
-                                                        labels: chartLabels,
-                                                        datasets: [{
-                                                            //data: [48.8, 21.5, 5.4, 24.2],
-                                                            data: chartValues,
-                                                            backgroundColor: chartColours
-                                                        }],                                                    
-                                                     },
-                                                   options: {
-                                                        title: {
-                                                            display: true,
-                                                            text: "Signalling Inbound",
-                                                            fontSize: 20,
-                                                            position: 'bottom'
-                                                        },
-                                                        legend: {
-                                                            width: 15,
-                                                            labels: { boxWidth: 25 }
-                                                        }
-                                                    }
-                                                });                                                                                        
-                                                chart4upper = new Chart(ctx4upper, {
-                                                    type: 'pie',
-                                                    data: {
-                                                        // labels: ["VF", "O2", "THREE", "EE"],
-                                                        labels: chartLabels,
-                                                        datasets: [{
-                                                            //data: [42.8, 27.5, 10.4, 19.2],
-                                                            data: chartValues,
-                                                            backgroundColor: chartColours
-                                                        }],                                                    
-                                                     },
-                                                   options: {
-                                                        title: {
-                                                            display: true,
-                                                            text: "Total Inbound",
-                                                            fontSize: 20,
-                                                            position: 'bottom'
-                                                        },
-                                                        legend: {
-                                                            width: 15,
-                                                            labels: { boxWidth: 25 }
-                                                        }
-                                                    }
-                                                });                                                                                        
-                                                chart1lower = new Chart(ctx1lower, {
-                                                    type: 'pie',
-                                                    data: {
-                                                        // labels: ["VF", "O2", "THREE", "EE"],
-                                                        labels: chartLabels,
-                                                        datasets: [{
-                                                            //data: [38.8, 26.5, 15.4, 19.2],
-                                                            data: chartValues,
-                                                            backgroundColor: chartColours
-                                                        }],                                                    
-                                                     },
-                                                   options: {
-                                                        title: {
-                                                            display: true,
-                                                            text: "CS Outbound",
-                                                            fontSize: 20,
-                                                            position: 'bottom'
-                                                        },
-                                                        legend: {
-                                                            width: 15,
-                                                            labels: { boxWidth: 25 }
-                                                        }
-                                                    }
-                                                });                                            
-                                                chart2lower = new Chart(ctx2lower, {
-                                                    type: 'pie',
-                                                    data: {
-                                                        //labels: ["VF", "O2", "THREE", "EE"],
-                                                        labels: chartLabels,
-                                                        datasets: [{
-                                                            //data: [8.8, 56.5, 10.4, 24.2],
-                                                            data: chartValues,
-                                                            backgroundColor: chartColours
-                                                        }],                                                    
-                                                     },
-                                                   options: {
-                                                        title: {
-                                                            display: true,
-                                                            text: "PS Outbound",
-                                                            fontSize: 20,
-                                                            position: 'bottom'
-                                                        },
-                                                        legend: {
-                                                            width: 15,
-                                                            labels: { boxWidth: 25 }
-                                                        }
-                                                    }
-                                                });                                            
-                                                chart3lower = new Chart(ctx3lower, {
-                                                    type: 'pie',
-                                                    data: {
-                                                        // labels: ["VF", "O2", "THREE", "EE"],
-                                                        labels: chartLabels,
-                                                        datasets: [{
-                                                            //data: [38.8, 36.5, 15.4, 9.2],
-                                                            data: chartValues,
-                                                            backgroundColor: chartColours
-                                                        }],                                                    
-                                                     },
-                                                   options: {
-                                                        title: {
-                                                            display: true,
-                                                            text: "Signalling Outbound",
-                                                            fontSize: 20,
-                                                            position: 'bottom'
-                                                        },
-                                                        legend: {
-                                                            width: 15,
-                                                            labels: { boxWidth: 25 }
-                                                        }
-                                                    }
-                                                });                                            
-                                                chart4lower = new Chart(ctx4lower, {
-                                                    type: 'pie',
-                                                    data: {
-                                                        //labels: ["VF", "O2", "THREE", "EE"],
-                                                        labels: chartLabels,
-                                                        datasets: [{
-                                                            //data: [28.8, 26.5, 25.4, 19.2],
-                                                            data: chartValues,
-                                                            backgroundColor: chartColours
-                                                        }],                                                    
-                                                     },
-                                                   options: {
-                                                        title: {
-                                                            display: true,
-                                                            text: "Total Outbound",
-                                                            fontSize: 20,
-                                                            position: 'bottom'
-                                                        },
-                                                        legend: {
-                                                            width: 15,
-                                                            labels: { boxWidth: 25 }
-                                                        }
-                                                    }
-                                                });
+                                                        //console.log("trafficCharts[" + (col + (4 * row)) + "] = " + trafficCharts[(col + (4 * row))]);
+                                                        //console.log("The typeof maxMBytesToChart is " + typeof maxMBytesToChart + " and value is " + maxMBytesToChart);
+                                                         
+                                                        gridCharts[row][col] = new Chart(gridCtx[row][col], {
+                                                            type: chartType,
+                                                            data: {
+                                                                labels: chartLabels,
+//                                                                datasets: [{ data: chartValues, backgroundColor: chartColours }],                                                    
+                                                                datasets: [{ 
+                                                                        data: trafficCharts[(col + (4 * row))],
+                                                                        //data: [38.8, 26.5, 15.4, 19.2],                                                                        
+                                                                        backgroundColor: chartColours }],                                                    
+                                                             },
+                                                           options: {
+                                                                title: {
+                                                                    display: true,
+//                                                                    text: chartTitles[row][col],
+                                                                    text: trafficChartTitles[col + (4 * row)],
+                                                                    fontSize: 20,
+                                                                    position: 'bottom'
+                                                                },
+                                                                scales: {
+                                                                    xAxes: [{ display:!legendDisplay, gridLines: { display: false } }],
+                                                                    yAxes: [{
+                                                                        display:!legendDisplay,
+                                                                        gridLines: { display:!legendDisplay },
+//                                                                        ticks: { beginAtZero:true },
+//                                                                        ticks: { beginAtZero:true, max: maxMBytesToChart },
+                                                                        ticks: { beginAtZero:true, max: r1 },
+//                                                                        ticks: { beginAtZero:true, max: 500 },
+                                                                        scaleLabel: {
+                                                                            display: true,
+                                                                            labelString: '# Calls'
+                                                                        }
+                                                                    }]
+                                                                },                                                                
+                                                                legend: {
+                                                                    display: legendDisplay,
+                                                                    width: 15,
+                                                                    labels: { boxWidth: 25 }
+                                                                }
+                                                            }
+                                                        });                                            
+                                                    }                                                    
+                                                // } // for 2 rows                                                                                                
                                             }
                                         } else {
                                             var graphLines = new Array();
@@ -1443,6 +1737,7 @@ function showGraph(id, visible, siteParam) {
                                             }
                                             $('#TrafficChartWrap').hide();
                                             $('#TrafficTableWrap').hide();
+                                            $('#CallsChartWrap').hide();
                                             $('#GraphWrap').show();
                                             myChart = new Chart(ctx, {
                                                 type: 'line',
@@ -1507,9 +1802,17 @@ function showGraph(id, visible, siteParam) {
                             // gb.display = 'none';
                             //var g = document.getElementById("graph");
                             //g.display = 'none';
-                            if (typeof myChart !== 'undefined') {
-                                myChart.destroy();
-                            }
+                            destroyOldCharts();
+                            
+//                            if (typeof myChart !== 'undefined') {
+//                                myChart.destroy();
+//                            } else {
+//                                try {
+//                                    myChart.destroy();
+//                                } catch (err) {
+//                                    console.log("Error destroying chart, " + err.message);
+//                                }                                
+//                            }
                             var d = new Date();
                             startMillis = d.getTime();
                             // xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+query,true); 
@@ -1526,6 +1829,40 @@ function showGraph(id, visible, siteParam) {
                 }
             }
         }
+    }
+}
+
+// Takes no prisoners
+function destroyOldCharts() {
+    try { 
+        if (typeof myChart !== 'undefined') {
+            console.log("Destroying the Single Graph Chart");
+            myChart.destroy();
+            console.log("Destroyed the Single Graph Chart");
+        } else {
+            try {
+                myChart.destroy();                                                                 
+            } catch (err) {
+                console.log("Error destroying the single graph chart, " + err.message);
+            }
+        }    
+        for (row = 0; row < 2; row++) { 
+            for (col = 0; col < 4; col++) {
+                if (typeof gridCharts[row][col] !== 'undefined') { 
+                    console.log("Destroying chart[" + row + "][" + col + "]");
+                    gridCharts[row][col].destroy(); 
+                    console.log("Destroyed chart[" + row + "][" + col + "]");
+                } else { // let's destroy it anyway
+                    try {
+                        gridCharts[row][col].destroy();                                                                 
+                    } catch (err) {
+                        console.log("Error destroying charts [" + row + "][" + col + "], " + err.message);
+                    }
+                }
+            }
+        }
+    } catch (unexpectedErr) {
+        console.log("Unexpected error destroying charts, " + unexpectedErr.message);
     }
 }
 

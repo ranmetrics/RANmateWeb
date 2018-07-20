@@ -32,7 +32,7 @@ and open the template in the editor.
         <!-- Header-->
         <div id="LogoWrap">        
 <!--            <a><img class="main" src="./img/RANmetricsLogoSmall.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>-->
-            <a href="index_metrics_test.html"><img class="main" src="./img/RANmetricsLogoTransparent.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>
+            <a href="index_metrics.html"><img class="main" src="./img/RANmetricsLogoTransparent.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>
         </div>
 
         <!-- Gather Inputs-->
@@ -58,7 +58,8 @@ and open the template in the editor.
     <!--                        <select id="metric" multiple="multiple">-->
     <!--                            <option disabled>── Femto Metrics ──</option>-->
                                 <optgroup label="Traffic&nbsp;Analysis">
-                                    <option value="Traffic-all">All Traffic</option>
+                                    <option value="Traffic-volumes">Traffic Volumes</option>
+                                    <option value="Calls-number">Number of Calls</option>
     <!--                                <option value="Traffic-in_CS">CS Traffic Inbound</option>
                                     <option value="Traffic-out_CS">CS Traffic Outbound</option>
                                     <option value="Traffic-in_PS">PS Traffic Inbound</option>
@@ -340,7 +341,21 @@ and open the template in the editor.
                 </div>
             </div>
         </div>
-        
+
+        <div id="CallsChartWrap" style="width:100%; height:60%; padding: 50px 0px 0px 0px; text-align: center;"> 
+            <div id="CallsChartCentreWrap" style="display:inline-block;">
+                <div id="CallsChart1Wrap" style="float:left;margin-right:30px">
+                    <canvas id="chart1" width=500 height=450></canvas>
+                </div>
+                <div id="CallsChart2Wrap" style="float:left;margin-right:30px">
+                    <canvas id="chart2" width=500 height=450></canvas>            
+                </div>
+                <div id="Chart3Wrap" style="float:left;margin-right:30px">
+                    <canvas id="chart3" width=500 height=450></canvas>
+                </div>
+            </div>                
+        </div>
+
     </body>
 </html>
  

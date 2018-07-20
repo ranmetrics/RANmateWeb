@@ -12,7 +12,7 @@ if (!$conn) {
 
 // The Traffic SQl has a number of SQL statements in the same request, separated by ;\n
 // The first statements populate temporary tables, only the final statement gathers the metrics
-if ($metrictype === "Traffic") {
+if (($metrictype === "Traffic") || ($metrictype === "Calls")) {
     $metrics_sql = substr($sql, strrpos($sql, "SELECT"));
 } else {
     $metrics_sql = $sql;    
@@ -24,7 +24,11 @@ if (substr($metrics_sql, 0, 13) === "SELECT * FROM") {
 } else {
     $metrics_end = strpos($metrics_sql, ' FROM ');
 }
-$tok = strtok(substr($metrics_sql, 7, ($metrics_end - 7)), ",");
+if ($metrictype === "Traffic") {
+    $tok = strtok(substr($metrics_sql, 7, ($metrics_end - 7)), ", ");    
+} else {
+    $tok = strtok(substr($metrics_sql, 7, ($metrics_end - 7)), ",");
+}
 $metric_names = array();
 
 //burn off the measurement_time part which will always be first
@@ -37,18 +41,26 @@ while ($tok !== false) {
     if (strpos($metricIncAlias, 'ROUND(') === false) {
         //echo "PHP Non-Traffic Metric detected " . $tok;        
         if (strpos($metricIncAlias, ' AS ') !== false) {
+            //echo "Pos a";
             $metric = substr($metricIncAlias, strpos($metricIncAlias, ' AS ') + 4);
         } else {
-            $metric = $metricIncAlias;
+            //echo "Pos b";
+            if ((strpos($metricIncAlias, 'COALESCE') === false) && (strpos($metricIncAlias, 'measurement_time') === false)) {
+                $metric = $metricIncAlias;
+            }
         }
       //echo "Metric=" . $metric;
-      $metric_names[] = $metric; 
+      if (strlen($metric) > 0) {
+        $metric_names[] = $metric; 
+      }
     } 
     // rubbish, don't know what I was thinking
     /* else if (($metrictype === "Traffic") && (strpos($metricIncAlias, ' AS ') !== false)) {
         //echo "PHP Traffic Metric detected ";        
         $metric = substr($metricIncAlias, strpos($metricIncAlias, ' AS ') + 4);
         //echo "PHP parsed Metric is " . $metric;        
+    } else {
+        echo "Fupping nothing detected ";                
     } */
     $tok = strtok(",");    
 }

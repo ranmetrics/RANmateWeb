@@ -58,7 +58,8 @@ and open the template in the editor.
     <!--                        <select id="metric" multiple="multiple">-->
     <!--                            <option disabled>── Femto Metrics ──</option>-->
                                 <optgroup label="Traffic&nbsp;Analysis">
-                                    <option value="Traffic-all">All Traffic</option>
+                                    <option value="Traffic-volumes">Traffic Volumes</option>
+                                    <option value="Calls-number">Number of Calls</option>
     <!--                                <option value="Traffic-in_CS">CS Traffic Inbound</option>
                                     <option value="Traffic-out_CS">CS Traffic Outbound</option>
                                     <option value="Traffic-in_PS">PS Traffic Inbound</option>
@@ -238,25 +239,29 @@ and open the template in the editor.
                             <div id="breakdown" style="float:left;margin-right:30px;">
                                 <label for="name" id="BreakdownLabel">Breakdown</label>            
                                 <div class="block-field" id="Breakdown" style="float:left;margin-right:0px;">
-                                    <input type="checkbox" id="PerDay" style="margin: 4px 3px 5px 3px;">
-                                    <input type="checkbox" id="PerSite" style="margin: 5px 3px;">
+                                    <input type="checkbox" id="PerDay" style="margin: 4px 3px 5px 3px;" onChange="perDayOrSiteChecked(this.id)">
+                                    <input type="checkbox" id="PerSite" style="margin: 5px 3px;" onChange="perDayOrSiteChecked(this.id)">
                                 </div>
                                 <div class="block-field" id="BreakdownOptionLabels" style="float:left;margin-right:0px;">
-                                    <label for="PerDay" style="margin: -1px 3px;color:lightgrey;">Per Day</label>
-                                    <label for="PerSite" style="margin: -1px 3px;color:lightgrey;">Per Site</label>
+<!--                                    <label for="PerDay" style="margin: -1px 3px;color:lightgrey;">Per Day</label>
+                                    <label for="PerSite" style="margin: -1px 3px;color:lightgrey;">Per Site</label>-->
+                                    <label for="PerDay" style="margin: -1px 3px;">Per Day</label>
+                                    <label for="PerSite" style="margin: -1px 3px;">Per Site</label>
                                 </div>
                             </div>
 
                             <div id="format" style="float:left;margin-right:30px;">
                                 <label for="name" id="FormatLabel">Format</label>            
 
-                                <div class="block-field" id="Format" style="float:left;margin-right:0px;">
-                                    <input type="radio" name="format" id="Chart" onChange="outputFormatSelected(this.id)" style="margin: 4px 3px;">
-                                    <input type="radio" name="format" id="Table" onChange="outputFormatSelected(this.id)" style="margin: 4px 3px;">
+                                <div class="output-format" id="Format" style="float:left;margin-right:0px;">
+                                    <input type="radio" name="format" id="Bar" onChange="outputFormatSelected(this.id)" style="margin: 0px 3px 0px 3px;">
+                                    <input type="radio" name="format" id="Pie" checked="checked" onChange="outputFormatSelected(this.id)" style="margin: 1px 3px 0px 3px;">
+                                    <input type="radio" name="format" id="Table" onChange="outputFormatSelected(this.id)" style="margin: 1px 3px 0px 3px;">
                                 </div>
-                                <div class="block-field" id="FormatOptionLabels" style="float:left;margin-right:0px;">
-                                    <label for="Chart" style="margin: -1px 3px;">Chart</label>
-                                    <label for="Table" style="margin: -1px 3px;">Table</label>
+                                <div class="output-format" id="FormatOptionLabels" style="float:left;margin-right:0px;">
+                                    <label for="Bar" id="BarLabel" style="margin: -3px 3px;">Bar Chart</label>
+                                    <label for="Pie" id="PieLabel" style="margin: -3px 3px;">Pie Chart</label>
+                                    <label for="Table" id="TableLabel" style="margin: -3px 3px;">Table</label>
                                 </div>
                             </div>
                             <script>
@@ -336,7 +341,21 @@ and open the template in the editor.
                 </div>
             </div>
         </div>
-        
+
+        <div id="CallsChartWrap" style="width:100%; height:60%; padding: 50px 0px 0px 0px; text-align: center;"> 
+            <div id="CallsChartCentreWrap" style="display:inline-block;">
+                <div id="CallsChart1Wrap" style="float:left;margin-right:30px">
+                    <canvas id="chart1" width=500 height=450></canvas>
+                </div>
+                <div id="CallsChart2Wrap" style="float:left;margin-right:30px">
+                    <canvas id="chart2" width=500 height=450></canvas>            
+                </div>
+                <div id="Chart3Wrap" style="float:left;margin-right:30px">
+                    <canvas id="chart3" width=500 height=450></canvas>
+                </div>
+            </div>                
+        </div>
+
     </body>
 </html>
  
