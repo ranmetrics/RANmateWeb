@@ -72,7 +72,7 @@ function getDateTimeString(day) {
 function listIsEmpty(listName){
 //    if (document.getElementById(listName).innerHTML === "<!DOCTYPE html><html><body></body></html>") {
     if (document.getElementById(listName).innerHTML.trim() === "") {
-        return true;         
+        return true;  
     } else {
         return false;                 
     }
@@ -110,6 +110,9 @@ function showSites(justNowSelected, siteToBeSelected) {
         var fap6 = document.getElementById("FAP6");
         var fap7 = document.getElementById("FAP7");
         var fap8 = document.getElementById("FAP8");
+        // Reports
+        var period = document.getElementById("fixedperiod");
+        var periodLabel = document.getElementById("FixedPeriodLabel");
 
         xmlhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status === 200) {
@@ -192,6 +195,31 @@ function showSites(justNowSelected, siteToBeSelected) {
                     }                                        
                 } else {
                     alert("Calls metrics cannot be selected with any other metric");
+                    document.getElementById("site").innerHTML = "<!DOCTYPE html><html><body></body></html>";
+                    document.getElementById("site").selectedIndex = -1;
+                    $('#site').multiselect('rebuild');
+                    thisMetricType = "";
+                    return;                    
+                }
+            } else if (selectedMetric.startsWith('Reports')) {
+                $('#worstwrapper').hide();
+                if (previousMetricTypes === null) { 
+                    thisMetricType = "Reports";
+                    pingOrCounterMetricSelected = false;
+                    document.getElementById("FixedPeriod").checked = true;                   // is 'Pie' for Traffic
+                    if ($('#metric').val().length > 1) {
+                        alert("Multiple Traffic Metrics not yet supported, please deselect one or more metrics");
+                        return;
+                    }
+//                    // now create the 2 inner part of the Traffic array charts
+//                    for (var i = 0; i < 2; i++) {
+//                        //console.log("Creating the 2nd dimension in the array for Calls metric");
+//                        gridCharts[i] = new Array(4);
+//                        gridCanvas[i] = new Array(4);
+//                        gridCtx[i] = new Array(4);
+//                    }                                        
+                } else {
+                    alert("Reports cannot be selected with any other metric");
                     document.getElementById("site").innerHTML = "<!DOCTYPE html><html><body></body></html>";
                     document.getElementById("site").selectedIndex = -1;
                     $('#site').multiselect('rebuild');
@@ -283,6 +311,8 @@ function showSites(justNowSelected, siteToBeSelected) {
                    thisMetricType = "Traffic";
                 } else if (justNowSelected.startsWith('Calls-')) {
                    thisMetricType = "Calls"; // will probably need to change this to 'Calls' to remove the Pie Chart option and lay out the grpahs properly
+                } else if (justNowSelected.startsWith('Reports')) {
+                   thisMetricType = "Reports";
                 }
             }
 
@@ -305,6 +335,7 @@ function showSites(justNowSelected, siteToBeSelected) {
                 //iface.style.margin = "10px 0px 0px 0px";    // no idea why we now need a 10px top border instead of 5px to keep it inline
                 //ifaceLabel.style.display = "block";            
                 $('#trafficwrapper').show();
+                $('#reportwrapper').hide();
                 $('#worstwrapper').hide();
                 document.getElementById("PerDay").checked = false;
                 document.getElementById("PerSite").checked = false;
@@ -315,11 +346,28 @@ function showSites(justNowSelected, siteToBeSelected) {
                 //ifaceLabel.style.display = 'none';            
                 $('#trafficwrapper').hide();
             }
+            
+            if (thisMetricType === "Reports") {                
+                period.style.display = "block";
+                period.style.margin = "10px 0px 0px 0px";    // no idea why we now need a 10px top border instead of 5px to keep it inline
+                periodLabel.style.display = "block";            
+                $('#reportwrapper').show();
+                $('#trafficwrapper').hide();
+                $('#worstwrapper').hide();
+                document.getElementById("FixedPeriod").checked = false;
+                document.getElementById("CustomRange").checked = false;
+            } else {
+                period.style.display = 'none';
+                periodLabel.style.display = 'none';            
+                $('#reportwrapper').hide();
+                customRangeSelected(); // this restores the to-from time components
+            }
+
             // if (((thisMetricType === "Counter") || (thisMetricType === "Ping")) && ((currentMetricType !== "Counter") && (currentMetricType !== "Ping"))) {  // pre Traffic entry
-            if ((((thisMetricType === "Counter") || (thisMetricType === "Ping")) && 
-                 ((currentMetricType !== "Counter") && (currentMetricType !== "Ping"))) ||
-                 (((thisMetricType === "Traffic") || (thisMetricType === "Calls")) && ((currentMetricType !== "Traffic") && (currentMetricType !== "Calls")))) { 
-                console.log("Need to rebuild Site list for Counter/Ping/Traffic/Calls metric");
+            if ((((thisMetricType === "Counter") || (thisMetricType === "Ping")) && ((currentMetricType !== "Counter") && (currentMetricType !== "Ping"))) ||
+                 (((thisMetricType === "Traffic") || (thisMetricType === "Calls")) && ((currentMetricType !== "Traffic") && (currentMetricType !== "Calls"))) || 
+                 ((thisMetricType === "Reports") && (currentMetricType !== "Reports"))) { 
+                console.log("Need to rebuild Site list for Counter/Ping/Traffic/Calls/Reports metric");
                 clearTickBoxes();
                 cellNum.style.display = 'none';
                 opCoName.style.display = 'none';
@@ -334,7 +382,7 @@ function showSites(justNowSelected, siteToBeSelected) {
                     //console.log("Calling RANMateMetrics_SiteList.php with group=Mixed");            
                     xmlhttp.open("GET","RANMateMetrics_SiteList.php?group=Mixed",true);
                 } else {
-                    //console.log("Calling RANMateMetrics_SiteList.php with group=" + selectedMetric);            
+                    console.log("Calling RANMateMetrics_SiteList.php with group=" + selectedMetric);            
                     xmlhttp.open("GET","RANMateMetrics_SiteList.php?group="+selectedMetric,true);
                 }
                 xmlhttp.send();
@@ -389,8 +437,7 @@ function showSites(justNowSelected, siteToBeSelected) {
                 //ifaceLabel.style.display = 'none';
                 //$('#interfacewrapper').hide();
                 // this PHP call is included in the if check since we don't want to call it and reset the list if the user isn't changing from Femto -> Router stats or vice versa.
-                console.log("Calling RANMateMetrics_SiteList_test.php");
-                xmlhttp.open("GET","RANMateMetrics_SiteList_test.php?group="+selectedMetric,true);
+                xmlhttp.open("GET","RANMateMetrics_SiteList.php?group="+selectedMetric,true);
                 xmlhttp.send();
             } else {
                 console.log("Site List won't be rebuilt because the new MetricType=" + thisMetricType + " and the existing MetricType=" + currentMetricType);
@@ -562,7 +609,6 @@ function removeOptions(selectbox) {
         selectbox.remove(i);
     }
 }
-//using the function:
 
 function showInterfaces(str) {
     //console.log("showInterfaces called with " + str);
@@ -601,19 +647,45 @@ function showInterfaces(str) {
             };
             xmlhttp.open("GET","RANMateMetrics_InterfaceList.php?site="+encodeURIComponent(str),true);
             xmlhttp.send();
-            // hardcoded before the above was redesigned
-            // document.getElementById("interface").innerHTML = "<!DOCTYPE html><html><head></head><body><option value=ge-0/0/15>ge-0/0/15</option></body></html>";
-            //$('#interface').multiselect('rebuild');
         }
     }
 }
 
-function initPage() {
+function showFixedReports(str) {
+    //console.log("showFixedReports called with " + str);
+    if (str == "") {
+        return;
+    } else {
+        var metric = document.getElementById("metric").value;
+            
+        if (window.XMLHttpRequest) {                
+            xmlhttp = new XMLHttpRequest();                     // code for IE7+, Firefox, Chrome, Opera, Safari
+        } else {                
+            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");    // code for IE6, IE5
+        }
+        xmlhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                document.getElementById("interface").innerHTML = this.responseText;
+//                document.getElementById("interface").selectedIndex = 0;
+                $('#interface').multiselect('rebuild');
+            }
+        };
+        xmlhttp.open("GET","RANMateMetrics_GeneratedReportList.php?site="+encodeURIComponent(str),true);
+        xmlhttp.send();
+    }
+}
+
+function initPageRANmate() {
     clearTickBoxes();
     document.getElementById("metric").selectedIndex = 0;  // was previously 1    
     // so that the metrics drop down is cleared when the page is refreshed
     $('#metric').multiselect('deselectAll', false);
     var metricParam = getURLParameter('metric');
+
+//    Chart.plugins.register({
+//        id: 'labels'
+//    });    
+    
     if (metricParam != null) {
         initWithParams(metricParam);
     } else {
@@ -627,9 +699,9 @@ function initPage() {
 function initWithParams(metricParam) {
     //console.log("metric name is " + metricParam);
     $('#metric').multiselect('select', metricParam, true);
+    // temporarliy changing the %2B to a ^ before the pluses get URL decocded and then convert ^ back to + when we're finished
     var siteParam = decodeURIComponent(getURLParameter('site').replace(/%2B/g, '^')).replace(/\+/g, " ").replace(/%28/g, '(').replace(/%29/g,')').replace(/\^/g, '+');
-    //showSites(metricParam, siteParam.replace("-", " - "));    
-    //                                                 " WHERE " + metricName + ".site_name = '" + site.replace(/ - ([^ ])/, "-$1") +
+    // console.log("Parsed site name is " + siteParam);
 
     showSites(metricParam, siteParam.replace(/([^ ])-([^ ])/, "$1 - $2"));    
     var opcoParam = getURLParameter('operator');
@@ -705,6 +777,22 @@ function outputFormatSelected(format) {
         trafficBarOutput = false;
         trafficTableOutput = false;
     }        
+}
+
+function fixedPeriodSelected() {
+    if (document.getElementById("FixedPeriod").checked === true) {
+        $('#starttimewrapper').hide();
+        $('#endtimewrapper').hide();
+        $('#fixedperiodwrapper').show();
+    }
+}
+
+function customRangeSelected() {
+    if (document.getElementById("CustomRange").checked === true) {
+        $('#starttimewrapper').show();
+        $('#endtimewrapper').show();
+        $('#fixedperiodwrapper').hide();    
+    }
 }
 
 function perDayOrSiteChecked(checkBox) {
@@ -998,6 +1086,86 @@ function getTrafficCommonSqlOld(metricName, startDateTime, endDateTime, addition
     additionalGroupBy;
 }
 
+//https://mozilla.github.io/pdf.js/examples/
+function showReport() {
+    // no need to check if a report has been selected, by default the first report is automatically selected when the fixed period radio button is pressed
+    if (document.getElementById("FixedPeriod").checked === true) {
+//        alert("Can't display preprepared PDF reports yet, sorry");    
+        // this code will open the PDF files in a new tab
+        window.open('./WorkspaceLadbrokeGrove201808.pdf');
+        
+        // This code SHOULD open up the PDF in the RANmetrics page using the same canvas as the Packets and PoE
+        // However it doesn't. No errors are displayed.
+        // Parked for an expert :)
+//        var url = 'min.pdf';        
+////        var url = 'ConcertTasks.pdf';        
+////        var url = './WorkspaceLadbrokeGrove201808.pdf'
+//        pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.js';
+//
+//        // Asynchronous download of PDF
+//        var loadingTask = pdfjsLib.getDocument(url);
+//        loadingTask.promise.then(function(pdf) {
+//          console.log('PDF loaded');
+//
+//          // Fetch the first page
+//          var pageNumber = 1;
+//          pdf.getPage(pageNumber).then(function(page) {
+//            console.log('Page loaded');
+//            
+//            detroyOldCharts();
+//            var scale = 1.5;
+//            var viewport = page.getViewport({scale: scale});
+//
+//            // Prepare canvas using PDF page dimensions
+//            var canvas = document.getElementById('graph');
+//            var context = canvas.getContext('2d');
+//            canvas.height = viewport.height;
+//            canvas.width = viewport.width;
+//
+//            // Render PDF page into canvas context
+//            var renderContext = {
+//              canvasContext: context,
+//              viewport: viewport
+//            };
+//            $('#CallsChartWrap').show();            
+//            var renderTask = page.render(renderContext);
+//            renderTask.promise.then(function () {
+//              console.log('Page rendered');
+//            });
+//            $('#CallsChartWrap').show();            
+//          });
+//        }, function (reason) {
+//          // PDF loading error
+//          console.error(reason);
+//        });          
+    } else {
+        var startDateTime = document.getElementById("startTime").value;
+        if (!isValidDateTimeString(startDateTime)) {
+            alert("The Start Date (" + startDateTime + ") is not correctly specified (YYYY-MM-DD hh:mm)")
+        } else {
+            // check that the end date-time is valid
+            var endDateTime = document.getElementById("endTime").value;
+            if (!isValidDateTimeString(endDateTime)) {
+                alert("The End Date (" + endDateTime + ") is not correctly specified (YYYY-MM-DD hh:mm)")
+            } else {
+                if (endDateTime <= startDateTime) {
+                    alert("The End Date-Time is before the Start Date-Time")
+                } else {
+//                    https://stackoverflow.com/questions/46012054/how-to-convert-html-page-to-pdf-then-download-it
+//                    https://www.sitepoint.com/generating-pdfs-from-web-pages-on-the-fly-with-jspdf/                    
+                    
+//                    <div id="content">
+//                      <h1 style="color:red">Hello World</h1>
+//                      <p>this is a PDF</p>
+//                    </div>
+            
+                    alert("Can't display custom PDF reports yet, sorry");                    
+                }
+            }
+        }
+    }    
+}
+
 function showGraph(id, visible, siteParam) {
     // check that the start date-time is valid
     yLabelTitle = ''; // clear the label, just in case
@@ -1018,6 +1186,9 @@ function showGraph(id, visible, siteParam) {
                 alert("The \"5 Worst Sites\" cannot be selected with any other sites");
             } else if ($('#site').val().length > 1 && $('#site').val()[0].startsWith(" All Sites")) {
                 alert("\"All Sites\" cannot be selected with any other sites");
+            } else if (metric == "Reports") {
+                // this function is already cluttered enough without trying to add PDF report handling
+                showReport();
             } else {            
                 var startDateTime = document.getElementById("startTime").value;
                 if (!isValidDateTimeString(startDateTime)) {
@@ -1400,8 +1571,9 @@ function showGraph(id, visible, siteParam) {
                                     if (this.responseText.indexOf("No data available for query") > -1) {
                                         alert("Metrics data does not exist for this interval at this site");
                                     } else {
+                                        console.log("response text is " + this.responseText);
                                         var metrics = JSON.parse(this.responseText);
-                                        if ((metric.substring(0,8) !== "Traffic-") && (metric.substring(0,6) !== "Calls-"))  {
+                                        if ((metric.substring(0,8) !== "Traffic-") && (metric.substring(0,6) !== "Calls-")) {
                                             var graphTimes = new Array();
                                             var graphValues = new Map(); // one entry for each metric
                                             for (var key in metrics) {
@@ -1621,7 +1793,16 @@ function showGraph(id, visible, siteParam) {
                                                                     display: legendDisplay,
                                                                     width: 15,
                                                                     labels: { boxWidth: 25 }
-                                                                }
+                                                                },
+                                                                plugins: {
+                                                                    labels: {
+                                                                        // configurable parameters and their possible values https://github.com/emn178/chartjs-plugin-labels
+                                                                        render: 'percentage',
+                                                                        fontColor: ['white', 'white', 'white', 'white'],
+                                                                        position: 'border',
+                                                                        precision: 0
+                                                                    }
+                                                                }                                                                      
                                                             }
                                                         });                                            
                                                     }                                                    
@@ -1696,7 +1877,7 @@ function showGraph(id, visible, siteParam) {
                                                                         //data: [38.8, 26.5, 15.4, 19.2],                                                                        
                                                                         backgroundColor: chartColours }],                                                    
                                                              },
-                                                           options: {
+                                                            options: {
                                                                 title: {
                                                                     display: true,
 //                                                                    text: chartTitles[row][col],
@@ -1723,6 +1904,15 @@ function showGraph(id, visible, siteParam) {
                                                                     display: legendDisplay,
                                                                     width: 15,
                                                                     labels: { boxWidth: 25 }
+                                                                },
+                                                                plugins: {
+                                                                    labels: {
+                                                                        // configurable parameters and their possible values https://github.com/emn178/chartjs-plugin-labels
+                                                                        render: 'percentage',
+                                                                        fontColor: ['white', 'white', 'white', 'white'],
+                                                                        position: 'border',                                                                        
+                                                                        precision: 0
+                                                                    }
                                                                 }
                                                             }
                                                         });                                            
@@ -1786,10 +1976,41 @@ function showGraph(id, visible, siteParam) {
                                                     },
                                                     legend: {
                                                         width: 15,
+                                                    },
+                                                    animation: {
+                                                        onComplete: save
                                                     }
                                                 }
                                             });
                                         }
+                                        // for testing PDF doc generation
+                                        //if ((metric.substring(0,8) == "Traffic-") || (metric.substring(0,6) == "Calls-")) {
+                                        if (false) {
+                                            // following code produces blank reports
+                                            // var htmlpdfdoc = new jsPDF('p','pt','a4');
+                                            //htmlpdfdoc.addHTML(document.getElementById('TrafficChartWrap'),function() {
+                                            // basic and poor quality
+//                                            htmlpdfdoc.addHTML(document.getElementsByTagName('body'),function() {
+//                                                htmlpdfdoc.save('html_report.pdf');
+//                                            });                                                            
+
+                                            var testCanvas = gridCanvas[0][0];
+                                            var testChart = gridCharts[0][0];
+                                            //https://stackoverflow.com/questions/34897515/chartjs-jspdf-blurry-image
+                                            var htmlpdfdoc = new jsPDF('l', 'mm',[210, 297]);
+                                                //html2canvas($("#myChart"), {
+                                                html2canvas($("#testChart"), {
+                                                    onrendered: function(testCanvas) {         
+                                                        var imgData = testCanvas.toDataURL('image/png',1.0);                  
+                                                        htmlpdfdoc.text(130,15,"First PDF");
+                                                        htmlpdfdoc.addImage(imgData, 'PNG',20,30,0,130); 
+                                                        htmlpdfdoc.addHTML(testCanvas);
+                                                        htmlpdfdoc.save('html_report.pdf');             
+                                                    }       
+                                            });
+                                            
+                                        }
+                                        
                                         d = new Date();
                                         var endMillis2 = d.getTime();
                                         console.log(endMillis2 - endMillis + " millis taken to create Graph");
@@ -1816,6 +2037,7 @@ function showGraph(id, visible, siteParam) {
 //                            }
                             var d = new Date();
                             startMillis = d.getTime();
+                            console.log("query = " + query);
                             // xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+query,true); 
                             xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+encodeURIComponent(query)+"&metrictype="+metricTypesForPhp.values()[0],true);
                             xmlhttp.send();
@@ -1831,6 +2053,10 @@ function showGraph(id, visible, siteParam) {
             }
         }
     }
+}
+
+function save() {
+
 }
 
 // Takes no prisoners
@@ -2474,6 +2700,10 @@ function getMetricType(theMetric) {
        thisMetricType = "RPM";
     } else if (theMetric.startsWith('Traffic-')) {
        thisMetricType = "Traffic";
+    } else if (theMetric.startsWith('Calls-')) {
+       thisMetricType = "Calls";
+    } else if (theMetric.startsWith('Reports')) {
+       thisMetricType = "Reports";
     } else {
         alert("Unknown metric type: " + theMetric);
     }
