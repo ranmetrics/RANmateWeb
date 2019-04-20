@@ -198,6 +198,32 @@ function showSites(justNowSelected, siteToBeSelected) {
                     thisMetricType = "";
                     return;                    
                 }
+            } else if (selectedMetric.startsWith('Reports')) {
+                $('#worstwrapper').hide();
+                if (previousMetricTypes === null) { 
+                    thisMetricType = "Reports";
+                    pingOrCounterMetricSelected = false;
+                    document.getElementById("Bar").checked = true;                   // is 'Pie' for Traffic
+                    outputFormatSelected("Bar");
+                    if ($('#metric').val().length > 1) {
+                        alert("Multiple Traffic Metrics not yet supported, please deselect one or more metrics");
+                        return;
+                    }
+                    // now create the 2 inner part of the Traffic array charts
+                    for (var i = 0; i < 2; i++) {
+                        //console.log("Creating the 2nd dimension in the array for Calls metric");
+                        gridCharts[i] = new Array(4);
+                        gridCanvas[i] = new Array(4);
+                        gridCtx[i] = new Array(4);
+                    }                                        
+                } else {
+                    alert("Calls metrics cannot be selected with any other metric");
+                    document.getElementById("site").innerHTML = "<!DOCTYPE html><html><body></body></html>";
+                    document.getElementById("site").selectedIndex = -1;
+                    $('#site').multiselect('rebuild');
+                    thisMetricType = "";
+                    return;                    
+                }
             } else if (selectedMetric.startsWith('Counter-')) {
                 $('#worstwrapper').hide();
                 if (previousMetricTypes === 'Femto') { 
@@ -613,6 +639,11 @@ function initPage() {
     // so that the metrics drop down is cleared when the page is refreshed
     $('#metric').multiselect('deselectAll', false);
     var metricParam = getURLParameter('metric');
+
+//    Chart.plugins.register({
+//        id: 'labels'
+//    });    
+    
     if (metricParam != null) {
         initWithParams(metricParam);
     } else {
@@ -1620,7 +1651,16 @@ function showGraph(id, visible, siteParam) {
                                                                     display: legendDisplay,
                                                                     width: 15,
                                                                     labels: { boxWidth: 25 }
-                                                                }
+                                                                },
+                                                                plugins: {
+                                                                    labels: {
+                                                                        // configurable parameters and their possible values https://github.com/emn178/chartjs-plugin-labels
+                                                                        render: 'percentage',
+                                                                        fontColor: ['white', 'white', 'white', 'white'],
+                                                                        position: 'border',
+                                                                        precision: 0
+                                                                    }
+                                                                }                                                                      
                                                             }
                                                         });                                            
                                                     }                                                    
@@ -1695,7 +1735,7 @@ function showGraph(id, visible, siteParam) {
                                                                         //data: [38.8, 26.5, 15.4, 19.2],                                                                        
                                                                         backgroundColor: chartColours }],                                                    
                                                              },
-                                                           options: {
+                                                            options: {
                                                                 title: {
                                                                     display: true,
 //                                                                    text: chartTitles[row][col],
@@ -1722,6 +1762,15 @@ function showGraph(id, visible, siteParam) {
                                                                     display: legendDisplay,
                                                                     width: 15,
                                                                     labels: { boxWidth: 25 }
+                                                                },
+                                                                plugins: {
+                                                                    labels: {
+                                                                        // configurable parameters and their possible values https://github.com/emn178/chartjs-plugin-labels
+                                                                        render: 'percentage',
+                                                                        fontColor: ['white', 'white', 'white', 'white'],
+                                                                        position: 'border',                                                                        
+                                                                        precision: 0
+                                                                    }
                                                                 }
                                                             }
                                                         });                                            
