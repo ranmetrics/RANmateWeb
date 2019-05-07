@@ -40,6 +40,12 @@ if ($MetricGroup == 'Counter') {
 //            . "Select DISTINCT site_name from metrics.jflow_sites ORDER BY site_name";
     $sql = "Select ' All Sites' as 'site_name' from metrics.routers union "
             . "Select DISTINCT site_name from metrics.routers ORDER BY site_name";
+} else if ($MetricGroup == 'Reports') {
+    //$sql = "SELECT CONCAT('(Customer) ', customer) as 'site_name' FROM OpenCellCM.Site GROUP BY customer HAVING count(*) > 1 union "
+    //        . "Select DISTINCT site_name from metrics.routers ORDER BY site_name";
+    // Every time a fixed period report is generated, it's stored in the metrics.generated_reports table
+    $sql = "SELECT DISTINCT CONCAT('(Customer) ', name) as 'site_name', customer FROM metrics.generated_reports where subject = 2 and name != 'Test' union "
+            . "SELECT DISTINCT name as 'site_name', customer FROM metrics.generated_reports where subject = 1 ORDER BY site_name";
 } else {
     echo "Unexpected Metric Group " . $MetricGroup . "\n";
 }
@@ -52,10 +58,15 @@ if ($result->num_rows > 0) {
 //        echo $row["Site"] . " - " . $row["SwitchLocation"] . " (" . $row["SwitchIP"] . ")\n";
         if (($MetricGroup == 'Counter') || ($MetricGroup == 'Buddy') || ($MetricGroup == 'Ping') || ($MetricGroup == 'Mixed') || ($MetricGroup == 'Traffic') || ($MetricGroup == 'Calls')) {
             $site = $row["site_name"];
+            echo "<option value=\"". $site . "\">" . $site . "</option>";
+        } else if ($MetricGroup == 'Reports') {
+            $site = $row["site_name"];
+            $customer = $row["customer"];
+            echo "<option value=\"". $customer . " " . $site . "\">" . $site . "</option>";
         } else if ($MetricGroup == 'Femto') {
             $site = $row["Site"] . " - " . $row["SwitchLocation"];
+            echo "<option value=\"". $site . "\">" . $site . "</option>";
         }            
-        echo "<option value=\"". $site . "\">" . $site . "</option>";
     }
 } else {
     echo "<option disabled>(No " . $MetricGroup . " Sites)</option>";    

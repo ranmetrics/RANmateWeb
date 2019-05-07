@@ -29,16 +29,18 @@ $pos = strrchr($Switch,'-');
 $floor = trim(substr($pos, 1));
 $site = trim(substr( $Switch , 0 , strlen($Switch) - strlen($pos) ));
 
-$sql = "select DISTINCT SwitchIP from customer_config where Site='" . $site . "' and SwitchLocation='" . $floor . "'";
+//$sql = "select DISTINCT SwitchIP from customer_config where Site='" . $site . "' and SwitchLocation='" . $floor . "'";  // pre Concert
+$sql = "select DISTINCT IP from OpenCellCM.Switch where site_name='" . $site . "' and name='" . $floor . "'"; // Concert Version
 //echo "Switch IP sql (1st attempt) is: $sql \n";    
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
     // output data of each row, there should only be 1 row
     while($row = $result->fetch_assoc()) {
-        $SwitchIp = $row["SwitchIP"];
+        $SwitchIp = $row["IP"];
     }
     //echo "Switch IP sql is " . $sql . "\n";    
+    //echo "Switch IP is " . $SwitchIp . "\n";    
 
     $java = "java -classpath /opt/RANmate/lib/RANMate_multi.jar:/opt/RANmate/lib/ganymed-ssh2-build210.jar com.dataduct.invobroker.ranmate.FemtoReset " . $SwitchIp . " gi" . $Port;
     //echo "java is " . $java . "\n";
@@ -66,16 +68,18 @@ if ($result->num_rows > 0) {
     $floor = trim(substr($pos, 1));
     $site = trim(substr( $Switch , 0 , strlen($Switch) - strlen($pos) ));
 
-    $sql = "select DISTINCT SwitchIP from customer_config where Site='" . $site . "' and SwitchLocation='" . $floor . "'";
+    // $sql = "select DISTINCT SwitchIP from customer_config where Site='" . $site . "' and SwitchLocation='" . $floor . "'"; // pre Concert
+    $sql = "select DISTINCT IP from OpenCellCM.Switch where site_name='" . $site . "' and name='" . $floor . "'"; // Concert Version
     //echo "Switch IP sql (2nd attempt) is: $sql \n";    
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {
         // output data of each row, there should only be 1 row
         while($row = $result->fetch_assoc()) {
-            $SwitchIp = $row["SwitchIP"];
+            $SwitchIp = $row["IP"];
         }
         
+        // echo "Switch IP is " . $SwitchIp . "\n";    
         $java = "java -classpath /opt/RANmate/lib/RANMate_multi.jar:/opt/RANmate/lib/ganymed-ssh2-build210.jar com.dataduct.invobroker.ranmate.FemtoReset " . $SwitchIp . " gi" . $Port;
         //echo "java is " . $java . "\n";
 

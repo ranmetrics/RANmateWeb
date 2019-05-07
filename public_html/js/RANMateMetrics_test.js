@@ -36,6 +36,7 @@ var trafficGroupBySQL = "GROUP BY metric_name ";
 var trafficOrderBySQL = "";
 var maxMBytesToChart = 0;
 var maxCallsToChart = 0;
+var customerReportSelected = true;
 
 function getNow() {
     return getDateTimeString(new Date());
@@ -631,47 +632,92 @@ function showInterfaces(str) {
                 $('#worstwrapper').hide();
             }
             
-            if (window.XMLHttpRequest) {
-                // code for IE7+, Firefox, Chrome, Opera, Safari
-                xmlhttp = new XMLHttpRequest();
-            } else {
-                // code for IE6, IE5
-                xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-            }
-            xmlhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    document.getElementById("interface").innerHTML = this.responseText;
-    //                document.getElementById("interface").selectedIndex = 0;
-                    $('#interface').multiselect('rebuild');
+            if (metric.substring(0,8) == "Counter-") {
+                if (window.XMLHttpRequest) {
+                    // code for IE7+, Firefox, Chrome, Opera, Safari
+                    xmlhttp = new XMLHttpRequest();
+                } else {
+                    // code for IE6, IE5
+                    xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
                 }
-            };
-            xmlhttp.open("GET","RANMateMetrics_InterfaceList.php?site="+encodeURIComponent(str),true);
-            xmlhttp.send();
+                xmlhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        document.getElementById("interface").innerHTML = this.responseText;
+        //                document.getElementById("interface").selectedIndex = 0;
+                        $('#interface').multiselect('rebuild');
+                    }
+                };
+                xmlhttp.open("GET","RANMateMetrics_InterfaceList.php?site="+encodeURIComponent(str),true);
+                xmlhttp.send();
+            } else if (metric.startsWith("Reports")) {
+                document.getElementById("FixedPeriod").checked = false;                
+            }
         }
     }
 }
 
-function showFixedReports(str) {
-    //console.log("showFixedReports called with " + str);
+function fixedPeriodSelected() {
+    if (document.getElementById("FixedPeriod").checked === true) {
+        $('#starttimewrapper').hide();
+        $('#endtimewrapper').hide();
+        $('#fixedperiodwrapper').show();
+        // showGeneratedReportList($('#site').val()[0]); // $('#site').val()[0] includes the customer name
+        showGeneratedReportList($('#site :selected').text());
+        // console.log("Calling showGeneratedReportList() with site=" + $('#site :selected').text());
+    }
+}
+
+function customRangeSelected() {
+    if (document.getElementById("CustomRange").checked === true) {
+        if ($('#site :selected').text().startsWith("(Customer)")) {
+            customerReportSelected = true;
+            alert("Custom period report generation is not yet available for customers, only individual sites");
+            document.getElementById("CustomRange").checked = false;
+        } else if ($('#site').val().length > 1) {
+            alert("Multiple Site selection not yet supported, please select only 1");
+            document.getElementById("CustomRange").checked = false;
+        } else {
+            customerReportSelected = false;
+            $('#starttimewrapper').show();
+            $('#endtimewrapper').show();
+            $('#fixedperiodwrapper').hide();    
+        }
+    }
+}
+
+function showGeneratedReportList(str) {
+    console.log("showGeneratedReportList called with " + str);
     if (str == "") {
         return;
     } else {
-        var metric = document.getElementById("metric").value;
-            
-        if (window.XMLHttpRequest) {                
-            xmlhttp = new XMLHttpRequest();                     // code for IE7+, Firefox, Chrome, Opera, Safari
-        } else {                
-            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");    // code for IE6, IE5
-        }
-        xmlhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                document.getElementById("interface").innerHTML = this.responseText;
-//                document.getElementById("interface").selectedIndex = 0;
-                $('#interface').multiselect('rebuild');
+        if ($('#site').val().length > 1) {
+            alert("Multiple Customer/Site selection not yet supported, please select only 1");
+            document.getElementById("FixedPeriod").checked = false;
+        } else {
+            if (window.XMLHttpRequest) {
+                xmlhttp = new XMLHttpRequest();                     // code for IE7+, Firefox, Chrome, Opera, Safari
+            } else {                
+                xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");    // code for IE6, IE5
             }
-        };
-        xmlhttp.open("GET","RANMateMetrics_GeneratedReportList.php?site="+encodeURIComponent(str),true);
-        xmlhttp.send();
+            xmlhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    //console.log("showGeneratedReportList() response=" + this.responseText);
+                    document.getElementById("fixedperiod").innerHTML = this.responseText;
+    //                document.getElementById("interface").selectedIndex = 0;
+                    $('#fixedperiod').multiselect('rebuild');
+                }
+            };
+            if (str.startsWith("(Customer)")) {
+                customerReportSelected = true;
+                str = str.substring(10).trim();
+                type=2;
+            } else {
+                customerReportSelected = false;
+                type=1;
+            }
+            xmlhttp.open("GET","RANMateMetrics_GeneratedReportList.php?site="+encodeURIComponent(str)+"&type="+type,true);
+            xmlhttp.send();
+        }
     }
 }
 
@@ -777,22 +823,6 @@ function outputFormatSelected(format) {
         trafficBarOutput = false;
         trafficTableOutput = false;
     }        
-}
-
-function fixedPeriodSelected() {
-    if (document.getElementById("FixedPeriod").checked === true) {
-        $('#starttimewrapper').hide();
-        $('#endtimewrapper').hide();
-        $('#fixedperiodwrapper').show();
-    }
-}
-
-function customRangeSelected() {
-    if (document.getElementById("CustomRange").checked === true) {
-        $('#starttimewrapper').show();
-        $('#endtimewrapper').show();
-        $('#fixedperiodwrapper').hide();    
-    }
 }
 
 function perDayOrSiteChecked(checkBox) {
@@ -1086,13 +1116,39 @@ function getTrafficCommonSqlOld(metricName, startDateTime, endDateTime, addition
     additionalGroupBy;
 }
 
+function convertMonthName(str) {
+    if (str.endsWith('(Jan)')) { return str.replace('(Jan)','January'); }
+    else if (str.endsWith('(Feb)')) { return str.replace('(Feb)','February'); }
+    else if (str.endsWith('(Mar)')) { return str.replace('(Mar)','March'); }
+    else if (str.endsWith('(Apr)')) { return str.replace('(Apr)','April'); }
+    else if (str.endsWith('(May)')) { return str.replace('(May)','May'); }
+    else if (str.endsWith('(Jun)')) { return str.replace('(Jun)','June'); }
+    else if (str.endsWith('(Jul)')) { return str.replace('(Jul)','July'); }
+    else if (str.endsWith('(Aug)')) { return str.replace('(Aug)','August'); }
+    else if (str.endsWith('(Sep)')) { return str.replace('(Sep)','September'); }
+    else if (str.endsWith('(Oct)')) { return str.replace('(Oct)','October'); }
+    else if (str.endsWith('(Nov)')) { return str.replace('(Nov)','November'); }
+    else if (str.endsWith('(Dec)')) { return str.replace('(Dec)','December'); }
+}
+
 //https://mozilla.github.io/pdf.js/examples/
 function showReport() {
     // no need to check if a report has been selected, by default the first report is automatically selected when the fixed period radio button is pressed
     if (document.getElementById("FixedPeriod").checked === true) {
 //        alert("Can't display preprepared PDF reports yet, sorry");    
         // this code will open the PDF files in a new tab
-        window.open('./WorkspaceLadbrokeGrove201808.pdf');
+        // window.open('./WorkspaceLadbrokeGrove201808.pdf'); // what originally worked !!!!
+        subdir = $('#site :selected').text();
+        siteOrCustomer = document.getElementById("site").value;
+        var selectedMonth = convertMonthName($('#fixedperiod :selected').text());
+        if (customerReportSelected) {
+            siteOrCustomer = siteOrCustomer.substring(10).trim();
+            customer = subdir.substring(10).trim();
+            window.open('reports/customers/' + customer + '/StrattoOpenCell Service Report - ' + customer + ' ' + selectedMonth +'.pdf');
+        } else {
+            // window.open('/var/Concert/reports/sites/StrattoOpenCell Service Report - ' + siteOrCustomer + ' ' + selectedMonth +'.pdf');
+            window.open('reports/sites/' + subdir + '/StrattoOpenCell Service Report - ' + siteOrCustomer + ' ' + selectedMonth +'.pdf');
+        }
         
         // This code SHOULD open up the PDF in the RANmetrics page using the same canvas as the Packets and PoE
         // However it doesn't. No errors are displayed.
@@ -1138,7 +1194,7 @@ function showReport() {
 //          // PDF loading error
 //          console.error(reason);
 //        });          
-    } else {
+    } else if (document.getElementById("CustomRange").checked === true) {
         var startDateTime = document.getElementById("startTime").value;
         if (!isValidDateTimeString(startDateTime)) {
             alert("The Start Date (" + startDateTime + ") is not correctly specified (YYYY-MM-DD hh:mm)")
@@ -1150,19 +1206,40 @@ function showReport() {
             } else {
                 if (endDateTime <= startDateTime) {
                     alert("The End Date-Time is before the Start Date-Time")
-                } else {
+                } else {            
+                    subdir = $('#site :selected').text().trim();
+                    siteOrCustomer = document.getElementById("site").value;
+                    xmlhttp.open("GET","RANMateMetrics_CreateCustomReport.php?Site=" + subdir + "&StartDateTime=" + startDateTime + "&EndDateTime=" + endDateTime,false);
+                    xmlhttp.send();
+
+                    if (xmlhttp.status === 200) {
+                        //console.log("RANMateMetrics_CreateCustomReport.php response is " + xmlhttp.responseText);
+                        fileNameDate = startDateTime.substring(0,10).replace(/-/g, '') + "-" + endDateTime.substring(0,10).replace(/-/g, '');
+                        if (customerReportSelected) {
+                            siteOrCustomer = siteOrCustomer.substring(10).trim();
+                            customer = subdir.substring(10).trim();
+                            window.open('reports/custom/' + customer + '/StrattoOpenCell Service Report - ' + customer + ' ' + fileNameDate +'.pdf');
+                        } else {
+                            // window.open('/var/Concert/reports/sites/StrattoOpenCell Service Report - ' + siteOrCustomer + ' ' + selectedMonth +'.pdf');
+                            window.open('reports/custom/' + subdir + '/StrattoOpenCell Service Report - ' + subdir + ' ' + fileNameDate +'.pdf');
+                        }
+                    } else {
+                        console.log("Error invoking RANMateMetrics_CreateCustomReport.php: " + xmlhttp.status);
+                    }
+                 
+                    //                    
 //                    https://stackoverflow.com/questions/46012054/how-to-convert-html-page-to-pdf-then-download-it
 //                    https://www.sitepoint.com/generating-pdfs-from-web-pages-on-the-fly-with-jspdf/                    
                     
 //                    <div id="content">
 //                      <h1 style="color:red">Hello World</h1>
 //                      <p>this is a PDF</p>
-//                    </div>
-            
-                    alert("Can't display custom PDF reports yet, sorry");                    
+//                    </div>            
                 }
             }
         }
+    } else {
+        alert("A valid report type must be selected");
     }    
 }
 
@@ -1996,7 +2073,7 @@ function showGraph(id, visible, siteParam) {
 
                                             var testCanvas = gridCanvas[0][0];
                                             var testChart = gridCharts[0][0];
-                                            //https://stackoverflow.com/questions/34897515/chartjs-jspdf-blurry-image
+                                           //https://stackoverflow.com/questions/34897515/chartjs-jspdf-blurry-image
                                             var htmlpdfdoc = new jsPDF('l', 'mm',[210, 297]);
                                                 //html2canvas($("#myChart"), {
                                                 html2canvas($("#testChart"), {

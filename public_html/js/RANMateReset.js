@@ -431,11 +431,13 @@ function resetFemto() {
         //console.log("Disabling the reset button");
         document.getElementById("resetButton").value = 'Wait...';
         document.getElementById("resetButton").disabled = true;
+        //document.body.style.cursor = "wait";
         xmlhttp.open("GET","RANMateReset_Reset.php?time=" + getNow() + "&switch=" + site + "&cell=" +
                 cellNum + "&opco=" + opcos[parseInt(selectedOpCo)] + "&femtoNum=" + femtoNum + "&user=" + username + "&comment=" + comment.substring(0,198) + "&note=" + warningMsg.substring(0,298), false);
         xmlhttp.send();
 
         var response = xmlhttp.responseText.trim();
+        //document.body.style.cursor = "default";
         if (xmlhttp.status === 200) {
             console.log("Reset Response: ->" + response + "<-");
         } else {
@@ -452,8 +454,37 @@ function resetFemto() {
             alert(opcos[parseInt(selectedOpCo)] + "_" + femtoNum + " at " + site + " has been successfully reset (char)");
         } else if (parseInt(response) === 0) {
             alert(opcos[parseInt(selectedOpCo)] + "_" + femtoNum + " at " + site + " has been successfully reset (int)");
+        } else if (response.includes("No corresponding IP found")) {
+// Reset Response: ->(No corresponding IP found for switch/floor) sql=select DISTINCT SwitchIP from customer_config where Site='8 Devonshire Square' and SwitchLocation='7th Floor comms'<-            
+            alert("Cannot find IP address for " + site + " in Concert (switch database table)");
         } else {
-            alert("\t\t" + opcos[parseInt(selectedOpCo)] + "_" + femtoNum + " at " + site + " has NOT been successfully reset\nMore details may be available in /opt/RANmate/logs/RANmateReset.log on the RANmate server");
+            if (confirm ("\t\t" + opcos[parseInt(selectedOpCo)] + "_" + femtoNum + " at " + site + " has NOT been successfully reset\nMore details may be available in /opt/RANmate/logs/RANmateReset.log on the RANmate server\nDo you want to reset via the web console?")) {
+                xmlhttp.open("GET","RANMateReset_GetSiteIp.php?switch="+site,false);
+                xmlhttp.send();
+
+                var switchIP = xmlhttp.responseText.trim();
+                //document.body.style.cursor = "default";
+                if (xmlhttp.status === 200) {
+                    console.log("Reset Response: ->" + switchIP + "<-");
+                } else {
+                    console.log("Error invoking RANMateReset_GetSwitchIp.php: " + xmlhttp.status);
+                }
+
+                alert("username is dataduct and the password has been copied to the clipboard (Ctrl-V to paste)\n" 
+                      + " 1. configure\n"
+                      + " 2. interface " + (cellNum + 1) + "\n"
+                      + " 3. power inline never\n"
+                      + " 4. power inline auto\n");
+                var el = document.createElement('textarea');
+                el.value = "DaTa2015!";
+                el.setAttribute('readonly', '');
+                el.style = {position: 'absolute', left: '-9999px'};
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                window.open("http://" + switchIP);                
+            }
         }
 
     }

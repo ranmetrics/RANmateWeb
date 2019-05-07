@@ -26,9 +26,20 @@ and open the template in the editor.
         <script src="js/RANMateMetrics_test.js"></script>
         <script src="js/moment.min.js"></script>            
         <script src="js/Chart.min.js"></script>            
+        <script src="js/chartjs-plugin-labels.js"></script>
+        <script src="js/pdf.min.js"></script>
+        <script src="js/pdf.worker.min.js"></script>        
+
+<!--        change to the min versions when testing is finished-->
+        <script src="js/html2canvas.min.js"></script>        
+<!--        <script src="js/jspdf.min.js"></script>         -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js"></script>
+        <!--        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.0.272/jspdf.debug.js"></script>-->
         
+       
     </head>
-    <body onload="initPage()">
+    <body onload="initPageRANmate()">
         <!-- Header-->
         <div id="LogoWrap">        
 <!--            <a><img class="main" src="./img/RANmetricsLogoSmall.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>-->
@@ -60,6 +71,7 @@ and open the template in the editor.
                                 <optgroup label="Traffic&nbsp;Analysis">
                                     <option value="Traffic-volumes">Traffic Volumes</option>
                                     <option value="Calls-number">Number of Calls</option>
+                                    <option value="Reports">Reports</option>
     <!--                                <option value="Traffic-in_CS">CS Traffic Inbound</option>
                                     <option value="Traffic-out_CS">CS Traffic Outbound</option>
                                     <option value="Traffic-in_PS">PS Traffic Inbound</option>
@@ -181,8 +193,7 @@ and open the template in the editor.
                                 $('#worstwrapper').hide();
                             </script>
                         </div>
-                        
-                        
+                                                
                         <div id="interfacewrapper" style="float:left;margin-right:30px;">
                             <label for="name" id="IfaceName">Interface</label>            
                             <script type="text/javascript">
@@ -215,10 +226,14 @@ and open the template in the editor.
 
                         <div id="operators" style="float:left;margin-right:30px;">
                             <label for="name" id="OpCoName" style="margin-left:0px;">Operator</label>            
-                            <div class="block-field" id="V"><label for="checkbox" style="margin: 0px 2px;">V</label><input type="checkbox" id=0 onChange="opcoSelected(this.id)"></div>                        
+<!--                            <div class="block-field" id="V"><label for="checkbox" style="margin: 0px 2px;">V</label><input type="checkbox" id=0 onChange="opcoSelected(this.id)"></div>                        
                             <div class="block-field" id="O"><label for="checkbox" style="margin: 0px 2px;">O</label><input type="checkbox" id=1 onChange="opcoSelected(this.id)"></div>                        
                             <div class="block-field" id="T"><label for="checkbox" style="margin: 0px 2px;">T</label><input type="checkbox" id=2 onChange="opcoSelected(this.id)"></div>                        
-                            <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input type="checkbox" id=3 onChange="opcoSelected(this.id)"></div>                        
+                            <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input type="checkbox" id=3 onChange="opcoSelected(this.id)"></div>                        -->
+                            <div class="block-field" id="V"><label for="checkbox" style="margin: 0px 2px;">V</label><input type="checkbox" id=0></div>                        
+                            <div class="block-field" id="O"><label for="checkbox" style="margin: 0px 2px;">O</label><input type="checkbox" id=1></div>                        
+                            <div class="block-field" id="T"><label for="checkbox" style="margin: 0px 2px;">T</label><input type="checkbox" id=2></div>                        
+                            <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input type="checkbox" id=3></div>                        
                         </div>
 
 
@@ -272,7 +287,27 @@ and open the template in the editor.
 
                         </div>
 
-                        <div style="float:left;margin-right:30px;">
+                        <div id="reportwrapper" style="float:left;margin-right:30px;">
+                            <div id="reportType" style="float:left;margin-right:30px;">
+                                <label for="name" id="ReportTypeLabel">Report Type</label>            
+<!--                                <div class="block-field" id="ReportType" style="float:left;margin-right:0px;">-->
+                                <div class="block-field" id="ReportType" style="float:left;margin-right:0px;">
+                                    <input type="radio" name="reporttype" id="FixedPeriod" style="margin: 5px 3px 5px 3px;" onChange="fixedPeriodSelected()">
+                                    <input type="radio" name="reporttype" id="CustomRange" style="margin: 4px 3px 4px 3px;" onChange="customRangeSelected()">
+                                </div>
+<!--                                <div class="block-field" id="ReportTypeOptionLabels" style="float:left;margin-right:0px;">-->
+                                <div class="block-field" id="ReportTypeOptionLabels" style="float:left;margin-right:0px;">
+                                    <label for="FixedPeriod" style="margin: -1px 0px -1px -7px;">Fixed Period</label>
+                                    <label for="CustomRange" style="margin: -1px 0px -1px 7px;">Custom Range</label>
+                                </div>
+                            </div>
+                            <script>
+                                $('#reportwrapper').hide();
+                            </script>
+
+                        </div>
+    
+                        <div id="starttimewrapper" style="float:left;margin-right:30px;">
                             <label for="name">Start Date/Time</label>            
                             <input id="startTime" title="YYYY-MM-DD hh:mm" type="datetime" name="Start"><br>
                             <script>
@@ -281,7 +316,7 @@ and open the template in the editor.
                             </script>
                         </div>
 
-                        <div style="float:left;margin-right:30px;">
+                        <div id="endtimewrapper" style="float:left;margin-right:30px;">
                             <label for="name">End Date/Time</label>            
     <!--                        <input title="YYYY-MM-DD hh:mm:ssZ" type="datetime" name="End" value="2016-10-13 18:00:00Z"><br>-->
                             <input id="endTime" title="YYYY-MM-DD hh:mm" type="datetime" name="End" ><br>
@@ -291,6 +326,36 @@ and open the template in the editor.
                             </script>
                         </div>
 
+                        <div id="fixedperiodwrapper" style="float:left;margin-right:30px;">
+                            <label for="name" id="FixedPeriodLabel">Fixed Period</label>            
+                            <script type="text/javascript">
+                                $(document).ready(function() {
+                                    $('#fixedperiod').multiselect({                                        
+                                        maxHeight: 200,
+                                        buttonWidth: '200px',
+                                        numberDisplayed: 1,
+                                        width: 'auto'
+                                    });
+                                });
+                            </script>
+                                                        
+                            <select id="fixedperiod" style="min-width: 130px;">
+<!--                            <select id="fixedperiod" multiple="multiple" style="min-width: 130px;" onchange="showAvailableReports(this.value); ">
+                                For testing only
+                                <option value="Moor Place 201901">201901 (Jan)</option>
+                                <option value="Moor Place 201812">201812 (Dec)</option>
+                                <option value="Moor Place 201811">201811 (Nov)</option>
+                                <option value="Moor Place 201810">201810 (Oct)</option>
+                                <option value="Moor Place 201809">201809 (Sep)</option>
+                                <option value="Moor Place 201808">201808 (Aug)</option>-->
+                            </select> 
+                            <script>
+                                $('#fixedperiodwrapper').hide();
+                                document.getElementById("fixedperiod").style.display = 'none';
+                                document.getElementById("FixedPeriodLabel").style.display = 'none';
+                            </script>
+                        </div>
+        
                         <div style="float:left">
                             <br>   
                                 <input id="graphButton" type="submit" value="Show" onclick="showGraph('graph', true); ">           
@@ -355,6 +420,10 @@ and open the template in the editor.
                 </div>
             </div>                
         </div>
+
+<!--        Section for displaying PDF Reports (Not Needed)
+        <div id="ReportWrap" style="width:100%; height:60%; padding: 50px 0px 0px 0px; text-align: center;"> 
+        </div>        -->
 
     </body>
 </html>
