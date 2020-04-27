@@ -11,7 +11,7 @@
  *
  * Copyright 2016 Nick Downie
  * Released under the MIT license
- * https://github.com/chartjs/Chart.js/blob/master/LICENSE.md
+ * https://github.com/chartjs/Chart.js/blob/master/LICENSmno4.md
  */
 var myChart;
 //var chart1upper, chart2upper, chart3upper, chart4upper, chart1lower, chart2lower, chart3lower, chart4lower;
@@ -23,9 +23,10 @@ var volumeChartNames = [["chart1upper", "chart2upper", "chart3upper", "chart4upp
 var callsChartNames = [["chart1", "chart2", "chart3"]]; // we might add a 2nd row of graphs in the future of the total number of call minutes
 //var chartTitles = [["CS Inbound", "PS Inbound", "Signalling Inbound", "Total Inbound"],["CS Outbound", "PS Outbound", "Signalling Outbound", "Total Outbound"]];
 // the femtoId will index this array
-var fapNames = [' VF_1', ' O2_1', ' 3_1', ' EE_1', ' VF_2', ' O2_2', ' 3_2', ' EE_2', ' VF_3', ' O2_3', ' 3_3', 
-                ' EE_3', ' VF_4', ' O2_4', ' 3_4', ' EE_4', ' VF_5', ' O2_5', ' 3_5', ' EE_5', ' VF_6', ' O2_6', 
-                ' 3_6', ' EE_6', ' VF_7', ' O2_7', ' 3_7', ' EE_7', ' VF_8', ' O2_8', ' 3_8', ' EE_8'];
+// Moved to the customer specific MnoLetters.js
+//var fapNames = [' VF_1', ' O2_1', ' 3_1', ' EE_1', ' VF_2', ' O2_2', ' 3_2', ' EE_2', ' VF_3', ' O2_3', ' 3_3', 
+//                ' EE_3', ' VF_4', ' O2_4', ' 3_4', ' EE_4', ' VF_5', ' O2_5', ' 3_5', ' EE_5', ' VF_6', ' O2_6', 
+//                ' 3_6', ' EE_6', ' VF_7', ' O2_7', ' 3_7', ' EE_7', ' VF_8', ' O2_8', ' 3_8', ' EE_8'];
 
 var startMillis;
 var liveCells;
@@ -44,6 +45,7 @@ var trafficOrderBySQL = "";
 var maxMBytesToChart = 0;
 var maxCallsToChart = 0;
 var customerReportSelected = true;
+var mnoReportSelected = false;
 
 var granularity = "";
 var femtoIds = [];
@@ -136,10 +138,10 @@ function showSites(justNowSelected, siteToBeSelected, force) {
         var ifaceLabel = document.getElementById("IfaceName");
         var cellNum = document.getElementById("CellNum");
         var opCoName = document.getElementById("OpCoName");
-        var V = document.getElementById("V");
-        var O = document.getElementById("O");
-        var T = document.getElementById("T");
-        var E = document.getElementById("E");
+        var mno1 = document.getElementById("MNO1");
+        var mno2 = document.getElementById("MNO2");
+        var mno3 = document.getElementById("MNO3");
+        var mno4 = document.getElementById("MNO4");
         var fap1 = document.getElementById("FAP1");
         var fap2 = document.getElementById("FAP2");
         var fap3 = document.getElementById("FAP3");
@@ -155,7 +157,7 @@ function showSites(justNowSelected, siteToBeSelected, force) {
         xmlhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status === 200) {
                 if (this.responseText.startsWith("<!DOCTYPE html>")) {
-                    console.log("showSites() received response from server: " + this.responseText);
+                    //console.log("showSites() received response from server: " + this.responseText);
                     //console.log("Site List rebuilt because thisMetricType=" + thisMetricType + " and currentMetricType=" + currentMetricType);
                     console.log("Site List rebuilt: thisMetricType=" + thisMetricType + " and currentMetricType=" + currentMetricType);
                     document.getElementById("site").innerHTML = this.responseText;
@@ -459,7 +461,7 @@ function showSites(justNowSelected, siteToBeSelected, force) {
                 clearTickBoxes();
                 cellNum.style.display = 'none';
                 opCoName.style.display = 'none';
-                V.style.display = O.style.display = T.style.display = E.style.display = 'none';
+                mno1.style.display = mno2.style.display = mno3.style.display = mno4.style.display = 'none';
                 fap1.style.display = fap2.style.display = fap3.style.display = fap4.style.display = 'none';
                 fap5.style.display = fap6.style.display = fap7.style.display = fap8.style.display = 'none';
                 //iface.style.display = "block";
@@ -479,7 +481,7 @@ function showSites(justNowSelected, siteToBeSelected, force) {
                 clearTickBoxes();
                 cellNum.style.display = 'none';
                 opCoName.style.display = 'none';
-                V.style.display = O.style.display = T.style.display = E.style.display = 'none';
+                mno1.style.display = mno2.style.display = mno3.style.display = mno4.style.display = 'none';
                 fap1.style.display = fap2.style.display = fap3.style.display = fap4.style.display = 'none';
                 fap5.style.display = fap6.style.display = fap7.style.display = fap8.style.display = 'none';
                 //iface.style.display = "block";
@@ -502,7 +504,7 @@ function showSites(justNowSelected, siteToBeSelected, force) {
                 opCoName.style.display = 'none';
                 iface.style.display = 'none';
                 ifaceLabel.style.display = 'none';
-                V.style.display = O.style.display = T.style.display = E.style.display = 'none';
+                mno1.style.display = mno2.style.display = mno3.style.display = mno4.style.display = 'none';
                 fap1.style.display = fap2.style.display = fap3.style.display = fap4.style.display = 'none';
                 fap5.style.display = fap6.style.display = fap7.style.display = fap8.style.display = 'none';
                 $('#interfacewrapper').hide();
@@ -519,10 +521,10 @@ function showSites(justNowSelected, siteToBeSelected, force) {
                 //console.log("The site list html is empty? " + listIsEmpty("site") );
                 cellNum.style.display = 'block';
                 opCoName.style.display = 'block';
-                V.style.display = O.style.display = T.style.display = E.style.display = 'block';
+                mno1.style.display = mno2.style.display = mno3.style.display = mno4.style.display = 'block';
                 fap1.style.display = fap2.style.display = fap3.style.display = fap4.style.display = 'block';
                 fap5.style.display = fap6.style.display = fap7.style.display = fap8.style.display = 'block';
-                V.style.visibility = O.style.visibility = T.style.visibility = E.style.visibility = 'visible';
+                mno1.style.visibility = mno2.style.visibility = mno3.style.visibility = mno4.style.visibility = 'visible';
                 fap1.style.visibility = fap2.style.visibility = fap3.style.visibility = fap4.style.visibility = 'visible';
                 fap5.style.visibility = fap6.style.visibility = fap7.style.visibility = fap8.style.visibility = 'visible';
                 //iface.style.display = 'none';
@@ -567,10 +569,10 @@ function updateOpCoCells(str, operatorToBeChecked, femtoToBeChecked, initSite) {
                 liveCells.set(2, new Set());
                 liveCells.set(3, new Set());
 
-                var V = document.getElementById("V");
-                var O = document.getElementById("O");
-                var T = document.getElementById("T");
-                var E = document.getElementById("E");
+                var mno1 = document.getElementById("MNO1");
+                var mno2 = document.getElementById("MNO2");
+                var mno3 = document.getElementById("MNO3");
+                var mno4 = document.getElementById("MNO4");
 
                 // clear any radio buttons that may have been checked previously
 //                document.getElementById("Vodafone").checked = false;
@@ -612,7 +614,7 @@ function updateOpCoCells(str, operatorToBeChecked, femtoToBeChecked, initSite) {
                         //liveCells.get(cellNum % 4).add(Math.floor(cellNum/4));
                     }
                 }
-                V.style.visibility = O.style.visibility = T.style.visibility = E.style.visibility = 'hidden';
+                mno1.style.visibility = mno2.style.visibility = mno3.style.visibility = mno4.style.visibility = 'hidden';
                 fap1.style.visibility = fap2.style.visibility = fap3.style.visibility = fap4.style.visibility = 'hidden';
                 fap5.style.visibility = fap6.style.visibility = fap7.style.visibility = fap8.style.visibility = 'hidden';
                 // now let's go through all the cells and work out what needs to be displayed and what doesn't
@@ -620,10 +622,10 @@ function updateOpCoCells(str, operatorToBeChecked, femtoToBeChecked, initSite) {
                     if (cellSet.has(i)) {
                         // Display the correct V, O, T, E
                         switch (i % 4) {
-                            case 0: V.style.visibility = 'visible'; break;
-                            case 1: O.style.visibility = 'visible'; break;
-                            case 2: T.style.visibility = 'visible'; break;
-                            case 3: E.style.visibility = 'visible'; break;
+                            case 0: mno1.style.visibility = 'visible'; break;
+                            case 1: mno2.style.visibility = 'visible'; break;
+                            case 2: mno3.style.visibility = 'visible'; break;
+                            case 3: mno4.style.visibility = 'visible'; break;
                         }
                         // Display the correct FAP number (a superset of all OPCos)
                         switch (Math.floor(i/4)) {
@@ -660,7 +662,7 @@ function updateOpCoCells(str, operatorToBeChecked, femtoToBeChecked, initSite) {
                     siteStr = siteStr + " || site_id = ";
                 }
                 selectedSite = $('#site').val()[i];
-                console.log(selectedSite + " contains " + (selectedSite.match(/\-/g) || []).length + " dashes");
+                //console.log(selectedSite + " contains " + (selectedSite.match(/\-/g) || []).length + " dashes");
                 if (((selectedSite.match(/\-/g) || []).length > 1) && ($('#site').val().length > 1)){
                     alert("Switches with '-' in the site/floor name can't be included in multiple selections");
                 } else {
@@ -861,6 +863,8 @@ function showGeneratedReportList(str) {
             xmlhttp.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     //console.log("showGeneratedReportList() response=" + this.responseText);
+                    // MW add logic here to remove a dummy first element if one exists
+                    // this dummy element is used to get all sites into the list of possibles so that SOC can generate custom reports before the first fixed one is  (end of month)
                     document.getElementById("fixedperiod").innerHTML = this.responseText;
     //                document.getElementById("interface").selectedIndex = 0;
                     $('#fixedperiod').multiselect('rebuild');
@@ -868,10 +872,17 @@ function showGeneratedReportList(str) {
             };
             if (str.startsWith("(Customer)")) {
                 customerReportSelected = true;
+                mnoReportSelected = false;
                 str = str.substring(10).trim();
                 type=2;
+            } else if (str.startsWith("(MNO)")) {
+                customerReportSelected = false;
+                mnoReportSelected = true;
+                str = str.substring(5).trim();
+                type=3;
             } else {
                 customerReportSelected = false;
+                mnoReportSelected = false;
                 type=1;
             }
             xmlhttp.open("GET","RANMateMetrics_GeneratedReportList.php?site="+encodeURIComponent(str)+"&type="+type,true);
@@ -1139,10 +1150,10 @@ function getCallsMergeSql (additionalGroupBy, additionalOrderBy) {
     // added a multiplier (0.3) to convert Megabyte volumes into number of calls 
     // changed from 0.3 to 0.6 3/6/19 after Andy's request https://dataduct.atlassian.net/browse/OC-85 
     return "SELECT (DATE(measurement_time)) AS measurement_time, " + siteField + " metric_name, " +
-        "COALESCE(ROUND(SUM(operator1)/(1048576 * 0.6)),0) AS VF, " +
-        "COALESCE(ROUND(SUM(operator2)/(1048576 * 0.6)),0) AS O2, " +
-        "COALESCE(ROUND(SUM(operator3)/(1048576 * 0.6)),0) AS THREE, " +
-        "COALESCE(ROUND(SUM(operator4)/(1048576 * 0.6)),0) AS EE " +
+        "COALESCE(ROUND(SUM(operator1)/(1048576 * 0.6)),0) AS " + MnosAlpha[0] + ", " +
+        "COALESCE(ROUND(SUM(operator2)/(1048576 * 0.6)),0) AS " + MnosAlpha[1] + ", " +
+        "COALESCE(ROUND(SUM(operator3)/(1048576 * 0.6)),0) AS " + MnosAlpha[2] + ", " +
+        "COALESCE(ROUND(SUM(operator4)/(1048576 * 0.6)),0) AS " + MnosAlpha[3] + " " +
         "FROM jflow_viewer_output_pivoted " +
 //        "GROUP BY metric_name " +
         additionalGroupBy +
@@ -1253,10 +1264,10 @@ function getTrafficMergeSql (additionalGroupBy, additionalOrderBy) {
         siteField = "site_name, ";
     }
     return "SELECT (DATE(measurement_time)) AS measurement_time, " + siteField + " metric_name, " +
-        "COALESCE(ROUND(SUM(operator1)/1048576),0) AS VF, " +
-        "COALESCE(ROUND(SUM(operator2)/1048576),0) AS O2, " +
-        "COALESCE(ROUND(SUM(operator3)/1048576),0) AS THREE, " +
-        "COALESCE(ROUND(SUM(operator4)/1048576),0) AS EE " +
+        "COALESCE(ROUND(SUM(operator1)/1048576),0) AS " + MnosAlpha[0] + ", " +
+        "COALESCE(ROUND(SUM(operator2)/1048576),0) AS " + MnosAlpha[1] + ", " +
+        "COALESCE(ROUND(SUM(operator3)/1048576),0) AS " + MnosAlpha[2] + ", " +
+        "COALESCE(ROUND(SUM(operator4)/1048576),0) AS " + MnosAlpha[3] + " " +
         "FROM jflow_viewer_output_pivoted " +
 //        "GROUP BY metric_name " +
         additionalGroupBy +
@@ -1266,10 +1277,10 @@ function getTrafficMergeSql (additionalGroupBy, additionalOrderBy) {
 function getTrafficMergePercentageSql () {
     console.log("Using percentage SQL");
     return "SELECT DATE(measurement_time) AS measurement_time, metric_name, " +
-        "COALESCE((SUM(operator1) * 100),0)/(COALESCE(SUM(operator1),0) + COALESCE(SUM(operator2),0) + COALESCE(SUM(operator3),0) + COALESCE(SUM(operator4),0)) AS VF, " +
-        "COALESCE((SUM(operator2) * 100),0)/(COALESCE(SUM(operator1),0) + COALESCE(SUM(operator2),0) + COALESCE(SUM(operator3),0) + COALESCE(SUM(operator4),0)) AS O2, " +
-        "COALESCE((SUM(operator3) * 100),0)/(COALESCE(SUM(operator1),0) + COALESCE(SUM(operator2),0) + COALESCE(SUM(operator3),0) + COALESCE(SUM(operator4),0)) AS THREE, " +
-        "COALESCE((SUM(operator4) * 100),0)/(COALESCE(SUM(operator1),0) + COALESCE(SUM(operator2),0) + COALESCE(SUM(operator3),0) + COALESCE(SUM(operator4),0)) AS EE " +
+        "COALESCE((SUM(operator1) * 100),0)/(COALESCE(SUM(operator1),0) + COALESCE(SUM(operator2),0) + COALESCE(SUM(operator3),0) + COALESCE(SUM(operator4),0)) AS " + MnosAlpha[0] + ", " +
+        "COALESCE((SUM(operator2) * 100),0)/(COALESCE(SUM(operator1),0) + COALESCE(SUM(operator2),0) + COALESCE(SUM(operator3),0) + COALESCE(SUM(operator4),0)) AS " + MnosAlpha[1] + ", " +
+        "COALESCE((SUM(operator3) * 100),0)/(COALESCE(SUM(operator1),0) + COALESCE(SUM(operator2),0) + COALESCE(SUM(operator3),0) + COALESCE(SUM(operator4),0)) AS " + MnosAlpha[2] + ", " +
+        "COALESCE((SUM(operator4) * 100),0)/(COALESCE(SUM(operator1),0) + COALESCE(SUM(operator2),0) + COALESCE(SUM(operator3),0) + COALESCE(SUM(operator4),0)) AS " + MnosAlpha[3] + " " +
         "FROM jflow_viewer_output_pivoted " +
         "GROUP BY metric_name ORDER BY NULL;\n";
 }
@@ -1289,22 +1300,22 @@ function getTrafficCommonSqlOld(metricName, startDateTime, endDateTime, addition
     "SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + " +
     "cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29 + cell_2 + cell_6 + " +
     "cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30 + cell_3 + cell_7 + cell_11 + cell_15 + " +
-    "cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS 'VF', " +
+    "cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS '" + MnosAlpha[0] + "', " +
     "ROUND(((SUM(cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29)/" +
     "SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + " +
     "cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29 + cell_2 + cell_6 + " +
     "cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30 + cell_3 + cell_7 + cell_11 + cell_15 + " +
-    "cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS 'O2', " +
+    "cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS '" + MnosAlpha[1] + "', " +
     "ROUND(((SUM(cell_2 + cell_6 + cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30)/" +
     "SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + " +
     "cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29 + cell_2 + cell_6 + " +
     "cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30 + cell_3 + cell_7 + cell_11 + cell_15 + " +
-    "cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS 'THREE', " +
+    "cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS '" + MnosAlpha[2] + "', " +
     "ROUND(((SUM(cell_3 + cell_7 + cell_11 + cell_15 + cell_19 + cell_23 + cell_27 + cell_31)/" +
     "SUM(cell_0 + cell_4 + cell_8 + cell_12 + cell_16 + cell_20 + cell_24 + cell_28 + " +
     "cell_1 + cell_5 + cell_9 + cell_13 + cell_17 + cell_21 + cell_25 + cell_29 + cell_2 + cell_6 + " +
     "cell_10 + cell_14 + cell_18 + cell_22 + cell_26 + cell_30 + cell_3 + cell_7 + cell_11 + cell_15 + " +
-    "cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS 'EE' " + 
+    "cell_19 + cell_23 + cell_27 + cell_31)) * 100),1) AS '" + MnosAlpha[3] + "' " + 
     "FROM metrics." + metricName +
     additionalFrom +
     " WHERE measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
@@ -1330,20 +1341,37 @@ function convertMonthName(str) {
 //https://mozilla.github.io/pdf.js/examples/
 function showReport() {
     // no need to check if a report has been selected, by default the first report is automatically selected when the fixed period radio button is pressed
+    document.getElementById("graphButton").value = 'Wait...';
     if (document.getElementById("FixedPeriod").checked === true) {
 //        alert("Can't display preprepared PDF reports yet, sorry");    
         // this code will open the PDF files in a new tab
         // window.open('./WorkspaceLadbrokeGrove201808.pdf'); // what originally worked !!!!
         subdir = $('#site :selected').text();
         siteOrCustomer = document.getElementById("site").value;
+        console.log("siteOrCustomer in showReport() is " + siteOrCustomer);
+        if (siteOrCustomer.startsWith("(MNO)")) {
+            customerReportSelected = false;
+            mnoReportSelected = true;
+        }
         var selectedMonth = convertMonthName($('#fixedperiod :selected').text());
         if (customerReportSelected) {
             siteOrCustomer = siteOrCustomer.substring(10).trim();
             customer = subdir.substring(10).trim();
             window.open('reports/customers/' + customer + '/StrattoOpenCell Service Report - ' + customer + ' ' + selectedMonth +'.pdf');
+        } else if (mnoReportSelected) {
+            siteOrCustomer = siteOrCustomer.substring(5).trim();
+            mno = subdir.substring(5).trim();
+            window.open('reports/mnos/' + mno + '/StrattoOpenCell Service Report - ' + selectedMonth +'.pdf');
         } else {
             // window.open('/var/Concert/reports/sites/StrattoOpenCell Service Report - ' + siteOrCustomer + ' ' + selectedMonth +'.pdf');
-            window.open('reports/sites/' + subdir + '/StrattoOpenCell Service Report - ' + siteOrCustomer + ' ' + selectedMonth +'.pdf');
+            xmlhttp.open("GET","RANMateMetrics_CustomerForSite.php?site=" + siteOrCustomer,false);
+            xmlhttp.send();
+            if (xmlhttp.status === 200) {
+                console.log("RANMateMetrics_CustomerForSite.php response is " + xmlhttp.responseText);
+                var thisSitesCustomer = xmlhttp.responseText;
+            }            
+            // at some stage the naming of the Site report was updated to include the customer
+            window.open('reports/sites/' + subdir + '/StrattoOpenCell Service Report - ' + thisSitesCustomer + siteOrCustomer + ' ' + selectedMonth +'.pdf');
         }
         
         // This code SHOULD open up the PDF in the RANmetrics page using the same canvas as the Packets and PoE
@@ -1403,10 +1431,17 @@ function showReport() {
                 if (endDateTime <= startDateTime) {
                     alert("The End Date-Time is before the Start Date-Time")
                 } else {            
-                    subdir = $('#site :selected').text().trim();
+                    subdir = $('#site :selected').text().trim();                        
                     siteOrCustomer = document.getElementById("site").value;
                     xmlhttp.open("GET","RANMateMetrics_CreateCustomReport.php?Site=" + subdir + "&StartDateTime=" + startDateTime + "&EndDateTime=" + endDateTime,false);
                     xmlhttp.send();
+                    console.log("siteOrCustomer in showReport() is " + siteOrCustomer);
+                    if (siteOrCustomer.trim().startsWith("(MNO)")) {
+                        customerReportSelected = false;
+                        mnoReportSelected = true;
+                    } else {
+                        mnoReportSelected = false;                        
+                    }
 
                     if (xmlhttp.status === 200) {
                         //console.log("RANMateMetrics_CreateCustomReport.php response is " + xmlhttp.responseText);
@@ -1415,6 +1450,10 @@ function showReport() {
                             siteOrCustomer = siteOrCustomer.substring(10).trim();
                             customer = subdir.substring(10).trim();
                             window.open('reports/custom/' + customer + '/StrattoOpenCell Service Report - ' + customer + ' ' + fileNameDate +'.pdf');
+                        } else if (mnoReportSelected) {
+                            siteOrCustomer = siteOrCustomer.substring(5).trim();
+                            mno = subdir.substring(5).trim();
+                            window.open('reports/custom/' + mno + '/StrattoOpenCell Service Report - ' + mno + ' ' + fileNameDate +'.pdf');
                         } else {
                             // window.open('/var/Concert/reports/sites/StrattoOpenCell Service Report - ' + siteOrCustomer + ' ' + selectedMonth +'.pdf');
                             window.open('reports/custom/' + subdir + '/StrattoOpenCell Service Report - ' + subdir + ' ' + fileNameDate +'.pdf');
@@ -1437,6 +1476,7 @@ function showReport() {
     } else {
         alert("A valid report type must be selected");
     }    
+    document.getElementById("graphButton").value = 'Show';
 }
 
 function showGraph(id, visible, siteParam) {
@@ -1485,19 +1525,19 @@ function showGraph(id, visible, siteParam) {
     //                            var siteOnly = site.substring(0, site.indexOf(' - '));
     //                            var floorOnly = site.substring(site.indexOf(' - ') + 3);
 
-    //                            var vfChecked = document.getElementById('Vodafone').checked;
-    //                            var o2Checked = document.getElementById('O2').checked;
-    //                            var thChecked = document.getElementById('Three').checked;
-    //                            var eeChecked = document.getElementById('EE').checked;
-                                var vfChecked = document.getElementById(0).checked;
-                                var o2Checked = document.getElementById(1).checked;
-                                var thChecked = document.getElementById(2).checked;
-                                var eeChecked = document.getElementById(3).checked;
+    //                            var mno1Checked = document.getElementById('Vodafone').checked;
+    //                            var mno2Checked = document.getElementById('O2').checked;
+    //                            var mno3Checked = document.getElementById('Three').checked;
+    //                            var mno4Checked = document.getElementById('EE').checked;
+                                var mno1Checked = document.getElementById(0).checked;
+                                var mno2Checked = document.getElementById(1).checked;
+                                var mno3Checked = document.getElementById(2).checked;
+                                var mno4Checked = document.getElementById(3).checked;
                                 if (metric.substring(0,6) == "Femto-") {
                                     var metricName = metric.substring(6);
                                 } // FemtoKPI and FemtosCounter metrics are now handled in separate dedicated functions and invoked from further on in the code
 
-                                if (!(vfChecked || o2Checked || thChecked || eeChecked) && (granularity != "PerSwitch") && (granularity != "PerSite") ) {
+                                if (!(mno1Checked || mno2Checked || mno3Checked || mno4Checked) && (granularity != "PerSwitch") && (granularity != "PerSite") ) {
                                     console.log("At least 1 operator must be ticked");
                                     alert("At least 1 operator must be ticked");
                                     return;
@@ -1518,73 +1558,73 @@ function showGraph(id, visible, siteParam) {
                                     } else {
                                         if ((metric.substring(0,9) == "FemtoKPI-") || (metric.substring(0,13) == "FemtoCounter-")) {
                                             femtoIds = [];
-                                            if (vfChecked && fap1Checked) { femtoIds.push("1"); cells = ' AS VF_1'; }
-                                            if (o2Checked && fap1Checked) { femtoIds.push("2"); cells = ' AS O2_1'; }
-                                            if (thChecked && fap1Checked) { femtoIds.push("3"); cells = ' AS 3_1'; }
-                                            if (eeChecked && fap1Checked) { femtoIds.push("4"); cells = ' AS EE_1'; }
-                                            if (vfChecked && fap2Checked) { femtoIds.push("5"); cells = ' AS VF_2'; }
-                                            if (o2Checked && fap2Checked) { femtoIds.push("6"); cells = ' AS O2_2'; }
-                                            if (thChecked && fap2Checked) { femtoIds.push("7"); cells = ' AS 3_2'; }
-                                            if (eeChecked && fap2Checked) { femtoIds.push("8"); cells = ' AS EE_2'; }
-                                            if (vfChecked && fap3Checked) { femtoIds.push("9"); cells = ' AS VF_3'; }
-                                            if (o2Checked && fap3Checked) { femtoIds.push("10"); cells = ' AS O2_3'; }
-                                            if (thChecked && fap3Checked) { femtoIds.push("11"); cells = ' AS 3_3'; }
-                                            if (eeChecked && fap3Checked) { femtoIds.push("12"); cells = ' AS EE_3'; }
-                                            if (vfChecked && fap4Checked) { femtoIds.push("13"); cells = ' AS VF_4'; }
-                                            if (o2Checked && fap4Checked) { femtoIds.push("14"); cells = ' AS O2_4'; }
-                                            if (thChecked && fap4Checked) { femtoIds.push("15"); cells = ' AS 3_4'; }
-                                            if (eeChecked && fap4Checked) { femtoIds.push("16"); cells = ' AS EE_4'; }
-                                            if (vfChecked && fap5Checked) { femtoIds.push("17"); cells = ' AS VF_5'; }
-                                            if (o2Checked && fap5Checked) { femtoIds.push("18"); cells = ' AS O2_5'; }
-                                            if (thChecked && fap5Checked) { femtoIds.push("19"); cells = ' AS 3_5'; }
-                                            if (eeChecked && fap5Checked) { femtoIds.push("20"); cells = ' AS EE_5'; }
-                                            if (vfChecked && fap6Checked) { femtoIds.push("21"); cells = ' AS VF_6'; }
-                                            if (o2Checked && fap6Checked) { femtoIds.push("22"); cells = ' AS O2_6'; }
-                                            if (thChecked && fap6Checked) { femtoIds.push("23"); cells = ' AS 3_6'; }
-                                            if (eeChecked && fap6Checked) { femtoIds.push("24"); cells = ' AS EE_6'; }
-                                            if (vfChecked && fap7Checked) { femtoIds.push("25"); cells = ' AS VF_7'; }
-                                            if (o2Checked && fap7Checked) { femtoIds.push("26"); cells = ' AS O2_7'; }
-                                            if (thChecked && fap7Checked) { femtoIds.push("27"); cells = ' AS 3_7'; }
-                                            if (eeChecked && fap7Checked) { femtoIds.push("28"); cells = ' AS EE_7'; }
-                                            if (vfChecked && fap8Checked) { femtoIds.push("29"); cells = ' AS VF_8'; }
-                                            if (o2Checked && fap8Checked) { femtoIds.push("30"); cells = ' AS O2_8'; }
-                                            if (thChecked && fap8Checked) { femtoIds.push("31"); cells = ' AS 3_8'; }
-                                            if (eeChecked && fap8Checked) { femtoIds.push("32"); cells = ' AS EE_8'; }                                                
+                                            if (mno1Checked && fap1Checked) { femtoIds.push("1"); cells = ' AS ' + fapNames[0]; }
+                                            if (mno2Checked && fap1Checked) { femtoIds.push("2"); cells = ' AS ' + fapNames[1]; }
+                                            if (mno3Checked && fap1Checked) { femtoIds.push("3"); cells = ' AS ' + fapNames[2]; }
+                                            if (mno4Checked && fap1Checked) { femtoIds.push("4"); cells = ' AS ' + fapNames[3]; }
+                                            if (mno1Checked && fap2Checked) { femtoIds.push("5"); cells = ' AS ' + fapNames[4]; }
+                                            if (mno2Checked && fap2Checked) { femtoIds.push("6"); cells = ' AS ' + fapNames[5]; }
+                                            if (mno3Checked && fap2Checked) { femtoIds.push("7"); cells = ' AS ' + fapNames[6]; }
+                                            if (mno4Checked && fap2Checked) { femtoIds.push("8"); cells = ' AS ' + fapNames[7]; }
+                                            if (mno1Checked && fap3Checked) { femtoIds.push("9"); cells = ' AS ' + fapNames[8]; }
+                                            if (mno2Checked && fap3Checked) { femtoIds.push("10"); cells = ' AS ' + fapNames[9]; }
+                                            if (mno3Checked && fap3Checked) { femtoIds.push("11"); cells = ' AS ' + fapNames[10]; }
+                                            if (mno4Checked && fap3Checked) { femtoIds.push("12"); cells = ' AS ' + fapNames[11]; }
+                                            if (mno1Checked && fap4Checked) { femtoIds.push("13"); cells = ' AS ' + fapNames[12]; }
+                                            if (mno2Checked && fap4Checked) { femtoIds.push("14"); cells = ' AS ' + fapNames[13]; }
+                                            if (mno3Checked && fap4Checked) { femtoIds.push("15"); cells = ' AS ' + fapNames[14]; }
+                                            if (mno4Checked && fap4Checked) { femtoIds.push("16"); cells = ' AS ' + fapNames[15]; }
+                                            if (mno1Checked && fap5Checked) { femtoIds.push("17"); cells = ' AS ' + fapNames[16]; }
+                                            if (mno2Checked && fap5Checked) { femtoIds.push("18"); cells = ' AS ' + fapNames[17]; }
+                                            if (mno3Checked && fap5Checked) { femtoIds.push("19"); cells = ' AS ' + fapNames[18]; }
+                                            if (mno4Checked && fap5Checked) { femtoIds.push("20"); cells = ' AS ' + fapNames[19]; }
+                                            if (mno1Checked && fap6Checked) { femtoIds.push("21"); cells = ' AS ' + fapNames[20]; }
+                                            if (mno2Checked && fap6Checked) { femtoIds.push("22"); cells = ' AS ' + fapNames[21]; }
+                                            if (mno3Checked && fap6Checked) { femtoIds.push("23"); cells = ' AS ' + fapNames[22]; }
+                                            if (mno4Checked && fap6Checked) { femtoIds.push("24"); cells = ' AS ' + fapNames[23]; }
+                                            if (mno1Checked && fap7Checked) { femtoIds.push("25"); cells = ' AS ' + fapNames[24]; }
+                                            if (mno2Checked && fap7Checked) { femtoIds.push("26"); cells = ' AS ' + fapNames[25]; }
+                                            if (mno3Checked && fap7Checked) { femtoIds.push("27"); cells = ' AS ' + fapNames[26]; }
+                                            if (mno4Checked && fap7Checked) { femtoIds.push("28"); cells = ' AS ' + fapNames[27]; }
+                                            if (mno1Checked && fap8Checked) { femtoIds.push("29"); cells = ' AS ' + fapNames[28]; }
+                                            if (mno2Checked && fap8Checked) { femtoIds.push("30"); cells = ' AS ' + fapNames[29]; }
+                                            if (mno3Checked && fap8Checked) { femtoIds.push("31"); cells = ' AS ' + fapNames[30]; }
+                                            if (mno4Checked && fap8Checked) { femtoIds.push("32"); cells = ' AS ' + fapNames[31]; }                                                
                                             //console.log("femtoIds are now populated " + femtoIds);
                                         } else {
                                             var cellList = new Array();
-                                            var cells = vfChecked && fap1Checked ? ', cell_0 AS VF_1' : "";
-                                            cells += o2Checked && fap1Checked ? ', cell_1 AS O2_1' : "";
-                                            cells += thChecked && fap1Checked ? ', cell_2 AS 3_1' : "";
-                                            cells += eeChecked && fap1Checked ? ', cell_3 AS EE_1' : "";
-                                            cells += vfChecked && fap2Checked ? ', cell_4 AS VF_2' : "";
-                                            cells += o2Checked && fap2Checked ? ', cell_5 AS O2_2' : "";
-                                            cells += thChecked && fap2Checked ? ', cell_6 AS 3_2' : "";
-                                            cells += eeChecked && fap2Checked ? ', cell_7 AS EE_2' : "";
-                                            cells += vfChecked && fap3Checked ? ', cell_8 AS VF_3' : "";
-                                            cells += o2Checked && fap3Checked ? ', cell_9 AS O2_3' : "";
-                                            cells += thChecked && fap3Checked ? ', cell_10 AS 3_3' : "";
-                                            cells += eeChecked && fap3Checked ? ', cell_11 AS EE_3' : "";
-                                            cells += vfChecked && fap4Checked ? ', cell_12 AS VF_4' : "";
-                                            cells += o2Checked && fap4Checked ? ', cell_13 AS O2_4' : "";
-                                            cells += thChecked && fap4Checked ? ', cell_14 AS 3_4' : "";
-                                            cells += eeChecked && fap4Checked ? ', cell_15 AS EE_4' : "";
-                                            cells += vfChecked && fap5Checked ? ', cell_16 AS VF_5' : "";
-                                            cells += o2Checked && fap5Checked ? ', cell_17 AS O2_5' : "";
-                                            cells += thChecked && fap5Checked ? ', cell_18 AS 3_5' : "";
-                                            cells += eeChecked && fap5Checked ? ', cell_19 AS EE_5' : "";
-                                            cells += vfChecked && fap6Checked ? ', cell_20 AS VF_6' : "";
-                                            cells += o2Checked && fap6Checked ? ', cell_21 AS O2_6' : "";
-                                            cells += thChecked && fap6Checked ? ', cell_22 AS 3_6' : "";
-                                            cells += eeChecked && fap6Checked ? ', cell_23 AS EE_6' : "";
-                                            cells += vfChecked && fap7Checked ? ', cell_24 AS VF_7' : "";
-                                            cells += o2Checked && fap7Checked ? ', cell_25 AS O2_7' : "";
-                                            cells += thChecked && fap7Checked ? ', cell_26 AS 3_7' : "";
-                                            cells += eeChecked && fap7Checked ? ', cell_27 AS EE_7' : "";
-                                            cells += vfChecked && fap8Checked ? ', cell_28 AS VF_8' : "";
-                                            cells += o2Checked && fap8Checked ? ', cell_29 AS O2_8' : "";
-                                            cells += thChecked && fap8Checked ? ', cell_30 AS 3_8' : "";
-                                            cells += eeChecked && fap8Checked ? ', cell_31 AS EE_8' : "";
+                                            var cells = mno1Checked && fap1Checked ? ', cell_0 AS ' + fapNames[0] : "";
+                                            cells += mno2Checked && fap1Checked ? ', cell_1 AS ' + fapNames[1] : "";
+                                            cells += mno3Checked && fap1Checked ? ', cell_2 AS ' + fapNames[2] : "";
+                                            cells += mno4Checked && fap1Checked ? ', cell_3 AS ' + fapNames[3] : "";
+                                            cells += mno1Checked && fap2Checked ? ', cell_4 AS ' + fapNames[4] : "";
+                                            cells += mno2Checked && fap2Checked ? ', cell_5 AS ' + fapNames[5] : "";
+                                            cells += mno3Checked && fap2Checked ? ', cell_6 AS ' + fapNames[6] : "";
+                                            cells += mno4Checked && fap2Checked ? ', cell_7 AS ' + fapNames[7] : "";
+                                            cells += mno1Checked && fap3Checked ? ', cell_8 AS ' + fapNames[8] : "";
+                                            cells += mno2Checked && fap3Checked ? ', cell_9 AS ' + fapNames[9] : "";
+                                            cells += mno3Checked && fap3Checked ? ', cell_10 AS ' + fapNames[10] : "";
+                                            cells += mno4Checked && fap3Checked ? ', cell_11 AS ' + fapNames[11] : "";
+                                            cells += mno1Checked && fap4Checked ? ', cell_12 AS ' + fapNames[12] : "";
+                                            cells += mno2Checked && fap4Checked ? ', cell_13 AS ' + fapNames[13] : "";
+                                            cells += mno3Checked && fap4Checked ? ', cell_14 AS ' + fapNames[14] : "";
+                                            cells += mno4Checked && fap4Checked ? ', cell_15 AS ' + fapNames[15] : "";
+                                            cells += mno1Checked && fap5Checked ? ', cell_16 AS ' + fapNames[16] : "";
+                                            cells += mno2Checked && fap5Checked ? ', cell_17 AS ' + fapNames[17] : "";
+                                            cells += mno3Checked && fap5Checked ? ', cell_18 AS ' + fapNames[18] : "";
+                                            cells += mno4Checked && fap5Checked ? ', cell_19 AS ' + fapNames[19] : "";
+                                            cells += mno1Checked && fap6Checked ? ', cell_20 AS ' + fapNames[20] : "";
+                                            cells += mno2Checked && fap6Checked ? ', cell_21 AS ' + fapNames[21] : "";
+                                            cells += mno3Checked && fap6Checked ? ', cell_22 AS ' + fapNames[22] : "";
+                                            cells += mno4Checked && fap6Checked ? ', cell_23 AS ' + fapNames[23] : "";
+                                            cells += mno1Checked && fap7Checked ? ', cell_24 AS ' + fapNames[24] : "";
+                                            cells += mno2Checked && fap7Checked ? ', cell_25 AS ' + fapNames[25] : "";
+                                            cells += mno3Checked && fap7Checked ? ', cell_26 AS ' + fapNames[26] : "";
+                                            cells += mno4Checked && fap7Checked ? ', cell_27 AS ' + fapNames[27] : "";
+                                            cells += mno1Checked && fap8Checked ? ', cell_28 AS ' + fapNames[28] : "";
+                                            cells += mno2Checked && fap8Checked ? ', cell_29 AS ' + fapNames[29] : "";
+                                            cells += mno3Checked && fap8Checked ? ', cell_30 AS ' + fapNames[30] : "";
+                                            cells += mno4Checked && fap8Checked ? ', cell_31 AS ' + fapNames[31] : "";
                                         }
 
     //                                    query = "SELECT measurement_time" + cells + " FROM metrics." + metric.substring(6) +
@@ -1597,38 +1637,39 @@ function showGraph(id, visible, siteParam) {
                                         if ((metric.substring(0,6) == "Femto-") && (siteParam == null) && ($('#site').val().length > 1)) { // this is going to be tough, pivot needed
                                             console.log("Pivoting");
                                             var cellList = new Array();
-                                            if (vfChecked && fap1Checked) cellList.push(new Array('cell_0','VF_1'));
-                                            if (o2Checked && fap1Checked) cellList.push(new Array('cell_1','O2_1'));
-                                            if (thChecked && fap1Checked) cellList.push(new Array('cell_2','3_1'));
-                                            if (eeChecked && fap1Checked) cellList.push(new Array('cell_3','EE_1'));
-                                            if (vfChecked && fap2Checked) cellList.push(new Array('cell_4','VF_2'));
-                                            if (o2Checked && fap2Checked) cellList.push(new Array('cell_5','O2_2'));
-                                            if (thChecked && fap2Checked) cellList.push(new Array('cell_6','3_2'));
-                                            if (eeChecked && fap2Checked) cellList.push(new Array('cell_7','EE_2'));
-                                            if (vfChecked && fap3Checked) cellList.push(new Array('cell_8','VF_3'));
-                                            if (o2Checked && fap3Checked) cellList.push(new Array('cell_9','O2_3'));
-                                            if (thChecked && fap3Checked) cellList.push(new Array('cell_10','3_3'));
-                                            if (eeChecked && fap3Checked) cellList.push(new Array('cell_11','EE_3'));
-                                            if (vfChecked && fap4Checked) cellList.push(new Array('cell_12','VF_4'));
-                                            if (o2Checked && fap4Checked) cellList.push(new Array('cell_13','O2_4'));
-                                            if (thChecked && fap4Checked) cellList.push(new Array('cell_14','3_4'));
-                                            if (eeChecked && fap4Checked) cellList.push(new Array('cell_15','EE_4'));
-                                            if (vfChecked && fap5Checked) cellList.push(new Array('cell_16','VF_5'));
-                                            if (o2Checked && fap5Checked) cellList.push(new Array('cell_17','O2_5'));
-                                            if (thChecked && fap5Checked) cellList.push(new Array('cell_18','3_5'));
-                                            if (eeChecked && fap5Checked) cellList.push(new Array('cell_19','EE_5'));
-                                            if (vfChecked && fap6Checked) cellList.push(new Array('cell_20','VF_6'));
-                                            if (o2Checked && fap6Checked) cellList.push(new Array('cell_21','O2_6'));
-                                            if (thChecked && fap6Checked) cellList.push(new Array('cell_22','3_6'));
-                                            if (eeChecked && fap6Checked) cellList.push(new Array('cell_23','EE_6'));
-                                            if (vfChecked && fap7Checked) cellList.push(new Array('cell_24','VF_7'));
-                                            if (o2Checked && fap7Checked) cellList.push(new Array('cell_25','O2_7'));
-                                            if (thChecked && fap7Checked) cellList.push(new Array('cell_26','3_7'));
-                                            if (eeChecked && fap7Checked) cellList.push(new Array('cell_27','EE_7'));
-                                            if (vfChecked && fap8Checked) cellList.push(new Array('cell_28','VF_8'));
-                                            if (o2Checked && fap8Checked) cellList.push(new Array('cell_29','O2_8'));
-                                            if (thChecked && fap8Checked) cellList.push(new Array('cell_30','3_8'));
-                                            if (eeChecked && fap8Checked) cellList.push(new Array('cell_31','EE_8'));
+                                            //console.log("(4MNO Check) cell_0 is " + fapNames[0]);
+                                            if (mno1Checked && fap1Checked) cellList.push(new Array('cell_0',fapNames[0]));
+                                            if (mno2Checked && fap1Checked) cellList.push(new Array('cell_1',fapNames[1]));
+                                            if (mno3Checked && fap1Checked) cellList.push(new Array('cell_2',fapNames[2]));
+                                            if (mno4Checked && fap1Checked) cellList.push(new Array('cell_3',fapNames[3]));
+                                            if (mno1Checked && fap2Checked) cellList.push(new Array('cell_4',fapNames[4]));
+                                            if (mno2Checked && fap2Checked) cellList.push(new Array('cell_5',fapNames[5]));
+                                            if (mno3Checked && fap2Checked) cellList.push(new Array('cell_6',fapNames[6]));
+                                            if (mno4Checked && fap2Checked) cellList.push(new Array('cell_7',fapNames[7]));
+                                            if (mno1Checked && fap3Checked) cellList.push(new Array('cell_8',fapNames[8]));
+                                            if (mno2Checked && fap3Checked) cellList.push(new Array('cell_9',fapNames[9]));
+                                            if (mno3Checked && fap3Checked) cellList.push(new Array('cell_10',fapNames[10]));
+                                            if (mno4Checked && fap3Checked) cellList.push(new Array('cell_11',fapNames[11]));
+                                            if (mno1Checked && fap4Checked) cellList.push(new Array('cell_12',fapNames[12]));
+                                            if (mno2Checked && fap4Checked) cellList.push(new Array('cell_13',fapNames[13]));
+                                            if (mno3Checked && fap4Checked) cellList.push(new Array('cell_14',fapNames[14]));
+                                            if (mno4Checked && fap4Checked) cellList.push(new Array('cell_15',fapNames[15]));
+                                            if (mno1Checked && fap5Checked) cellList.push(new Array('cell_16',fapNames[16]));
+                                            if (mno2Checked && fap5Checked) cellList.push(new Array('cell_17',fapNames[17]));
+                                            if (mno3Checked && fap5Checked) cellList.push(new Array('cell_18',fapNames[18]));
+                                            if (mno4Checked && fap5Checked) cellList.push(new Array('cell_19',fapNames[19]));
+                                            if (mno1Checked && fap6Checked) cellList.push(new Array('cell_20',fapNames[20]));
+                                            if (mno2Checked && fap6Checked) cellList.push(new Array('cell_21',fapNames[21]));
+                                            if (mno3Checked && fap6Checked) cellList.push(new Array('cell_22',fapNames[22]));
+                                            if (mno4Checked && fap6Checked) cellList.push(new Array('cell_23',fapNames[23]));
+                                            if (mno1Checked && fap7Checked) cellList.push(new Array('cell_24',fapNames[24]));
+                                            if (mno2Checked && fap7Checked) cellList.push(new Array('cell_25',fapNames[25]));
+                                            if (mno3Checked && fap7Checked) cellList.push(new Array('cell_26',fapNames[26]));
+                                            if (mno4Checked && fap7Checked) cellList.push(new Array('cell_27',fapNames[27]));
+                                            if (mno1Checked && fap8Checked) cellList.push(new Array('cell_28',fapNames[28]));
+                                            if (mno2Checked && fap8Checked) cellList.push(new Array('cell_29',fapNames[29]));
+                                            if (mno3Checked && fap8Checked) cellList.push(new Array('cell_30',fapNames[30]));
+                                            if (mno4Checked && fap8Checked) cellList.push(new Array('cell_31',fapNames[31]));
 
                                             // console.log("cellList has " + cellList.length + " entries which are " + cellList.toString());
                                             var columnsStr = "";
@@ -1702,38 +1743,38 @@ function showGraph(id, visible, siteParam) {
                                             ); */
 
                                         } else { // just the usual single site
-                                            var cells = vfChecked && fap1Checked ? ', cell_0 AS VF_1' : "";
-                                            cells += o2Checked && fap1Checked ? ', cell_1 AS O2_1' : "";
-                                            cells += thChecked && fap1Checked ? ', cell_2 AS 3_1' : "";
-                                            cells += eeChecked && fap1Checked ? ', cell_3 AS EE_1' : "";
-                                            cells += vfChecked && fap2Checked ? ', cell_4 AS VF_2' : "";
-                                            cells += o2Checked && fap2Checked ? ', cell_5 AS O2_2' : "";
-                                            cells += thChecked && fap2Checked ? ', cell_6 AS 3_2' : "";
-                                            cells += eeChecked && fap2Checked ? ', cell_7 AS EE_2' : "";
-                                            cells += vfChecked && fap3Checked ? ', cell_8 AS VF_3' : "";
-                                            cells += o2Checked && fap3Checked ? ', cell_9 AS O2_3' : "";
-                                            cells += thChecked && fap3Checked ? ', cell_10 AS 3_3' : "";
-                                            cells += eeChecked && fap3Checked ? ', cell_11 AS EE_3' : "";
-                                            cells += vfChecked && fap4Checked ? ', cell_12 AS VF_4' : "";
-                                            cells += o2Checked && fap4Checked ? ', cell_13 AS O2_4' : "";
-                                            cells += thChecked && fap4Checked ? ', cell_14 AS 3_4' : "";
-                                            cells += eeChecked && fap4Checked ? ', cell_15 AS EE_4' : "";
-                                            cells += vfChecked && fap5Checked ? ', cell_16 AS VF_5' : "";
-                                            cells += o2Checked && fap5Checked ? ', cell_17 AS O2_5' : "";
-                                            cells += thChecked && fap5Checked ? ', cell_18 AS 3_5' : "";
-                                            cells += eeChecked && fap5Checked ? ', cell_19 AS EE_5' : "";
-                                            cells += vfChecked && fap6Checked ? ', cell_20 AS VF_6' : "";
-                                            cells += o2Checked && fap6Checked ? ', cell_21 AS O2_6' : "";
-                                            cells += thChecked && fap6Checked ? ', cell_22 AS 3_6' : "";
-                                            cells += eeChecked && fap6Checked ? ', cell_23 AS EE_6' : "";
-                                            cells += vfChecked && fap7Checked ? ', cell_24 AS VF_7' : "";
-                                            cells += o2Checked && fap7Checked ? ', cell_25 AS O2_7' : "";
-                                            cells += thChecked && fap7Checked ? ', cell_26 AS 3_7' : "";
-                                            cells += eeChecked && fap7Checked ? ', cell_27 AS EE_7' : "";
-                                            cells += vfChecked && fap8Checked ? ', cell_28 AS VF_8' : "";
-                                            cells += o2Checked && fap8Checked ? ', cell_29 AS O2_8' : "";
-                                            cells += thChecked && fap8Checked ? ', cell_30 AS 3_8' : "";
-                                            cells += eeChecked && fap8Checked ? ', cell_31 AS EE_8' : "";
+                                            var cells = mno1Checked && fap1Checked ? ', cell_0 AS ' + fapNames[0] : "";
+                                            cells += mno2Checked && fap1Checked ? ', cell_1 AS ' + fapNames[1] : "";
+                                            cells += mno3Checked && fap1Checked ? ', cell_2 AS ' + fapNames[2] : "";
+                                            cells += mno4Checked && fap1Checked ? ', cell_3 AS ' + fapNames[3] : "";
+                                            cells += mno1Checked && fap2Checked ? ', cell_4 AS ' + fapNames[4] : "";
+                                            cells += mno2Checked && fap2Checked ? ', cell_5 AS ' + fapNames[5] : "";
+                                            cells += mno3Checked && fap2Checked ? ', cell_6 AS ' + fapNames[6] : "";
+                                            cells += mno4Checked && fap2Checked ? ', cell_7 AS ' + fapNames[7] : "";
+                                            cells += mno1Checked && fap3Checked ? ', cell_8 AS ' + fapNames[8] : "";
+                                            cells += mno2Checked && fap3Checked ? ', cell_9 AS ' + fapNames[9] : "";
+                                            cells += mno3Checked && fap3Checked ? ', cell_10 AS ' + fapNames[10] : "";
+                                            cells += mno4Checked && fap3Checked ? ', cell_11 AS ' + fapNames[11] : "";
+                                            cells += mno1Checked && fap4Checked ? ', cell_12 AS ' + fapNames[12] : "";
+                                            cells += mno2Checked && fap4Checked ? ', cell_13 AS ' + fapNames[13] : "";
+                                            cells += mno3Checked && fap4Checked ? ', cell_14 AS ' + fapNames[14] : "";
+                                            cells += mno4Checked && fap4Checked ? ', cell_15 AS ' + fapNames[15] : "";
+                                            cells += mno1Checked && fap5Checked ? ', cell_16 AS ' + fapNames[16] : "";
+                                            cells += mno2Checked && fap5Checked ? ', cell_17 AS ' + fapNames[17] : "";
+                                            cells += mno3Checked && fap5Checked ? ', cell_18 AS ' + fapNames[18] : "";
+                                            cells += mno4Checked && fap5Checked ? ', cell_19 AS ' + fapNames[19] : "";
+                                            cells += mno1Checked && fap6Checked ? ', cell_20 AS ' + fapNames[20] : "";
+                                            cells += mno2Checked && fap6Checked ? ', cell_21 AS ' + fapNames[21] : "";
+                                            cells += mno3Checked && fap6Checked ? ', cell_22 AS ' + fapNames[22] : "";
+                                            cells += mno4Checked && fap6Checked ? ', cell_23 AS ' + fapNames[23] : "";
+                                            cells += mno1Checked && fap7Checked ? ', cell_24 AS ' + fapNames[24] : "";
+                                            cells += mno2Checked && fap7Checked ? ', cell_25 AS ' + fapNames[25] : "";
+                                            cells += mno3Checked && fap7Checked ? ', cell_26 AS ' + fapNames[26] : "";
+                                            cells += mno4Checked && fap7Checked ? ', cell_27 AS ' + fapNames[27] : "";
+                                            cells += mno1Checked && fap8Checked ? ', cell_28 AS ' + fapNames[28] : "";
+                                            cells += mno2Checked && fap8Checked ? ', cell_29 AS ' + fapNames[29] : "";
+                                            cells += mno3Checked && fap8Checked ? ', cell_30 AS ' + fapNames[30] : "";
+                                            cells += mno4Checked && fap8Checked ? ', cell_31 AS ' + fapNames[31] : "";
 
 // packets SQL for multiple cells
 // sql is SELECT measurement_time, cell_19 AS EE_5, cell_23 AS EE_6 FROM metrics.packets WHERE packets.site_name = '15 Bishopsgate-1st Floor IT Room SW1' AND measurement_time BETWEEN '2019-07-20 18:07' AND '2019-07-22 00:07' GROUP BY measurement_time;
@@ -1962,7 +2003,8 @@ function showGraph(id, visible, siteParam) {
                                                 trafficCharts[nero] = new Array();
                                             }
                                             trafficCharts[0] = new Array();
-                                            var chartColours = ['rgba(255,36,36,1)','rgba(42,137,192,1)','rgba(182,95,194,1)','rgba(43,172,177, 1)'];
+                                            //var chartColours = ['rgba(255,36,36,1)','rgba(42,137,192,1)','rgba(182,95,194,1)','rgba(43,172,177, 1)'];
+                                            var chartColours = [Mno1colour,Mno2colour,Mno3colour,Mno4colour];
                                             maxMBytesToChart = 0;
                                             for (var kpi in metrics) {
                                                 //console.log("JS: 'kpi in metrics' is " + kpi); // Output says it's 0
@@ -2704,6 +2746,7 @@ function getSQL_FemtoPM_SingleMetric_MultiSites(metricTypeLength, metrics, table
             //AND ( Femto.id = 3 ||  Femto.id = 7) AND ('207 Old Street (LON26)-Old Street Switch 1' = CONCAT(Femto.site_name,'-',switch_id)) 
             //AND measurement_time BETWEEN '2019-08-06 06:39' AND '2019-08-08 12:39' ORDER BY measurement_time, site_id);
             //#select measurement_time, SUM(`207 Old Street (LON26)-Old Street Switch 1 3_1`) AS `207 Old Street (LON26)-Old Street Switch 1 3_1`, SUM(`207 Old Street (LON26)-Old Street Switch 1 3_2`) AS `207 Old Street (LON26)-Old Street Switch 1 3_2` FROM NUMBEROFRXPACKETS_tmp GROUP BY measurement_time ORDER BY measurement_time;
+            console.log("*** fapName logic section entered ***");
             for (i = 0; i < sites.length; i++) {
                 for (j = 0; j < femtoIds.length; j++) {
                 selectedSite = sites[i].replace(" - ", "-");

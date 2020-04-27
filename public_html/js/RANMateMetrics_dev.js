@@ -511,7 +511,7 @@ function showSites(justNowSelected, siteToBeSelected, force) {
             } */ 
             // else if ((thisMetricType === "Femto") && ((currentMetricType !== "Femto") || listIsEmpty("site"))) { // Femto metric
             else if (force ||
-                    ((thisMetricType === "Femto") && ((currentMetricType !== "Femto") && (currentMetricType !== "FemtoCounter") && (currentMetricType !== "FemtoKPI")) || listIsEmpty("site")) ||  // Femto metric
+                    ((thisMetricType === "Femto") && ((currentMetricType !== "Femto") || (currentMetricType !== "FemtoCounter") || (currentMetricType !== "FemtoKPI") || listIsEmpty("site"))) ||  // Femto metric
                     ((thisMetricType === "FemtoCounter") && (granularity === "PerFemto") && (((currentMetricType !== "Femto") && (currentMetricType !== "FemtoCounter") && (currentMetricType !== "FemtoKPI")) || listIsEmpty("site"))) || // FemtoCounter Metric
                     ((thisMetricType === "FemtoKPI")  && (granularity === "PerFemto") && (((currentMetricType !== "Femto") && (currentMetricType !== "FemtoCounter") && (currentMetricType !== "FemtoKPI")) || listIsEmpty("site")))) { // FemtoKPI Metric
                 //currentMetricType = "Femto";
@@ -2706,13 +2706,13 @@ function getSQL_FemtoPM_SingleMetric_MultiSites(metricTypeLength, metrics, table
             //#select measurement_time, SUM(`207 Old Street (LON26)-Old Street Switch 1 3_1`) AS `207 Old Street (LON26)-Old Street Switch 1 3_1`, SUM(`207 Old Street (LON26)-Old Street Switch 1 3_2`) AS `207 Old Street (LON26)-Old Street Switch 1 3_2` FROM NUMBEROFRXPACKETS_tmp GROUP BY measurement_time ORDER BY measurement_time;
             for (i = 0; i < sites.length; i++) {
                 for (j = 0; j < femtoIds.length; j++) {
-                selectedSite = sites[i].replace(" - ", "-");
+                selectedSite = sites[i].replace(" - ", "-"); //  + fapNames[femtoIds[j]];
                     if (i == 0 && j == 0) {
-                        pivotStr = " case when ((" + tableName + ".imei = Femto.imei) AND " + getSQL_FemtoPM_SiteSQL_ForPivot(selectedSite) + " AND (Femto.id = " + femtoIds[j] + ")) then ROUND(" + metricName + ",3) end AS `" + selectedSite + fapNames[femtoIds[j] - 1] + '`';
-                        columnsStr += ", " + func + "(`" + selectedSite + fapNames[femtoIds[j] - 1] + "`) AS `" + selectedSite + fapNames[femtoIds[j] - 1] + '`';
+                        pivotStr = " case when ((" + tableName + ".imei = Femto.imei) AND " + getSQL_FemtoPM_SiteSQL_ForPivot(selectedSite) + " AND (Femto.id = " + femtoIds[j] + ")) then ROUND(" + metricName + ",3) end AS `" + selectedSite + fapNames[femtoIds[j]] + '`';
+                        columnsStr += ", " + func + "(`" + selectedSite + fapNames[femtoIds[j]] + "`) AS `" + selectedSite + fapNames[femtoIds[j]] + '`';
                     } else {
-                        pivotStr += ", case when ((" + tableName + ".imei = Femto.imei) AND " + getSQL_FemtoPM_SiteSQL_ForPivot(selectedSite) + " AND (Femto.id = " + femtoIds[j] + ")) then ROUND(" + metricName + ",3) end AS `" + selectedSite + fapNames[femtoIds[j] - 1] + '`';
-                        columnsStr += ", " + func + "(`" + selectedSite + fapNames[femtoIds[j] - 1] + "`) AS `" + selectedSite + fapNames[femtoIds[j] - 1] + '`';
+                        pivotStr += ", case when ((" + tableName + ".imei = Femto.imei) AND " + getSQL_FemtoPM_SiteSQL_ForPivot(selectedSite) + " AND (Femto.id = " + femtoIds[j] + ")) then ROUND(" + metricName + ",3) end AS `" + selectedSite + fapNames[femtoIds[j]] + '`';
+                        columnsStr += ", " + func + "(`" + selectedSite + fapNames[femtoIds[j]] + "`) AS `" + selectedSite + fapNames[femtoIds[j]] + '`';
                     }
                 }
             }
