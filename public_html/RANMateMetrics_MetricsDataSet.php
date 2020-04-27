@@ -33,36 +33,59 @@ $metric_names = array();
 
 //burn off the measurement_time part which will always be first
 $tok = strtok(",");    
-    
-//echo "Sanity check " . substr($sql, 7, ($metrics_end - 7));
-while ($tok !== false) {
-    //echo "TOK IS " . $tok;
-    $metricIncAlias = trim($tok);   
-    if (strpos($metricIncAlias, 'ROUND(') === false) {
-        //echo "PHP Non-Traffic Metric detected " . $tok;        
-        if (strpos($metricIncAlias, ' AS ') !== false) {
-            //echo "Pos a";
-            $metric = substr($metricIncAlias, strpos($metricIncAlias, ' AS ') + 4);
-        } else {
-            //echo "Pos b";
-            if ((strpos($metricIncAlias, 'COALESCE') === false) && (strpos($metricIncAlias, 'measurement_time') === false)) {
-                $metric = $metricIncAlias;
+
+// if it's a Femto PM single metric to multiple sites that's being pivoted we can't token on a single string since
+// that's included in the SQL CONCAT(,,) function and breaks the logic
+if ((strpos($sql, ' CONCAT(') !== false) && (strpos($sql, ' ROUND(') !== false)) {
+    //$pieces = preg_split("/, /", substr($sql, 0, strpos($sql, ' FROM ')));
+    $from_index = strpos($sql, ' FROM ');
+    $sql_substr = substr($sql, 0, $from_index);
+    $pieces = preg_split("/, /", $sql_substr);
+    foreach($pieces as $metricIncAlias) {
+        if (strpos($metricIncAlias, 'ROUND(') !== false) {
+            if (strpos($metricIncAlias, ' AS ') !== false) {
+                $metric = substr($metricIncAlias, strpos($metricIncAlias, ' AS ') + 4);
+            } else {
+                if ((strpos($metricIncAlias, 'COALESCE') === false) && (strpos($metricIncAlias, 'measurement_time') === false)) {
+                    $metric = $metricIncAlias;
+                }
             }
-        }
-      //echo "Metric=" . $metric;
-      if (strlen($metric) > 0) {
-        $metric_names[] = $metric; 
-      }
-    } 
-    // rubbish, don't know what I was thinking
-    /* else if (($metrictype === "Traffic") && (strpos($metricIncAlias, ' AS ') !== false)) {
-        //echo "PHP Traffic Metric detected ";        
-        $metric = substr($metricIncAlias, strpos($metricIncAlias, ' AS ') + 4);
-        //echo "PHP parsed Metric is " . $metric;        
-    } else {
-        echo "Fupping nothing detected ";                
-    } */
-    $tok = strtok(",");    
+          if (strlen($metric) > 0) {
+            $metric_names[] = $metric; 
+          }
+        } 
+    }    
+} else { // for all the existing metrics that were being processed ok
+    //echo "Sanity check " . substr($sql, 7, ($metrics_end - 7));
+    while ($tok !== false) {
+        //echo "TOK IS " . $tok;
+        $metricIncAlias = trim($tok);   
+        if (strpos($metricIncAlias, 'ROUND(') === false) { // this should be !== false, but the end result is correct for some reason
+            //echo "PHP Non-Traffic Metric detected " . $tok;        
+            if (strpos($metricIncAlias, ' AS ') !== false) {
+                //echo "Pos a";
+                $metric = substr($metricIncAlias, strpos($metricIncAlias, ' AS ') + 4);
+            } else {
+                //echo "Pos b";
+                if ((strpos($metricIncAlias, 'COALESCE') === false) && (strpos($metricIncAlias, 'measurement_time') === false)) {
+                    $metric = $metricIncAlias;
+                }
+            }
+          //echo "Metric=" . $metric;
+          if (strlen($metric) > 0) {
+            $metric_names[] = $metric; 
+          }
+        } 
+        // rubbish, don't know what I was thinking
+        /* else if (($metrictype === "Traffic") && (strpos($metricIncAlias, ' AS ') !== false)) {
+            //echo "PHP Traffic Metric detected ";        
+            $metric = substr($metricIncAlias, strpos($metricIncAlias, ' AS ') + 4);
+            //echo "PHP parsed Metric is " . $metric;        
+        } else {
+            echo "Fupping nothing detected ";                
+        } */
+        $tok = strtok(",");    
+    }
 }
 
 //echo "Metric Names are " . $metric_names[];

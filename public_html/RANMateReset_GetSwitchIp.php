@@ -12,7 +12,7 @@ $pos = strrchr($Switch,'-');
 $floor = trim(substr($pos, 1));
 $site = trim(substr( $Switch , 0 , strlen($Switch) - strlen($pos) ));
 
-$sql = "select DISTINCT IP from OpenCellCM.Switch where site_name='" . $site . "' and name='" . $floor . "'"; // Concert Version
+$sql = "select DISTINCT IP from Concert.Switch where site_name='" . $site . "' and name='" . $floor . "'"; // Concert Version
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
@@ -29,7 +29,7 @@ if ($result->num_rows > 0) {
     $floor = trim(substr($pos, 1));
     $site = trim(substr( $Switch , 0 , strlen($Switch) - strlen($pos) ));
 
-    $sql = "select DISTINCT IP from OpenCellCM.Switch where site_name='" . $site . "' and name='" . $floor . "'"; // Concert Version
+    $sql = "select DISTINCT IP from Concert.Switch where site_name='" . $site . "' and name='" . $floor . "'"; // Concert Version
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {

@@ -11,6 +11,7 @@ $FemtoNum = $_GET['femtoNum'];
 $User = $_GET['user'];
 $Comment = $_GET['comment'];
 $Note = $_GET['note'];
+$VirtualSwitchChars = $_GET['virtualSwitchChars']; // <, <<, ., >>, >>> for overloaded switches
 //$Timestamp = '2017-01-28 12:03';
 //$Switch = '111 Salusbury Rd - 1st Floor';
 //$Port = 30;
@@ -29,8 +30,8 @@ $pos = strrchr($Switch,'-');
 $floor = trim(substr($pos, 1));
 $site = trim(substr( $Switch , 0 , strlen($Switch) - strlen($pos) ));
 
-//$sql = "select DISTINCT SwitchIP from customer_config where Site='" . $site . "' and SwitchLocation='" . $floor . "'";  // pre Concert
-$sql = "select DISTINCT IP from OpenCellCM.Switch where site_name='" . $site . "' and name='" . $floor . "'"; // Concert Version
+// type added 29/9/19 for OC-77 so that FemtoReset.java knows the switch type since 2960 and 3650 use 'terminal length 0' instead of 'terminal datadump'
+$sql = "select DISTINCT IP, type from Concert.Switch where site_name='" . $site . "' and name='" . $floor . "'"; // Concert Version
 //echo "Switch IP sql (1st attempt) is: $sql \n";    
 $result = $conn->query($sql);
 
@@ -38,11 +39,13 @@ if ($result->num_rows > 0) {
     // output data of each row, there should only be 1 row
     while($row = $result->fetch_assoc()) {
         $SwitchIp = $row["IP"];
+        $SwitchType = $row["type"];
     }
     //echo "Switch IP sql is " . $sql . "\n";    
     //echo "Switch IP is " . $SwitchIp . "\n";    
 
-    $java = "java -classpath /opt/RANmate/lib/RANMate_multi.jar:/opt/RANmate/lib/ganymed-ssh2-build210.jar com.dataduct.invobroker.ranmate.FemtoReset " . $SwitchIp . " gi" . $Port;
+    //$java = "java -classpath /opt/RANmate/lib/RANMate_multi.jar:/opt/RANmate/lib/ganymed-ssh2-build210.jar com.dataduct.invobroker.ranmate.FemtoReset " . $SwitchIp . " gi" . $Port . " " . $SwitchType;
+    $java = "java -classpath /opt/RANmate/lib/RANmate.jar:/opt/RANmate/lib/ganymed-ssh2-build210.jar com.dataduct.invobroker.ranmate.FemtoReset " . $SwitchIp . " gi" . $Port . " " . $SwitchType;
     //echo "java is " . $java . "\n";
 
     $reset_output = exec($java, $output, $return);
@@ -51,7 +54,7 @@ if ($result->num_rows > 0) {
         //echo("Execution of Reset failed");
     } else { // only update the log on a successful reset
         $sql = "INSERT INTO reset_log (reset_time, site_id, port_no, opco, femto_no, user, comment, note) "
-                ."VALUES ('" . $Timestamp . "', '" . $Switch . "', " . $Port . ", '" . $OpCo . "', " . $FemtoNum . ", '" . $User . "', '" . $Comment . "', '" . $Note . "')";
+                ."VALUES ('" . $Timestamp . "', '" . $Switch . $VirtualSwitchChars . "', " . $Port . ", '" . $OpCo . "', " . $FemtoNum . ", '" . $User . "', '" . $Comment . "', '" . $Note . "')";
 
         //echo ("sql is " . $sql);
         if ($conn->query($sql) === TRUE) {
@@ -68,8 +71,8 @@ if ($result->num_rows > 0) {
     $floor = trim(substr($pos, 1));
     $site = trim(substr( $Switch , 0 , strlen($Switch) - strlen($pos) ));
 
-    // $sql = "select DISTINCT SwitchIP from customer_config where Site='" . $site . "' and SwitchLocation='" . $floor . "'"; // pre Concert
-    $sql = "select DISTINCT IP from OpenCellCM.Switch where site_name='" . $site . "' and name='" . $floor . "'"; // Concert Version
+    // type added 29/9/19 for OC-77 so that FemtoReset.java knows the switch type since 2960 and 3650 use 'terminal length 0' instead of 'terminal datadump'
+    $sql = "select DISTINCT IP, type from Concert.Switch where site_name='" . $site . "' and name='" . $floor . "'"; // Concert Version
     //echo "Switch IP sql (2nd attempt) is: $sql \n";    
     $result = $conn->query($sql);
 
@@ -77,10 +80,11 @@ if ($result->num_rows > 0) {
         // output data of each row, there should only be 1 row
         while($row = $result->fetch_assoc()) {
             $SwitchIp = $row["IP"];
+            $SwitchType = $row["type"];
         }
         
         // echo "Switch IP is " . $SwitchIp . "\n";    
-        $java = "java -classpath /opt/RANmate/lib/RANMate_multi.jar:/opt/RANmate/lib/ganymed-ssh2-build210.jar com.dataduct.invobroker.ranmate.FemtoReset " . $SwitchIp . " gi" . $Port;
+        $java = "java -classpath /opt/RANmate/lib/RANMate_multi.jar:/opt/RANmate/lib/ganymed-ssh2-build210.jar com.dataduct.invobroker.ranmate.FemtoReset " . $SwitchIp . " gi" . $Port . " " . $SwitchType;
         //echo "java is " . $java . "\n";
 
         $reset_output = exec($java, $output, $return);
@@ -89,7 +93,7 @@ if ($result->num_rows > 0) {
             //echo("Execution of Reset failed");
         } else { // only update the log on a successful reset
             $sql = "INSERT INTO reset_log (reset_time, site_id, port_no, opco, femto_no, user, comment, note) "
-                    ."VALUES ('" . $Timestamp . "', '" . $Switch . "', " . $Port . ", '" . $OpCo . "', " . $FemtoNum . ", '" . $User . "', '" . $Comment . "', '" . $Note . "')";
+                    ."VALUES ('" . $Timestamp . "', '" . $Switch . $VirtualSwitchChars . "', " . $Port . ", '" . $OpCo . "', " . $FemtoNum . ", '" . $User . "', '" . $Comment . "', '" . $Note . "')";
 
             //echo ("sql is " . $sql);
             if ($conn->query($sql) === TRUE) {

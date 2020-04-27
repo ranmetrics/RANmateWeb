@@ -16,7 +16,7 @@ if (!$conn) {
 
 //$sql = "Select DISTINCT interface from `ranmate-femto`.customer_config, `metrics`.router_counters "
 //        . "WHERE customer_config.Site='" . $Site . "' and customer_config.RouterIp=router_counters.public_site_id";
-$sql = "Select period from metrics.generated_reports WHERE subject='" . $Type . "' and name='" . $SiteOrCustomer . "' ORDER BY period DESC";
+$sql = "Select period from metrics.generated_reports WHERE period != '' and subject='" . $Type . "' and name='" . $SiteOrCustomer . "' ORDER BY period DESC";
 //echo "$sql";
 $result = $conn->query($sql);
 

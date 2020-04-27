@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>RANMate Reset</title>
+        <meta charset="UTF-8">
+<!--        <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+        <link rel="stylesheet" href="css/RANMateReset.css">
+        <script src="js/RANMateReset.js"></script>
+<!--        <script src="js/moment.min.js"></script>            -->
+    </head>
+    <body onload="initPage()">
+        <!-- Header-->
+        <div id="LogoWrap" style="border-spacing: 0px 0px 10px 0px;">        
+            <a href="index_reset.html"><img class="main" src="./img/RANmetricsLogoTransparent.png" style="max-height: 80%; max-width: 80%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>
+        </div>
+
+        <!-- Gather Inputs-->
+        <div id="ResetWrap" style=" text-align: center; ">        
+        <div id="ResetInner" style=" display: inline-block; ">        
+
+                <section>
+                    
+                    <div style="float:left;margin-right:30px;">
+                        <label for="name" id="SiteLabel">Site</label>            
+                        <select id="site" style="min-width: 130px;" onload="showSites()" onchange="updateOpCoCells(this.value); ">
+                        </select> 
+                    </div>
+
+                    <div id="operators" style="float:left;margin-right:30px;">
+                        <label for="name" id="OpCoName" style="margin-left:0px;">Operator</label>            
+                        <div class="block-field" id="V"><label for="checkbox" style="margin: 0px 2px;">V</label><input name="OpCo" type="radio" id=0 onChange="opcoSelected(this.id)"></div>
+                        <div class="block-field" id="O"><label for="checkbox" style="margin: 0px 2px;">O</label><input name="OpCo" type="radio" id=1 onChange="opcoSelected(this.id)"></div>
+                        <div class="block-field" id="T"><label for="checkbox" style="margin: 0px 2px;">T</label><input name="OpCo" type="radio" id=2 onChange="opcoSelected(this.id)"></div>
+                        <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input name="OpCo" type="radio" id=3 onChange="opcoSelected(this.id)"></div>
+                    </div>
+                    
+                    <div id="cells" style="float:left;margin-right:30px;">
+                        <label for="name" id="CellNum">Femto Number</label>            
+<!--                        <div style="float:left;margin-right:0px;"><input type="checkbox" name="FemtoNumber" value="1" style="font-family: Arial; font-size: 60%"> 1<br></div>-->
+                        <div class="block-field" id="FAP1" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">1</label><input name="FAP" type="radio" id="Femto1" onChange="femtoSelected(this.id)"></div>                        
+                        <div class="block-field" id="FAP2" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">2</label><input name="FAP" type="radio" id="Femto2" onChange="femtoSelected(this.id)"></div>                        
+                        <div class="block-field" id="FAP3" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">3</label><input name="FAP" type="radio" id="Femto3" onChange="femtoSelected(this.id)"></div>                        
+                        <div class="block-field" id="FAP4" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">4</label><input name="FAP" type="radio" id="Femto4" onChange="femtoSelected(this.id)"></div>                        
+                        <div class="block-field" id="FAP5" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">5</label><input name="FAP" type="radio" id="Femto5" onChange="femtoSelected(this.id)"></div>                        
+                        <div class="block-field" id="FAP6" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">6</label><input name="FAP" type="radio" id="Femto6" onChange="femtoSelected(this.id)"></div>                        
+                        <div class="block-field" id="FAP7" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">7</label><input name="FAP" type="radio" id="Femto7" onChange="femtoSelected(this.id)"></div>                        
+                        <div class="block-field" id="FAP8" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">8</label><input name="FAP" type="radio" id="Femto8" onChange="femtoSelected(this.id)"></div>                        
+                    </div>
+                                        
+                    <div style="float:left">
+                        <br>   
+                            <input id="resetButton" type="submit" value="Reset" onclick="resetFemto('reset', true); ">           
+                    </div>
+                </section>
+        </div>
+        </div>
+
+        <div align="center" style="margin-top:100px;">
+            <label for="TableName" id="LogTableLabel">Reset Log</label>            
+        </div>
+        
+        <!-- Display the Reset Log Table-->
+        <div id="TableWrap" style="width:1600px; height:500px; margin:0 auto; overflow: auto;">   
+        </div>
+            
+    </body>
+</html>
+ 
