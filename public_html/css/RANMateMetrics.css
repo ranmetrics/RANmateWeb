@@ -135,3 +135,46 @@ ul.multiselect-container {
 }
 
 .dropdown-menu {width:100% !important;}
+
+.slidecontainer {
+  //width: 100%; /* Width of the outside container */
+  width: 75px; /* Width of the outside container */
+  margin: 5px 0px 0px 0px;
+}
+
+/* The slider itself */
+.slider {
+  -webkit-appearance: none;  /* Override default CSS styles */
+  appearance: none;
+  // width: 100%; /* Full-width */
+  width: 75px;  
+  height: 37px; /* Specified height */
+  background: rgb(240,240,240); // #d3d3d3; /* Grey background */
+  outline: none; /* Remove outline */
+  //opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+}
+
+/* Mouse-over effects */
+.slider:hover {
+  opacity: 1; /* Fully shown on mouse-over */
+}
+
+/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default look */
+  appearance: none;
+  width: 20px; /* Set a specific slider handle width */
+  height: 37px; /* Slider handle height */
+  background: #4CAF50; /* Green background */
+  cursor: pointer; /* Cursor on hover */
+}
+
+.slider::-moz-range-thumb {
+  width: 15px; /* Set a specific slider handle width */
+  height: 35px; /* Slider handle height */
+  //background: rgb(169,224,254);  /* lightskyblue */ // previously #4CAF50; /* Green background */
+  background: rgb(252,252,252);  /* lightskyblue */ // previously #4CAF50; /* Green background */
+  cursor: pointer; /* Cursor on hover */
+}
