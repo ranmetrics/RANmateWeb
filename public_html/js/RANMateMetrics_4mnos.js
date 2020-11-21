@@ -58,6 +58,8 @@ var timeGranMonth = false;
 var timeFormat = "YYYY-MM-DD hh:mm";
 var currentTimeGranularity = 1;
 
+var hash = new Object();
+
 function getNow() {
     return getDateTimeString(new Date());
 //    return "2016-11-06 03:52";  // used when testing specific dates
@@ -910,6 +912,19 @@ function initPageRANmate() {
     $('#metric').multiselect('updateButtonText');
     console.log("Enabling the graph button");
     document.getElementById("graphButton").disabled = false;
+    
+    // fix the incorrect KPI calculation
+    //console.log("Adding CSDROPRATE to the KPI hash");
+    hash["CSDROPRATE"] = "ROUND(ifnull((((SUM(SPEECHDROPAPINITATED) + SUM(CSVIDEODROPAPINITIATED) + SUM(CSVIDEODROPCNINITIATED)) / (SUM(CSSPEECHRABSUCCESS) + SUM(CSVIDEORABSUCCESS))) * 100),0),2)";
+    hash["PSDROPRATE"] = "ROUND(ifnull(((SUM(PSDROPAPINITIATED) / (SUM(PSHSDPARABSUCCESS) + SUM(PSR99RABSUCCESS))) * 100),0),2)";
+    hash["CSSETUPSUCCESSRATE"] = "ROUND(ifnull(((SUM(CSSPEECHRABSUCCESS)/ SUM(CSSPEECHRABATTEMPTS)) * 100),100),2)";
+    hash["PSSETUPSUCCESSRATE"] = "ROUND(ifnull((((SUM(PSR99RABSUCCESS) + SUM(PSHSDPARABSUCCESS)) / (SUM(PSR99RABATTEMPTS) + SUM(PSHSDPARABATTEMPTS))) * 100),100),2)";
+    hash["RRCCONSUCCESSRATE"] = "ROUND(ifnull(((SUM(STANDALONESRBSUCCESS)/ SUM(STANDALONESRBATTEMPTS)) * 100),100),2)";
+    hash["INTERHANDOUTSUCCESSRATE"] = "ROUND(ifnull(((SUM(INTERFAPSPEECHINTERFREQHANDOUTSUCCESS) + SUM(INTERFAPSPEECHINTERFREQHANDOUTCANCELS)) / (SUM(INTERFAPSPEECHINTERFREQHANDOUTATTEMPTS)) * 100),100),2)";
+    hash["INTRAHANDOUTSUCCESSRATE"] = "LEAST(ROUND(ifnull(((SUM(INTERFAPSPEECHINTRAFREQHANDOUTSUCCESS) + SUM(INTERFAPSPEECHINTRAFREQHANDOUTCANCELS)) / (SUM(INTERFAPSPEECHINTRAFREQHANDOUTATTEMPTS)) * 100),100),2),100)";
+    hash["CSHANDINSUCCESSRATE"] = "ROUND(ifnull(((SUM(INTERFAPCSHANDINSUCCESS) + SUM(INTERFAPCSHANDINCANCELS)) / (SUM(INTERFAPCSHANDINATTEMPTS)) * 100),100),2)";
+    hash["PSHANDINSUCCESSRATE"] = "ROUND(ifnull(((SUM(INTERFAPPSHANDINSUCCESS) + SUM(INTERFAPPSHANDINCANCELS)) / (SUM(INTERFAPPSHANDINATTEMPTS)) * 100),100),2)";
+    //console.log("hash[\"CSDROPRATE\"] is " + hash["CSDROPRATE"]);
 }
 
 function initWithParams(metricParam) {
@@ -1361,7 +1376,8 @@ function showReport() {
         } else if (mnoReportSelected) {
             siteOrCustomer = siteOrCustomer.substring(5).trim();
             mno = subdir.substring(5).trim();
-            window.open('reports/mnos/' + mno + '/StrattoOpenCell Service Report - ' + selectedMonth +'.pdf');
+            // window.open('reports/mnos/' + mno + '/StrattoOpenCell Service Report - ' + selectedMonth +'.pdf'); // not working with MNO reports that have the MNO name in the report file name
+            window.open('reports/mnos/' + mno + '/StrattoOpenCell Service Report - ' + mno + ' ' + selectedMonth +'.pdf');
         } else {
             // window.open('/var/Concert/reports/sites/StrattoOpenCell Service Report - ' + siteOrCustomer + ' ' + selectedMonth +'.pdf');
             xmlhttp.open("GET","RANMateMetrics_CustomerForSite.php?site=" + siteOrCustomer,false);
@@ -1449,6 +1465,7 @@ function showReport() {
                         if (customerReportSelected) {
                             siteOrCustomer = siteOrCustomer.substring(10).trim();
                             customer = subdir.substring(10).trim();
+                            //window.open('reports/custom/' + customer + '/StrattoOpenCell Service Report - ' + customer + ' ' + fileNameDate +'.pdf');
                             window.open('reports/custom/' + customer + '/StrattoOpenCell Service Report - ' + customer + ' ' + fileNameDate +'.pdf');
                         } else if (mnoReportSelected) {
                             siteOrCustomer = siteOrCustomer.substring(5).trim();
@@ -1785,10 +1802,19 @@ function showGraph(id, visible, siteParam) {
 // Multiple Femto counters multiple cells (cell counts aggregated) maybe they'll want to pivot this one
 // SELECT measurement_time, SUM(NUMBEROFTXBYTES),SUM(NUMBEROFRXBYTES) FROM OpenCellCM.Femto, metrics.mno_counters WHERE Femto.IMEI != 'N/A' AND mno_counters.IMEI = Femto.IMEI AND (Femto.id = 3 OR Femto.id = 7) AND 'South Bank Central-Alto Tower 3rd Floor' = CONCAT(Femto.site_name, '-', switch_id) AND measurement_time BETWEEN '2019-07-16 18:44' AND '2019-07-22 00:44' GROUP BY measurement_time;
                                             if ((metric.substring(0,9) == "FemtoKPI-") || (metric.substring(0,13) == "FemtoCounter-")) {
+                                                console.log("metric.substring(0,9)=" + metric.substring(0,9));
                                                 if (metric.substring(0,9) == "FemtoKPI-") {
                                                     var metricTypeLength = 9;
-                                                    var tableName = 'mno_kpis';
+                                                    //var tableName = 'mno_kpis';   // this view incorrectly calculates the KPIs as averages of averagees
+                                                    //if (($('#site').val().length == 1) && (femtoCountersPerFemto && femtoIds.length == 1)) { 
+                                                    console.log("#sites = " + $('#site').val().length + " and femtoIds.length=" + femtoIds.length);
+                                                    if (($('#site').val().length == 1) && (femtoIds.length < 2)) { // femtoCountersPerFemto messes up per site KPIs
+                                                        var tableName = 'mno_counters';
+                                                    } else {
+                                                        var tableName = 'mno_kpis';     // multi site queries still have to use the less correct KPI View calculation
+                                                    }
                                                 } else {
+                                                    console.log("mno_counters it is");
                                                     var metricTypeLength = 13;
                                                     var tableName = 'mno_counters';
                                                 }                 
@@ -2628,21 +2654,30 @@ function pingMetricsToString(metrics) {
 /**************************************************/
 
 function femtoPMMetricsToString(metrics, cutPoint, isKpi) {
+    console.log("In femtoPMMetricsToString() for metrics " + metrics + " and isKpi=" + isKpi);
     var metricsString = "";
-    var func = "SUM(";
+    //var func = "SUM(";
     if (isKpi) {
-        func = "AVG(";
+//        func = "AVG(";
+        for (var i = 0; i < metrics.length; i++) {
+            if (i == 0) {
+                metricsString += hash[metrics[i].substring(cutPoint)] + " AS " + metrics[i].substring(cutPoint);
+            } else {
+                metricsString += ", " + hash[metrics[i].substring(cutPoint)] + " AS " + metrics[i].substring(cutPoint);
+            }
+        }    
+    } else {
+        for (var i = 0; i < metrics.length; i++) {
+            // using SUM() here because when combined with GROUPING by measurement time that will aggregate the various counter/KPI columns
+            if (i == 0) {
+                metricsString += "SUM(" + metrics[i].substring(cutPoint) + ") AS " + metrics[i].substring(cutPoint);
+                //metricsString += func + metrics[i].substring(cutPoint) + ") AS " + metrics[i].substring(cutPoint);
+            } else {
+                metricsString += ", SUM(" + metrics[i].substring(cutPoint) + ") AS " + metrics[i].substring(cutPoint);
+                //metricsString += ", " + func + metrics[i].substring(cutPoint) + ") AS " + metrics[i].substring(cutPoint);
+            }
+        }    
     }
-    for (var i = 0; i < metrics.length; i++) {
-        // using SUM() here because when combined with GROUPING by measurement time that will aggregate the various counter/KPI columns
-        if (i == 0) {
-            //metricsString += "SUM(" + metrics[i].substring(cutPoint) + ") AS " + metrics[i].substring(cutPoint);
-            metricsString += func + metrics[i].substring(cutPoint) + ") AS " + metrics[i].substring(cutPoint);
-        } else {
-            //metricsString += ", SUM(" + metrics[i].substring(cutPoint) + ") AS " + metrics[i].substring(cutPoint);
-            metricsString += ", " + func + metrics[i].substring(cutPoint) + ") AS " + metrics[i].substring(cutPoint);
-        }
-    }    
     return metricsString;
 }
 
@@ -2686,12 +2721,13 @@ function getSQL_FemtoPM_SiteSQL_ForPivot(site) {
     return sql;
 }
 
-getSQL_FemtoPM_SiteSQL
+//getSQL_FemtoPM_SiteSQL
 
 function getSQL_FemtoPM_Common(metricTypeLength, metrics, tableName, sites, femtoIds, startDateTime, endDateTime) {
-    metricNames = femtoPMMetricsToString(metrics, metricTypeLength, tableName == 'mno_kpis');
-    return "SELECT measurement_time, " + metricNames + " FROM OpenCellCM.Femto, metrics." + tableName +
-            " WHERE Femto.IMEI != 'N/A' AND " + tableName + ".IMEI = Femto.IMEI" + 
+    //metricNames = femtoPMMetricsToString(metrics, metricTypeLength, tableName == 'mno_kpis'); // the table name changed for KPIs on 14/5/2020 so that they are calculated properly
+    metricNames = femtoPMMetricsToString(metrics, metricTypeLength, metrics[0].startsWith("FemtoKPI-"));
+    return "SELECT measurement_time, " + metricNames + " FROM Concert.Femto, metrics." + tableName +
+            " WHERE Femto.IMEI != 'N/A' AND Femto.live AND " + tableName + ".IMEI = Femto.IMEI" + 
             getSQL_FemtoPM_FemtoIdSQL(femtoIds) +
             " AND " + getSQL_FemtoPM_SiteSQL(sites) + 
             " AND measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
@@ -2719,6 +2755,7 @@ function getSQL_FemtoPM_MultiMetric_SingleSite(metricTypeLength, metrics, tableN
 /* 
  */
 function getSQL_FemtoPM_SingleMetric_MultiSites(metricTypeLength, metrics, tableName, sites, femtoIds, startDateTime, endDateTime) {
+    alert("Multiple Sites can only be displayed using a less correct KPI calculation.\nIt is recommended to select only a single site if troubleshooting");
     // for this one we want to do pivoting
         metricName = metrics[0].substring(metricTypeLength);
         // console.log("The metric name is " + metricName);
@@ -2764,9 +2801,9 @@ function getSQL_FemtoPM_SingleMetric_MultiSites(metricTypeLength, metrics, table
         query = "drop view if exists " + metricName + "_tmp;" +
                 "create view " + metricName + "_tmp as ( SELECT measurement_time, " +
                 pivotStr +
-                " FROM OpenCellCM.Femto, metrics." + tableName +
+                " FROM Concert.Femto, metrics." + tableName +
                 //" WHERE " + tableName + ".site_name IN (" + siteFloorStr + ") " +
-                " WHERE Femto.IMEI != 'N/A' AND " + tableName + ".IMEI = Femto.IMEI" + 
+                " WHERE Femto.IMEI != 'N/A' AND Femto.live AND " + tableName + ".IMEI = Femto.IMEI" + 
                 getSQL_FemtoPM_FemtoIdSQL(femtoIds) +
                 " AND " + getSQL_FemtoPM_SiteSQL(sites) + 
 
