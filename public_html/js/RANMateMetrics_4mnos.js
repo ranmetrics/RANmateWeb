@@ -1369,15 +1369,25 @@ function showReport() {
             mnoReportSelected = true;
         }
         var selectedMonth = convertMonthName($('#fixedperiod :selected').text());
+        var selectedMonthNum = selectedMonth.substring(0,6);
         if (customerReportSelected) {
             siteOrCustomer = siteOrCustomer.substring(10).trim();
             customer = subdir.substring(10).trim();
-            window.open('reports/customers/' + customer + '/StrattoOpenCell Service Report - ' + customer + ' ' + selectedMonth +'.pdf');
+            if (selectedMonthNum < 202010) {
+                window.open('reports/customers/' + customer + '/StrattoOpenCell Service Report - ' + customer + ' ' + selectedMonth +'.pdf');
+            } else {
+                window.open('reports/customers/' + customer + '/FreshWave Service Report - ' + customer + ' ' + selectedMonth +'.pdf');                
+            }
         } else if (mnoReportSelected) {
             siteOrCustomer = siteOrCustomer.substring(5).trim();
             mno = subdir.substring(5).trim();
             // window.open('reports/mnos/' + mno + '/StrattoOpenCell Service Report - ' + selectedMonth +'.pdf'); // not working with MNO reports that have the MNO name in the report file name
-            window.open('reports/mnos/' + mno + '/StrattoOpenCell Service Report - ' + mno + ' ' + selectedMonth +'.pdf');
+            //window.open('reports/mnos/' + mno + '/StrattoOpenCell Service Report - ' + mno + ' ' + selectedMonth +'.pdf');
+            if (selectedMonthNum < 202011) {
+                window.open('reports/mnos/' + mno + '/StrattoOpenCell Service Report - ' + mno + ' ' + selectedMonth +'.pdf');
+            } else {
+                window.open('reports/mnos/' + mno + '/FreshWave Service Report - ' + mno + ' ' + selectedMonth +'.pdf');
+            }
         } else {
             // window.open('/var/Concert/reports/sites/StrattoOpenCell Service Report - ' + siteOrCustomer + ' ' + selectedMonth +'.pdf');
             xmlhttp.open("GET","RANMateMetrics_CustomerForSite.php?site=" + siteOrCustomer,false);
@@ -1387,7 +1397,12 @@ function showReport() {
                 var thisSitesCustomer = xmlhttp.responseText;
             }            
             // at some stage the naming of the Site report was updated to include the customer
-            window.open('reports/sites/' + subdir + '/StrattoOpenCell Service Report - ' + thisSitesCustomer + siteOrCustomer + ' ' + selectedMonth +'.pdf');
+            //window.open('reports/sites/' + subdir + '/StrattoOpenCell Service Report - ' + thisSitesCustomer + siteOrCustomer + ' ' + selectedMonth +'.pdf');
+            if (selectedMonthNum < 202010) {
+                window.open('reports/sites/' + subdir + '/StrattoOpenCell Service Report - ' + thisSitesCustomer + siteOrCustomer + ' ' + selectedMonth +'.pdf');
+            } else {
+                window.open('reports/sites/' + subdir + '/FreshWave Service Report - ' + thisSitesCustomer + siteOrCustomer + ' ' + selectedMonth +'.pdf');
+            }
         }
         
         // This code SHOULD open up the PDF in the RANmetrics page using the same canvas as the Packets and PoE
@@ -1466,14 +1481,14 @@ function showReport() {
                             siteOrCustomer = siteOrCustomer.substring(10).trim();
                             customer = subdir.substring(10).trim();
                             //window.open('reports/custom/' + customer + '/StrattoOpenCell Service Report - ' + customer + ' ' + fileNameDate +'.pdf');
-                            window.open('reports/custom/' + customer + '/StrattoOpenCell Service Report - ' + customer + ' ' + fileNameDate +'.pdf');
+                            window.open('reports/custom/' + customer + '/FreshWave Service Report - ' + customer + ' ' + fileNameDate +'.pdf');
                         } else if (mnoReportSelected) {
                             siteOrCustomer = siteOrCustomer.substring(5).trim();
                             mno = subdir.substring(5).trim();
-                            window.open('reports/custom/' + mno + '/StrattoOpenCell Service Report - ' + mno + ' ' + fileNameDate +'.pdf');
+                            window.open('reports/custom/' + mno + '/FreshWave Service Report - ' + mno + ' ' + fileNameDate +'.pdf');
                         } else {
                             // window.open('/var/Concert/reports/sites/StrattoOpenCell Service Report - ' + siteOrCustomer + ' ' + selectedMonth +'.pdf');
-                            window.open('reports/custom/' + subdir + '/StrattoOpenCell Service Report - ' + subdir + ' ' + fileNameDate +'.pdf');
+                            window.open('reports/custom/' + subdir + '/FreshWave Service Report - ' + subdir + ' ' + fileNameDate +'.pdf');
                         }
                     } else {
                         console.log("Error invoking RANMateMetrics_CreateCustomReport.php: " + xmlhttp.status);
