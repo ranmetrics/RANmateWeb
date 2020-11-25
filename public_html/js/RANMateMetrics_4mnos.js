@@ -1376,17 +1376,17 @@ function showReport() {
             if (selectedMonthNum < 202010) {
                 window.open('reports/customers/' + customer + '/StrattoOpenCell Service Report - ' + customer + ' ' + selectedMonth +'.pdf');
             } else {
-                window.open('reports/customers/' + customer + '/FreshWave Service Report - ' + customer + ' ' + selectedMonth +'.pdf');                
+                window.open('reports/customers/' + customer + '/Freshwave Service Report - ' + customer + ' ' + selectedMonth +'.pdf');                
             }
         } else if (mnoReportSelected) {
             siteOrCustomer = siteOrCustomer.substring(5).trim();
             mno = subdir.substring(5).trim();
             // window.open('reports/mnos/' + mno + '/StrattoOpenCell Service Report - ' + selectedMonth +'.pdf'); // not working with MNO reports that have the MNO name in the report file name
             //window.open('reports/mnos/' + mno + '/StrattoOpenCell Service Report - ' + mno + ' ' + selectedMonth +'.pdf');
-            if (selectedMonthNum < 202011) {
+            if (selectedMonthNum < 202010) {
                 window.open('reports/mnos/' + mno + '/StrattoOpenCell Service Report - ' + mno + ' ' + selectedMonth +'.pdf');
             } else {
-                window.open('reports/mnos/' + mno + '/FreshWave Service Report - ' + mno + ' ' + selectedMonth +'.pdf');
+                window.open('reports/mnos/' + mno + '/Freshwave Service Report - ' + mno + ' ' + selectedMonth +'.pdf');
             }
         } else {
             // window.open('/var/Concert/reports/sites/StrattoOpenCell Service Report - ' + siteOrCustomer + ' ' + selectedMonth +'.pdf');
@@ -1401,7 +1401,7 @@ function showReport() {
             if (selectedMonthNum < 202010) {
                 window.open('reports/sites/' + subdir + '/StrattoOpenCell Service Report - ' + thisSitesCustomer + siteOrCustomer + ' ' + selectedMonth +'.pdf');
             } else {
-                window.open('reports/sites/' + subdir + '/FreshWave Service Report - ' + thisSitesCustomer + siteOrCustomer + ' ' + selectedMonth +'.pdf');
+                window.open('reports/sites/' + subdir + '/Freshwave Service Report - ' + thisSitesCustomer + siteOrCustomer + ' ' + selectedMonth +'.pdf');
             }
         }
         
@@ -1481,14 +1481,14 @@ function showReport() {
                             siteOrCustomer = siteOrCustomer.substring(10).trim();
                             customer = subdir.substring(10).trim();
                             //window.open('reports/custom/' + customer + '/StrattoOpenCell Service Report - ' + customer + ' ' + fileNameDate +'.pdf');
-                            window.open('reports/custom/' + customer + '/FreshWave Service Report - ' + customer + ' ' + fileNameDate +'.pdf');
+                            window.open('reports/custom/' + customer + '/Freshwave Service Report - ' + customer + ' ' + fileNameDate +'.pdf');
                         } else if (mnoReportSelected) {
                             siteOrCustomer = siteOrCustomer.substring(5).trim();
                             mno = subdir.substring(5).trim();
-                            window.open('reports/custom/' + mno + '/FreshWave Service Report - ' + mno + ' ' + fileNameDate +'.pdf');
+                            window.open('reports/custom/' + mno + '/Freshwave Service Report - ' + mno + ' ' + fileNameDate +'.pdf');
                         } else {
                             // window.open('/var/Concert/reports/sites/StrattoOpenCell Service Report - ' + siteOrCustomer + ' ' + selectedMonth +'.pdf');
-                            window.open('reports/custom/' + subdir + '/FreshWave Service Report - ' + subdir + ' ' + fileNameDate +'.pdf');
+                            window.open('reports/custom/' + subdir + '/Freshwave Service Report - ' + subdir + ' ' + fileNameDate +'.pdf');
                         }
                     } else {
                         console.log("Error invoking RANMateMetrics_CreateCustomReport.php: " + xmlhttp.status);

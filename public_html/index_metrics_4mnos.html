@@ -41,7 +41,9 @@ On the customer site a logical link named 'index_metrics.html' should be created
         
        
     </head>
-    <body onload="initPageRANmate()">
+<!-- Suggested disabling by Rastko 2/10/2020 to solve narrow drop downs. Replaced by end of file function -->
+<!--    <body onload="initPageRANmate()">-->
+    <body>
         <!-- Header-->
         <div id="LogoWrap">        
 <!--            <a><img class="main" src="./img/RANmetricsLogoSmall.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>-->
@@ -512,5 +514,10 @@ On the customer site a logical link named 'index_metrics.html' should be created
         </div>        -->
 
     </body>
+    <script>
+        document.onload = function() {
+            initPageRANmate();
+        }
+    </script>    
 </html>
  
