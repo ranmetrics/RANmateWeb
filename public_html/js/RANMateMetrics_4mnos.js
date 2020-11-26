@@ -927,6 +927,19 @@ function initPageRANmate() {
     //console.log("hash[\"CSDROPRATE\"] is " + hash["CSDROPRATE"]);
 }
 
+function storeKpiFormulae() {
+    console.log("Adding KPI formulae to the KPI hash");
+    hash["CSDROPRATE"] = "ROUND(ifnull((((SUM(SPEECHDROPAPINITATED) + SUM(CSVIDEODROPAPINITIATED) + SUM(CSVIDEODROPCNINITIATED)) / (SUM(CSSPEECHRABSUCCESS) + SUM(CSVIDEORABSUCCESS))) * 100),0),2)";
+    hash["PSDROPRATE"] = "ROUND(ifnull(((SUM(PSDROPAPINITIATED) / (SUM(PSHSDPARABSUCCESS) + SUM(PSR99RABSUCCESS))) * 100),0),2)";
+    hash["CSSETUPSUCCESSRATE"] = "ROUND(ifnull(((SUM(CSSPEECHRABSUCCESS)/ SUM(CSSPEECHRABATTEMPTS)) * 100),100),2)";
+    hash["PSSETUPSUCCESSRATE"] = "ROUND(ifnull((((SUM(PSR99RABSUCCESS) + SUM(PSHSDPARABSUCCESS)) / (SUM(PSR99RABATTEMPTS) + SUM(PSHSDPARABATTEMPTS))) * 100),100),2)";
+    hash["RRCCONSUCCESSRATE"] = "ROUND(ifnull(((SUM(STANDALONESRBSUCCESS)/ SUM(STANDALONESRBATTEMPTS)) * 100),100),2)";
+    hash["INTERHANDOUTSUCCESSRATE"] = "ROUND(ifnull(((SUM(INTERFAPSPEECHINTERFREQHANDOUTSUCCESS) + SUM(INTERFAPSPEECHINTERFREQHANDOUTCANCELS)) / (SUM(INTERFAPSPEECHINTERFREQHANDOUTATTEMPTS)) * 100),100),2)";
+    hash["INTRAHANDOUTSUCCESSRATE"] = "LEAST(ROUND(ifnull(((SUM(INTERFAPSPEECHINTRAFREQHANDOUTSUCCESS) + SUM(INTERFAPSPEECHINTRAFREQHANDOUTCANCELS)) / (SUM(INTERFAPSPEECHINTRAFREQHANDOUTATTEMPTS)) * 100),100),2),100)";
+    hash["CSHANDINSUCCESSRATE"] = "ROUND(ifnull(((SUM(INTERFAPCSHANDINSUCCESS) + SUM(INTERFAPCSHANDINCANCELS)) / (SUM(INTERFAPCSHANDINATTEMPTS)) * 100),100),2)";
+    hash["PSHANDINSUCCESSRATE"] = "ROUND(ifnull(((SUM(INTERFAPPSHANDINSUCCESS) + SUM(INTERFAPPSHANDINCANCELS)) / (SUM(INTERFAPPSHANDINATTEMPTS)) * 100),100),2)";    
+}
+
 function initWithParams(metricParam) {
     //console.log("metric name is " + metricParam);
     $('#metric').multiselect('select', metricParam, true);
@@ -1819,6 +1832,7 @@ function showGraph(id, visible, siteParam) {
                                             if ((metric.substring(0,9) == "FemtoKPI-") || (metric.substring(0,13) == "FemtoCounter-")) {
                                                 console.log("metric.substring(0,9)=" + metric.substring(0,9));
                                                 if (metric.substring(0,9) == "FemtoKPI-") {
+                                                    storeKpiFormulae();
                                                     var metricTypeLength = 9;
                                                     //var tableName = 'mno_kpis';   // this view incorrectly calculates the KPIs as averages of averagees
                                                     //if (($('#site').val().length == 1) && (femtoCountersPerFemto && femtoIds.length == 1)) { 
