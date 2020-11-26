@@ -68,7 +68,9 @@ if ((strpos($sql, ' CONCAT(') !== false) && (strpos($sql, ' ROUND(') !== false))
             } else {
                 //echo "Pos b";
                 if ((strpos($metricIncAlias, 'COALESCE') === false) && (strpos($metricIncAlias, 'measurement_time') === false)) {
-                    $metric = $metricIncAlias;
+                    if (substr($metricIncAlias, -1) != ')') { // probably a MNO-KPI metric
+                        $metric = $metricIncAlias;
+                    }
                 }
             }
           //echo "Metric=" . $metric;
