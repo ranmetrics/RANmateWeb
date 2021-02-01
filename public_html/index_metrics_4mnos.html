@@ -42,8 +42,9 @@ On the customer site a logical link named 'index_metrics.html' should be created
        
     </head>
 <!-- Suggested disabling by Rastko 2/10/2020 to solve narrow drop downs. Replaced by end of file function -->
-<!--    <body onload="initPageRANmate()">-->
-    <body>
+<!--  However disabling it here also prevents context-sensitive URL-based loads so re-enabling it until Leto 2021 -->
+    <body onload="initPageRANmate()">
+<!-- <body> -->
         <!-- Header-->
         <div id="LogoWrap">        
 <!--            <a><img class="main" src="./img/RANmetricsLogoSmall.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>-->
@@ -91,49 +92,51 @@ On the customer site a logical link named 'index_metrics.html' should be created
                                 </optgroup>                        
 <!--https://stackoverflow.com/questions/52156973/collapse-expand-optgroup-using-select2                                -->
                                 <optgroup label="Femto&nbsp;Counters">
-                                    <option value="FemtoCounter-NUMBEROFTXBYTES">Tx Bytes</option>
-                                    <option value="FemtoCounter-NUMBEROFRXBYTES">Rx Bytes</option>
-                                    <option value="FemtoCounter-NUMBEROFTXPACKETS">Tx Packets</option>
-                                    <option value="FemtoCounter-NUMBEROFRXPACKETS">Rx Packets</option>
-                                    <option value="FemtoCounter-PSATTACHACCEPTS">PS Attach Accepts</option>
-                                    <option value="FemtoCounter-PSATTACHREJECTS">PS Attach Rejects</option>
-                                    <option value="FemtoCounter-PSDROPAPINITIATED">PS Drop AP Init</option>
-                                    <option value="FemtoCounter-PSDROPAPINITIATEDHANDOUTEXECINPROGRESS">PS Drop AP Init HO In Pro</option>
-                                    <option value="FemtoCounter-PSDROPAPINITIATEDHANDOUTTARGETUNAVAILABLE">PS Drop AP Init HO Unav</option>
-                                    <option value="FemtoCounter-PSDROPAPINITIATEDNOHANDOUTTARGETIDENTIFIED">PS Drop AP Init HO Ident</option>
-                                    <option value="FemtoCounter-PSDROPAPINITIATEDRLFAILUEPOWERSATURATED">PS Drop AP Init Pow Sat</option>
-                                    <option value="FemtoCounter-PSDROPCNINITIATED">PS Drop CN Init</option>
-                                    <option value="FemtoCounter-PSHSDPADROPAPINITIATED">HSDPA Drop AP Init</option>
-                                    <option value="FemtoCounter-PSHSDPARABATTEMPTS">HSDPA RAB Attempts</option>
-                                    <option value="FemtoCounter-PSHSDPARABSUCCESS">HSDPA RAB Success</option>
-                                    <option value="FemtoCounter-PSR99DROPAPINITIATED">R99 Drop AP Init</option>
-                                    <option value="FemtoCounter-PSR99RABATTEMPTS">R99 RAB Attempts</option>
-                                    <option value="FemtoCounter-PSR99RABSUCCESS">R99 RAB Success</option>
-                                    <option value="FemtoCounter-SPEECHDROPAPINITATED">Speech Drop AP Init</option>
-                                    <option value="FemtoCounter-SPEECHDROPAPINITIATEDHANDOUTEXECINPROGRESS">Speech Drop AP Init HO In Pro</option>
-                                    <option value="FemtoCounter-SPEECHDROPAPINITIATEDHANDOUTTARGETUNAVAILABLE">Speech Drop AP Init HO Unav</option>
-                                    <option value="FemtoCounter-SPEECHDROPAPINITIATEDNOHANDOUTTARGETIDENTIFIED">Speech Drop AP Init HO Ident</option>
-                                    <option value="FemtoCounter-SPEECHDROPAPINITIATEDRLFAILUEPOWERSATURATED">Speech Drop AP Init Pow Sat</option>
-                                    <option value="FemtoCounter-SPEECHDROPCNINITATED">Speech Drop CN Init</option>
-                                    <option value="FemtoCounter-STANDALONESRBATTEMPTS">SRB Attempts</option>
-                                    <option value="FemtoCounter-STANDALONESRBDROP">SRB Drop</option>
-                                    <option value="FemtoCounter-STANDALONESRBSUCCESS">SRB Success</option>
-                                    <option value="FemtoCounter-CSSPEECHRABATTEMPTS">Call Attempts</option>                                    
-                                    <option value="FemtoCounter-CSSPEECHRABSUCCESS">Calls</option>
-                                    <option value="FemtoCounter-UPTIME">Uptime</option>
-                                    <option value="FemtoCounter-INTERFAPCSHANDINSUCCESS">CS Handin Success</option>
-                                    <option value="FemtoCounter-INTERFAPCSHANDINCANCELS">CS Handin Cancels</option>
-                                    <option value="FemtoCounter-INTERFAPCSHANDINATTEMPTS">CS Handin Attempts</option>
-                                    <option value="FemtoCounter-INTERFAPPSHANDINSUCCESS">PS Handin Success</option>
-                                    <option value="FemtoCounter-INTERFAPPSHANDINCANCELS">PS Handin Cancels</option>
-                                    <option value="FemtoCounter-INTERFAPPSHANDINATTEMPTS">PS Handin Attempts</option>     
-                                    <option value="FemtoCounter-INTERFAPSPEECHINTERFREQHANDOUTSUCCESS">Inter Handout Success</option>     
-                                    <option value="FemtoCounter-INTERFAPSPEECHINTERFREQHANDOUTCANCELS">Inter Handout Cancels</option>     
-                                    <option value="FemtoCounter-INTERFAPSPEECHINTERFREQHANDOUTATTEMPTS">Inter Handout Attempts</option>     
-                                    <option value="FemtoCounter-INTERFAPSPEECHINTRAFREQHANDOUTSUCCESS">Intra Handout Success</option>     
-                                    <option value="FemtoCounter-INTERFAPSPEECHINTRAFREQHANDOUTCANCELS">Intra Handout Cancels</option>     
-                                    <option value="FemtoCounter-INTERFAPSPEECHINTRAFREQHANDOUTATTEMPTS">Intra Handout Attempts</option>     
-                                                                 
+                                    <option value="FemtoCounter-NUMBEROFTXBYTES" title="NUMBEROFTXBYTES">Tx Bytes</option>
+                                    <option value="FemtoCounter-NUMBEROFRXBYTES" title="NUMBEROFRXBYTES">Rx Bytes</option>
+                                    <option value="FemtoCounter-NUMBEROFTXPACKETS" title="NUMBEROFTXPACKETS">Tx Packets</option>
+                                    <option value="FemtoCounter-NUMBEROFRXPACKETS" title="NUMBEROFRXPACKETS">Rx Packets</option>
+                                    <option value="FemtoCounter-PSATTACHACCEPTS" title="PSATTACHACCEPTS">PS Attach Accepts</option>
+                                    <option value="FemtoCounter-PSATTACHREJECTS" title="PSATTACHREJECTS">PS Attach Rejects</option>
+                                    <option value="FemtoCounter-PSDROPAPINITIATED" title="PSDROPAPINITIATED">PS Drop AP Init</option>
+                                    <option value="FemtoCounter-PSDROPAPINITIATEDHANDOUTEXECINPROGRESS" title="PSDROPAPINITIATEDHANDOUTEXECINPROGRESS">PS Drop AP Init HO In Pro</option>
+                                    <option value="FemtoCounter-PSDROPAPINITIATEDHANDOUTTARGETUNAVAILABLE" title="PSDROPAPINITIATEDHANDOUTTARGETUNAVAILABLE">PS Drop AP Init HO Unav</option>
+                                    <option value="FemtoCounter-PSDROPAPINITIATEDNOHANDOUTTARGETIDENTIFIED" title="PSDROPAPINITIATEDNOHANDOUTTARGETIDENTIFIED">PS Drop AP Init HO Ident</option>
+                                    <option value="FemtoCounter-PSDROPAPINITIATEDRLFAILUEPOWERSATURATED" title="PSDROPAPINITIATEDRLFAILUEPOWERSATURATED">PS Drop AP Init Pow Sat</option>
+                                    <option value="FemtoCounter-PSDROPCNINITIATED" title="PSDROPCNINITIATED">PS Drop CN Init</option>
+                                    <option value="FemtoCounter-PSHSDPADROPAPINITIATED" title="PSHSDPADROPAPINITIATED">HSDPA Drop AP Init</option>
+                                    <option value="FemtoCounter-PSHSDPARABATTEMPTS" title="PSHSDPARABATTEMPTS">HSDPA RAB Attempts</option>
+                                    <option value="FemtoCounter-PSHSDPARABSUCCESS" title="PSHSDPARABSUCCESS">HSDPA RAB Success</option>
+                                    <option value="FemtoCounter-PSR99DROPAPINITIATED" title="PSR99DROPAPINITIATED">R99 Drop AP Init</option>
+                                    <option value="FemtoCounter-PSR99RABATTEMPTS" title="PSR99RABATTEMPTS">R99 RAB Attempts</option>
+                                    <option value="FemtoCounter-PSR99RABSUCCESS" title="PSR99RABSUCCESS">R99 RAB Success</option>
+                                    <option value="FemtoCounter-SPEECHDROPAPINITATED" title="SPEECHDROPAPINITATED">Speech Drop AP Init</option>
+                                    <option value="FemtoCounter-SPEECHDROPAPINITIATEDHANDOUTEXECINPROGRESS" title="SPEECHDROPAPINITIATEDHANDOUTEXECINPROGRESS">Speech Drop AP Init HO In Pro</option>
+                                    <option value="FemtoCounter-SPEECHDROPAPINITIATEDHANDOUTTARGETUNAVAILABLE" title="SPEECHDROPAPINITIATEDHANDOUTTARGETUNAVAILABLE">Speech Drop AP Init HO Unav</option>
+                                    <option value="FemtoCounter-SPEECHDROPAPINITIATEDNOHANDOUTTARGETIDENTIFIED" title="SPEECHDROPAPINITIATEDNOHANDOUTTARGETIDENTIFIED">Speech Drop AP Init HO Ident</option>
+                                    <option value="FemtoCounter-SPEECHDROPAPINITIATEDRLFAILUEPOWERSATURATED" title="SPEECHDROPAPINITIATEDRLFAILUEPOWERSATURATED">Speech Drop AP Init Pow Sat</option>
+                                    <option value="FemtoCounter-SPEECHDROPCNINITATED" title="SPEECHDROPCNINITATED">Speech Drop CN Init</option>
+                                    <option value="FemtoCounter-STANDALONESRBATTEMPTS" title="STANDALONESRBATTEMPTS">SRB Attempts</option>
+                                    <option value="FemtoCounter-STANDALONESRBDROP" title="STANDALONESRBDROP">SRB Drop</option>
+                                    <option value="FemtoCounter-STANDALONESRBSUCCESS" title="STANDALONESRBSUCCESS">SRB Success</option>
+                                    <option value="FemtoCounter-CSSPEECHRABATTEMPTS" title="CSSPEECHRABATTEMPTS">Call Attempts</option>                                    
+                                    <option value="FemtoCounter-CSSPEECHRABSUCCESS" title="CSSPEECHRABSUCCESS">Calls</option>
+                                    <option value="FemtoCounter-UPTIME" title="UPTIME">Uptime</option>
+                                    <option value="FemtoCounter-INTERFAPCSHANDINSUCCESS" title="INTERFAPCSHANDINSUCCESS">CS Handin Success</option>
+                                    <option value="FemtoCounter-INTERFAPCSHANDINCANCELS" title="INTERFAPCSHANDINCANCELS">CS Handin Cancels</option>
+                                    <option value="FemtoCounter-INTERFAPCSHANDINATTEMPTS" title="INTERFAPCSHANDINATTEMPTS">CS Handin Attempts</option>
+                                    <option value="FemtoCounter-INTERFAPPSHANDINSUCCESS" title="INTERFAPPSHANDINSUCCESS">PS Handin Success</option>
+                                    <option value="FemtoCounter-INTERFAPPSHANDINCANCELS" title="INTERFAPPSHANDINCANCELS">PS Handin Cancels</option>
+                                    <option value="FemtoCounter-INTERFAPPSHANDINATTEMPTS" title="INTERFAPPSHANDINATTEMPTS">PS Handin Attempts</option>     
+                                    <option value="FemtoCounter-INTERFAPSPEECHINTERFREQHANDOUTSUCCESS" title="INTERFAPSPEECHINTERFREQHANDOUTSUCCESS">Inter Handout Success</option>     
+                                    <option value="FemtoCounter-INTERFAPSPEECHINTERFREQHANDOUTCANCELS" title="INTERFAPSPEECHINTERFREQHANDOUTCANCELS">Inter Handout Cancels</option>     
+                                    <option value="FemtoCounter-INTERFAPSPEECHINTERFREQHANDOUTATTEMPTS" title="INTERFAPSPEECHINTERFREQHANDOUTATTEMPTS">Inter Handout Attempts</option>     
+                                    <option value="FemtoCounter-INTERFAPSPEECHINTRAFREQHANDOUTSUCCESS" title="INTERFAPSPEECHINTRAFREQHANDOUTSUCCESS">Intra Handout Success</option>     
+                                    <option value="FemtoCounter-INTERFAPSPEECHINTRAFREQHANDOUTCANCELS" title="INTERFAPSPEECHINTRAFREQHANDOUTCANCELS">Intra Handout Cancels</option>     
+                                    <option value="FemtoCounter-INTERFAPSPEECHINTRAFREQHANDOUTATTEMPTS" title="INTERFAPSPEECHINTRAFREQHANDOUTATTEMPTS">Intra Handout Attempts</option>     
+                                    <option value="FemtoCounter-3GSPEECHINTRAFREQHANDOUTSUCCESS" title="3GSPEECHINTRAFREQHANDOUTSUCCESS">Speech Handout Success</option>     
+                                    <option value="FemtoCounter-3GSPEECHINTRAFREQHANDOUTCANCELS" title="3GSPEECHINTRAFREQHANDOUTCANCELS">Speech Handout Cancels</option>     
+                                    <option value="FemtoCounter-3GSPEECHINTRAFREQHANDOUTATTEMPTS" title="3GSPEECHINTRAFREQHANDOUTATTEMPTS">Speech Handout Attempts</option>                                         
                                 </optgroup>                            
                                 <optgroup label="Femto&nbsp;KPIs">
                                     <option value="FemtoKPI-CSSETUPSUCCESSRATE">CS Setup Success Rate</option>
@@ -521,10 +524,12 @@ On the customer site a logical link named 'index_metrics.html' should be created
         </div>        -->
 
     </body>
+
+<!-- Attempt by Rastko to keep the width of the Combo boxes constant. However having this here, and not in the opening body means that context-sensitive launches via the URL don't work
     <script>
         document.onload = function() {
             initPageRANmate();
         }
-    </script>    
+    </script>      -->
 </html>
  
