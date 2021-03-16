@@ -149,7 +149,11 @@ On the customer site a logical link named 'index_metrics.html' should be created
                                     <option value="FemtoKPI-CSHANDINSUCCESSRATE">CS Handin Success Rate</option>
                                     <option value="FemtoKPI-PSHANDINSUCCESSRATE">PS Handin Success Rate</option>
                                 </optgroup>                            
-    <!--                            <option disabled>── Router Ping ──</option>-->
+                                <optgroup label="Femto&nbsp;RCA">
+                                    <option value="FemtoRCA-CSDROPRATE">CS Drop Rate RCA</option>
+                                    <option value="FemtoRCA-PSDROPRATE">PS Drop Rate RCA</option>
+                                </optgroup>                            
+<!--                            <option disabled>── Router Ping ──</option>-->
     <!--                            <optgroup label="Router Buddy">-->
                                 <optgroup label="Router Ping">
                                     <option value="Ping-min">Min Ping Latency</option>
@@ -469,9 +473,16 @@ On the customer site a logical link named 'index_metrics.html' should be created
         </div>
 
         <!-- Display the Traffic Table-->
-<!--        <div id="TrafficTableWrap" style="width:1600px; height:500px; margin:100px auto 0px auto; overflow: auto;">   -->
-        <div id="TrafficTableWrap" style="width:800px; height:500px; margin:100px auto 0px auto; overflow: auto;">   
-        </div>        
+<!--        <div id="TrafficTableWrap" style="width:800px; height:500px; margin:100px auto 0px auto; overflow: auto;">   
+        </div>        -->
+        <div id="TrafficTableWrap" style="width:100%; height:60%; padding: 10px 0px 0px 0px; text-align: center;"> 
+            <div id="TrafficTableInnerWrap" style="padding: 10px 0px 0px 0px; display:inline-block;">
+                <div id="TrafficTableLeftWrap" style="float:none;width:800px; height:500px; margin:50px 10px 0px 0px; overflow: auto;">   
+                </div>
+                <div id="TrafficTableRightWrap" style="float:right;width:400px; height:500px; margin:50px 0px 0px 10px; overflow: auto;">   
+                </div>
+            </div>
+        </div>
 
 <!--        <div id="TrafficChartWrap" style="width:100%; height:60%; padding: 10px 0px 0px 0px; display:inline-block;"> -->
         <div id="TrafficChartWrap" style="width:100%; height:60%; padding: 10px 0px 0px 0px; text-align: center;"> 

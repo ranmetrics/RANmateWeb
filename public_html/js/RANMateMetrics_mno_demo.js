@@ -59,7 +59,6 @@ var timeFormat = "YYYY-MM-DD hh:mm";
 var currentTimeGranularity = 1;
 
 var hash = new Object();
-var rcaDetailsResponseExpected = false;
 
 function getNow() {
     return getDateTimeString(new Date());
@@ -117,9 +116,15 @@ function metricSelected(justNowSelected) {
     // no option selected initially
     if (!femtoCountersPerFemto && !femtoCountersPerSwitch && !femtoCountersPerSite) {
         //console.log("Setting PerFemto");
-        document.getElementById("PerFemto").checked = true;
-        granularity = "PerFemto";
-        femtoCountersPerFemto = true; // added 13/8 MW
+        //document.getElementById("PerFemto").checked = true; 
+        //granularity = "PerFemto";
+        //femtoCountersPerFemto = true; // added 13/8 MW
+        //
+        document.getElementById("PerSite").checked = true; // PerSite for the THREE demo, was PerFemto
+        granularity = "PerSite";
+        femtoCountersPerSite = true;
+        $('#operators').hide(); // extras needed here for PerSite
+        $('#cells').hide();                
     }
     showSites(justNowSelected, null, false);
 }
@@ -127,7 +132,7 @@ function metricSelected(justNowSelected) {
 // force forces the list to be rebuilt - used by PerSite even though the metric type remains the same
 function showSites(justNowSelected, siteToBeSelected, force) {
     //console.log("showSites called, the first selected metric in the list is " + justNowSelected + ", and the site to be selected is " + siteToBeSelected);
-    //console.log("showSites called with metrics " + $('#metric').val() + " and currentMetricType=" + currentMetricType);
+    console.log("showSites called with metrics " + $('#metric').val() + " and currentMetricType=" + currentMetricType);
     if (justNowSelected == "") {
         //document.getElementById("metric").innerHTML = "";
         return;
@@ -320,13 +325,13 @@ function showSites(justNowSelected, siteToBeSelected, force) {
                 }
             // look, when I started writing this, there were just Femto packets and poe. Imagine that, Femto Packets and Poe. It's grown into Frankenstein
             } else if ((selectedMetric.startsWith('FemtoCounter-')) || (selectedMetric.startsWith('FemtoKPI-'))) {
-                console.log("Femto Counter selected");
+                console.log("Femto Counter selected ");
                 if (selectedMetric.startsWith('FemtoCounter-')) {
                     thisMetricType = "FemtoCounter";
                 } else {
                     thisMetricType = "FemtoKPI";
                 }
-                $('#femtocounterperwrapper').show();
+                //$('#femtocounterperwrapper').show(); // MNO version doesn't display this
                 $('#timegranularitywrapper').show();
                 $('#worstwrapper').hide();
                 if (previousMetricTypes != null) {
@@ -377,18 +382,6 @@ function showSites(justNowSelected, siteToBeSelected, force) {
                     // console.log("Option 4, not changing thisMetricType");
                     previousMetricTypes = thisMetricType;
                 }
-            } else if (selectedMetric.startsWith('FemtoRCA-')) {
-                //console.log("Femto RCA selected");
-                if (previousMetricTypes != null) {
-                    alert("RCA can only be conducted for 1 metric at a time");
-                    $('#site').multiselect('rebuild');
-                    thisMetricType = "";
-                    return;
-                } else {
-                    thisMetricType = "FemtoRCA";                                    
-                    pingOrCounterMetricSelected = false; // might need to set this to true...
-                    previousMetricTypes = thisMetricType;
-                }
             }
 
             if (thisMetricType != "") { // added by MW 25/5/17 so that some of the Femto-Femto Femto-Router checking above isn't overwritten
@@ -403,8 +396,6 @@ function showSites(justNowSelected, siteToBeSelected, force) {
                    thisMetricType = "FemtoCounter";
                 } else if (justNowSelected.startsWith('FemtoKPI-')) {
                    thisMetricType = "FemtoKPI";
-                } else if (justNowSelected.startsWith('FemtoRCA-')) {
-                   thisMetricType = "FemtoRCA";
                 } else if (justNowSelected.startsWith('Femto-')) {
                    thisMetricType = "Femto";
                 } else if (justNowSelected.startsWith('Traffic-')) {
@@ -450,19 +441,6 @@ function showSites(justNowSelected, siteToBeSelected, force) {
                 //ifaceLabel.style.display = 'none';            
                 $('#trafficwrapper').hide();
             }
-
-            if ((thisMetricType === "FemtoRCA")) {
-                $('#femtocounterperwrapper').hide();
-                $('#worstwrapper').hide();
-                $('#timegranularitywrapper').hide();
-                $('#operators').hide();
-                $('#cells').hide();        
-                $('#trafficwrapper').hide();
-            } else {
-                //iface.style.display = 'none';
-                //ifaceLabel.style.display = 'none';            
-                // $('#trafficwrapper').hide();
-            }
             
             if (thisMetricType === "Reports") {                
                 period.style.display = "block";
@@ -486,8 +464,7 @@ function showSites(justNowSelected, siteToBeSelected, force) {
             // if (((thisMetricType === "Counter") || (thisMetricType === "Ping")) && ((currentMetricType !== "Counter") && (currentMetricType !== "Ping"))) {  // pre Traffic entry
             if ((((thisMetricType === "Counter") || (thisMetricType === "Ping")) && ((currentMetricType !== "Counter") && (currentMetricType !== "Ping"))) ||
                  (((thisMetricType === "Traffic") || (thisMetricType === "Calls")) && ((currentMetricType !== "Traffic") && (currentMetricType !== "Calls"))) || 
-                 ((thisMetricType === "Reports") && (currentMetricType !== "Reports")) ||
-                 ((thisMetricType === "FemtoRCA") && (currentMetricType !== "FemtoRCA"))) { 
+                 ((thisMetricType === "Reports") && (currentMetricType !== "Reports"))) { 
                 console.log("Need to rebuild Site list for Counter/Ping/Traffic/Calls/Reports metric");
                 clearTickBoxes();
                 cellNum.style.display = 'none';
@@ -502,8 +479,6 @@ function showSites(justNowSelected, siteToBeSelected, force) {
                 if (pingOrCounterMetricSelected && buddyMetricSelected) {
                     //console.log("Calling RANMateMetrics_SiteList.php with group=Mixed");            
                     xmlhttp.open("GET","RANMateMetrics_SiteList.php?group=Mixed",true);
-                } else if (thisMetricType === "FemtoRCA") { 
-                    xmlhttp.open("GET","RANMateMetrics_SiteList.php?group="+ selectedMetric + "&mnoNum=" + 3); // For now, hardcoded to THREE here. If other MNOs in future, make the mno tick boxes enabled again                    
                 } else {
                     console.log("Calling RANMateMetrics_SiteList.php with group=" + selectedMetric);            
                     xmlhttp.open("GET","RANMateMetrics_SiteList.php?group="+selectedMetric,true);
@@ -547,8 +522,10 @@ function showSites(justNowSelected, siteToBeSelected, force) {
             // else if ((thisMetricType === "Femto") && ((currentMetricType !== "Femto") || listIsEmpty("site"))) { // Femto metric
             else if (force ||
                     ((thisMetricType === "Femto") && ((currentMetricType !== "Femto") && (currentMetricType !== "FemtoCounter") && (currentMetricType !== "FemtoKPI")) || listIsEmpty("site")) ||  // Femto metric
-                    ((thisMetricType === "FemtoCounter") && (granularity === "PerFemto") && (((currentMetricType !== "Femto") && (currentMetricType !== "FemtoCounter") && (currentMetricType !== "FemtoKPI")) || listIsEmpty("site"))) || // FemtoCounter Metric
-                    ((thisMetricType === "FemtoKPI")  && (granularity === "PerFemto") && (((currentMetricType !== "Femto") && (currentMetricType !== "FemtoCounter") && (currentMetricType !== "FemtoKPI")) || listIsEmpty("site")))) { // FemtoKPI Metric
+//                    ((thisMetricType === "FemtoCounter") && (granularity === "PerFemto") && (((currentMetricType !== "Femto") && (currentMetricType !== "FemtoCounter") && (currentMetricType !== "FemtoKPI")) || listIsEmpty("site"))) || // FemtoCounter Metric
+//                    ((thisMetricType === "FemtoKPI")  && (granularity === "PerFemto") && (((currentMetricType !== "Femto") && (currentMetricType !== "FemtoCounter") && (currentMetricType !== "FemtoKPI")) || listIsEmpty("site")))) { // FemtoKPI Metric
+                    ((thisMetricType === "FemtoCounter") && (((currentMetricType !== "Femto") && (currentMetricType !== "FemtoCounter") && (currentMetricType !== "FemtoKPI")) || listIsEmpty("site"))) || // FemtoCounter Metric
+                    ((thisMetricType === "FemtoKPI") && (((currentMetricType !== "Femto") && (currentMetricType !== "FemtoCounter") && (currentMetricType !== "FemtoKPI")) || listIsEmpty("site")))) { // FemtoKPI Metric
                 //currentMetricType = "Femto";
                 //console.log("Need to rebuild Site list for Femto metric");
                 //console.log("The site list html is empty? " + listIsEmpty("site") );
@@ -568,9 +545,10 @@ function showSites(justNowSelected, siteToBeSelected, force) {
                 xmlhttp.open("GET","RANMateMetrics_SiteList.php?group="+ selectedMetric + "&granularity=" + granularity,true);
                 xmlhttp.send();
             } else {
-                console.log("Site List won't be rebuilt because thisMetricType=" + thisMetricType + " and currentMetricType=" + currentMetricType);
+                console.log("Site List won't be rebuilt because the new MetricType=" + thisMetricType + " and the existing MetricType=" + currentMetricType);
                 //console.log("The site list html is " + document.getElementById("site").innerHTML );
             }
+            console.log("Setting the currentMetricType (" + currentMetricType + ") to " + thisMetricType);
             currentMetricType = thisMetricType;
         }
     }
@@ -815,14 +793,6 @@ function outputTimeGranularitySelected(timeGranularity) {
     displayStartTime = document.getElementById("startTime").value;
     displayEndTime = document.getElementById("endTime").value;
     if (timeGranularity == 1) {
-        document.getElementById('timegranularitylabel').innerHTML = '15 min'; 
-        timeGran15min = true;
-        timeGranHour = false;
-        timeGranDay = false;
-        timeGranWeek = false;
-        timeGranMonth = false;
-        timeFormat = "YYYY-MM-DD hh:mm";
-    } else if (timeGranularity == 2) {
         document.getElementById('timegranularitylabel').innerHTML = 'Hourly';        
         timeGran15min = false;
         timeGranHour = true;
@@ -830,7 +800,7 @@ function outputTimeGranularitySelected(timeGranularity) {
         timeGranWeek = false;
         timeGranMonth = false;
         timeFormat = "YYYY-MM-DD hh";
-    } else if (timeGranularity == 3) {
+    } else if (timeGranularity == 2) {
         document.getElementById('timegranularitylabel').innerHTML = 'Daily';        
         timeGran15min = false;
         timeGranHour = false;
@@ -838,41 +808,89 @@ function outputTimeGranularitySelected(timeGranularity) {
         timeGranWeek = false;
         timeGranMonth = false;
         timeFormat = "YYYY-MM-DD";
-    } else if (timeGranularity == 4) {
-        document.getElementById('timegranularitylabel').innerHTML = 'Weekly';        
-        timeGran15min = false;
-        timeGranHour = false;
-        timeGranDay = false;
-        timeGranWeek = true;
-        timeGranMonth = false;
-        timeFormat = "YYYY-MM-DD";
-    } else if (timeGranularity == 5) {
-        document.getElementById('timegranularitylabel').innerHTML = 'Monthly';        
-        timeGran15min = false;
-        timeGranHour = false;
-        timeGranDay = false;
-        timeGranWeek = false;
-        timeGranMonth = true;
-        timeFormat = "YYYY-MM";
-    }
+    } 
     if (timeGranularity > currentTimeGranularity) {
-        if (timeGranularity > 2) {
+        if (timeGranularity > 1) {
             document.getElementById("startTime").value = displayStartTime.substring(0,10);
             document.getElementById("endTime").value = displayEndTime.substring(0,10); 
-        } else if (timeGranularity == 2) {
+        } else if (timeGranularity == 1) {
             document.getElementById("startTime").value = displayStartTime.substring(0,14) + '00';
             document.getElementById("endTime").value = displayEndTime.substring(0,14) + '00'; 
         }
     } else if (timeGranularity < currentTimeGranularity) {
-        if (currentTimeGranularity > 2) {
-            if (timeGranularity < 3 ) {
+        if (currentTimeGranularity > 1) {
+            if (timeGranularity < 2 ) {
                 document.getElementById("startTime").value = displayStartTime + " 00:00";
                 document.getElementById("endTime").value = displayEndTime + " 00:00";
             }
         }        
     }
     currentTimeGranularity = timeGranularity;
-}
+} 
+
+//function outputTimeGranularitySelected(timeGranularity) {
+//    console.log("Time Granularity changed to " + timeGranularity + " from " + currentTimeGranularity);
+//    displayStartTime = document.getElementById("startTime").value;
+//    displayEndTime = document.getElementById("endTime").value;
+//    if (timeGranularity == 1) {
+//        document.getElementById('timegranularitylabel').innerHTML = '15 min'; 
+//        timeGran15min = true;
+//        timeGranHour = false;
+//        timeGranDay = false;
+//        timeGranWeek = false;
+//        timeGranMonth = false;
+//        timeFormat = "YYYY-MM-DD hh:mm";
+//    } else if (timeGranularity == 2) {
+//        document.getElementById('timegranularitylabel').innerHTML = 'Hourly';        
+//        timeGran15min = false;
+//        timeGranHour = true;
+//        timeGranDay = false;
+//        timeGranWeek = false;
+//        timeGranMonth = false;
+//        timeFormat = "YYYY-MM-DD hh";
+//    } else if (timeGranularity == 3) {
+//        document.getElementById('timegranularitylabel').innerHTML = 'Daily';        
+//        timeGran15min = false;
+//        timeGranHour = false;
+//        timeGranDay = true;
+//        timeGranWeek = false;
+//        timeGranMonth = false;
+//        timeFormat = "YYYY-MM-DD";
+//    } else if (timeGranularity == 4) {
+//        document.getElementById('timegranularitylabel').innerHTML = 'Weekly';        
+//        timeGran15min = false;
+//        timeGranHour = false;
+//        timeGranDay = false;
+//        timeGranWeek = true;
+//        timeGranMonth = false;
+//        timeFormat = "YYYY-MM-DD";
+//    } else if (timeGranularity == 5) {
+//        document.getElementById('timegranularitylabel').innerHTML = 'Monthly';        
+//        timeGran15min = false;
+//        timeGranHour = false;
+//        timeGranDay = false;
+//        timeGranWeek = false;
+//        timeGranMonth = true;
+//        timeFormat = "YYYY-MM";
+//    }
+//    if (timeGranularity > currentTimeGranularity) {
+//        if (timeGranularity > 2) {
+//            document.getElementById("startTime").value = displayStartTime.substring(0,10);
+//            document.getElementById("endTime").value = displayEndTime.substring(0,10); 
+//        } else if (timeGranularity == 2) {
+//            document.getElementById("startTime").value = displayStartTime.substring(0,14) + '00';
+//            document.getElementById("endTime").value = displayEndTime.substring(0,14) + '00'; 
+//        }
+//    } else if (timeGranularity < currentTimeGranularity) {
+//        if (currentTimeGranularity > 2) {
+//            if (timeGranularity < 3 ) {
+//                document.getElementById("startTime").value = displayStartTime + " 00:00";
+//                document.getElementById("endTime").value = displayEndTime + " 00:00";
+//            }
+//        }        
+//    }
+//    currentTimeGranularity = timeGranularity;
+//} 
 
 function hidePdfFixedPeriodList() {
     $('#starttimewrapper').show();
@@ -925,6 +943,7 @@ function showGeneratedReportList(str) {
 }
 
 function initPageRANmate() {
+    $('#cells').hide();        
     clearTickBoxes();
     document.getElementById("metric").selectedIndex = 0;  // was previously 1    
     // so that the metrics drop down is cleared when the page is refreshed
@@ -939,6 +958,8 @@ function initPageRANmate() {
     $('#metric').multiselect('updateButtonText');
     console.log("Enabling the graph button");
     document.getElementById("graphButton").disabled = false;
+    
+    document.getElementById(2).checked = true;
     
     // fix the incorrect KPI calculation
     //console.log("Adding CSDROPRATE to the KPI hash");
@@ -1018,10 +1039,11 @@ function getURLParameter(sParam) {
 
 function clearTickBoxes() {
     // clear any previously selected inputs - page refresh scenario
-    document.getElementById(0).checked = false;
-    document.getElementById(1).checked = false;
-    document.getElementById(2).checked = false;
-    document.getElementById(3).checked = false;
+    // for the MNO version of this JS file, the MNO boxes will not be displayed but one of them will be set ticked once at init time 
+    //document.getElementById(0).checked = false;
+    //document.getElementById(1).checked = false;
+    //document.getElementById(2).checked = false;
+    //document.getElementById(3).checked = false;
     document.getElementById('Femto1').checked = false;
     document.getElementById('Femto2').checked = false;
     document.getElementById('Femto3').checked = false;
@@ -1550,6 +1572,7 @@ function showReport() {
         alert("A valid report type must be selected");
     }    
     document.getElementById("graphButton").value = 'Show';
+    // Need to check what metrics are selected - don't show for reports
 }
 
 function showGraph(id, visible, siteParam) {
@@ -1586,7 +1609,7 @@ function showGraph(id, visible, siteParam) {
                         alert("The End Date (" + endDateTime + ") is not correctly specified (" + timeFormat + ")")
                     } else {
                         // check that the start time is before the end time
-                        var metricTypesForPhp = new HashSet();                            // moved to be a global var for FemtoRCADetails (and moved back here again afterwards)
+                        var metricTypesForPhp = new HashSet();                            
                         if (endDateTime <= startDateTime) {
                             alert("The End Date-Time is before the Start Date-Time")
                         } else {
@@ -1597,6 +1620,10 @@ function showGraph(id, visible, siteParam) {
 //                                ((metric.substring(0,13) == "FemtoCounter-") && (granularity == "PerFemto"))) {
     //                            var siteOnly = site.substring(0, site.indexOf(' - '));
     //                            var floorOnly = site.substring(site.indexOf(' - ') + 3);
+    // 
+                                // just checking I have the correct syntax
+                                document.getElementById(2).checked = true;
+
 
     //                            var mno1Checked = document.getElementById('Vodafone').checked;
     //                            var mno2Checked = document.getElementById('O2').checked;
@@ -1903,16 +1930,6 @@ function showGraph(id, visible, siteParam) {
                                         //console.log("showGraph() SQL is " + query);
                                     }
                                 }
-                            } else if (metric.substring(0,9) == "FemtoRCA-") {
-                                if ($('#metric').val().length == 0) {
-                                    alert("1 KPI must be selected for RCA");
-                                } else if ($('#metric').val().length > 1) {
-                                    alert("Multiple KPIs cannot be selected for RCA");
-                                } else {
-                                    metricTypesForPhp.add("FemtoRCA");
-                                    query = getSQL_FemtoRCA($('#metric').val()[0], $('#site').val(), startDateTime, endDateTime);
-                                }
-                                console.log("FemtoRCA SQL is: " + query);
                             } else if (metric.substring(0,8) == "Traffic-") {
                                 metricTypesForPhp.add("Traffic");
                                 query = getTrafficSQL(metricName, startDateTime, endDateTime, ($('#site').val()[0] == " All Sites"), false, false);
@@ -2034,603 +2051,522 @@ function showGraph(id, visible, siteParam) {
                                 xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");   // code for IE6, IE5
                             }
                             xmlhttp.onreadystatechange = function() {
-//                                if (this.readyState == 4 && this.status == 200 && !rcaDetailsResponseExpected) {
                                 if (this.readyState == 4 && this.status == 200) {
-                                        var d = new Date();
-                                        var endMillis = d.getTime();
-                                        console.log(endMillis - startMillis + " millis taken to run " + metricTypesForPhp.values()[0] + " query");
-                                        //console.log("showGraph() data=" + this.responseText.substring(0,5000));
-                                        // response string
-                                        // [{"time":"2016-11-05 03:55:00","VF_1":"152","O2_1":"90"},{"time":"2016-11-05 04:00:00","VF_1":"157","O2_1":"90"},{"tim...
-                                        // console.log("The index is " + this.responseText.indexOf("<data>(No data available for query"));
-                                        // disable the graph button
-                                        //console.log("Enabling the graph button");
-                                        document.getElementById("graphButton").disabled = false;
-                                        document.getElementById("graphButton").value = 'Show';
-                                        //gb.display = 'block';
-                                        // var g = document.getElementById("graph");
-                                        // g.display = 'block';
-                                        if (this.responseText.indexOf("No data available for query") > -1) {
-                                            alert("Metrics data does not exist for this interval at this site");
+                                    var d = new Date();
+                                    var endMillis = d.getTime();
+                                    console.log(endMillis - startMillis + " millis taken to run query");
+                                    //console.log("showGraph() data=" + this.responseText.substring(0,5000));
+                                    // response string
+                                    // [{"time":"2016-11-05 03:55:00","VF_1":"152","O2_1":"90"},{"time":"2016-11-05 04:00:00","VF_1":"157","O2_1":"90"},{"tim...
+                                    // console.log("The index is " + this.responseText.indexOf("<data>(No data available for query"));
+                                    // disable the graph button
+                                    //console.log("Enabling the graph button");
+                                    document.getElementById("graphButton").disabled = false;
+                                    document.getElementById("graphButton").value = 'Show';
+                                    //gb.display = 'block';
+                                    // var g = document.getElementById("graph");
+                                    // g.display = 'block';
+                                    if (this.responseText.indexOf("No data available for query") > -1) {
+                                        alert("Metrics data does not exist for this interval at this site");
+                                    } else {
+                                        //console.log("response text is " + this.responseText);
+                                        var metrics = JSON.parse(this.responseText);
+                                        if ((metric.substring(0,8) !== "Traffic-") && (metric.substring(0,6) !== "Calls-")) {
+                                            var graphTimes = new Array();
+                                            var graphValues = new Map(); // one entry for each metric
+                                            for (var key in metrics) {
+                                                var measurement = metrics[key];
+                                                var dataPoints;
+                                                for (var entry in measurement) {
+                                                    if (entry === 'time') {
+                                                        graphTimes.push(measurement[entry]);
+                                                        //console.log("Adding time " + measurement[entry]);
+                                                    } else {
+                                                        // add the data point to a Map, null or missing values will get "spanned" (spanGap)
+                                                        if (graphValues.has(entry)) {
+                                                            graphValues.get(entry).push(measurement[entry]);
+                                                            //console.log("   Adding measurement " + entry + "=" + measurement[entry]);
+                                                        } else {
+            //                                                console.log("   How is measurement " + entry + "=" + measurement[entry] + " being stored?");
+                                                            graphValues.set(entry, new Array(measurement[entry]));
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        } else {                                            
+                                            // prepare the chart
+                                            var trafficTableDef ="<table align=\"center\" style=\"width:90%\">"; // ;table-layout:auto had no effect
+                                            var trafficTableCols = "";
+                                            var trafficTableRows = "";
+                                            
+                                            // prepare the chart
+                                            var chartLabels = new Array();
+                                            var trafficChartTitles = new Array();
+                                            if (metric.substring(0,8) == "Traffic-") {
+                                                var numCharts = 8;                                               
+                                            } else if (metric.substring(0,6) == "Calls-") {
+                                                var numCharts = 3;
+                                            }
+                                            console.log(numCharts + " traffic charts being initialised");
+                                            var trafficCharts = new Array(numCharts);
+                                            for (nero=0; nero < numCharts; nero++) {
+                                                trafficCharts[nero] = new Array();
+                                            }
+                                            trafficCharts[0] = new Array();
+                                            //var chartColours = ['rgba(255,36,36,1)','rgba(42,137,192,1)','rgba(182,95,194,1)','rgba(43,172,177, 1)'];
+                                            var chartColours = [Mno1colour,Mno2colour,Mno3colour,Mno4colour];
+                                            maxMBytesToChart = 0;
+                                            for (var kpi in metrics) {
+                                                //console.log("JS: 'kpi in metrics' is " + kpi); // Output says it's 0
+                                                var chartValues = new Array();
+                                                var measurement = metrics[kpi];
+                                                var dataPoints;
+                                                var trafficTableRow = "";
+                                                var date;
+                                                for (var entry in measurement) {
+                                                    if (entry !== 'time') {
+                                                        if (entry === 'metric_name') {
+                                                            trafficChartTitles.push(measurement[entry]);
+                                                            date = measurement[entry];
+                                                            //console.log("Adding metric " + measurement[entry]);                                                            
+                                                        } else if (entry === 'site_name') {
+                                                            console.log("site_name filtered out");
+                                                        } else {
+                                                            // console.log("   Adding measurement " + entry + "=" + measurement[entry]);
+                                                            if (kpi == 0) {
+                                                                chartLabels.push(entry);
+                                                                trafficTableCols += "<th>" + entry + "</th>"
+                                                            }
+                                                            // GROUP BY SQL required by table output format generates more rows than can be anticipated for charts
+                                                            if (!trafficTableOutput) {
+                                                                trafficCharts[kpi].push(measurement[entry]);
+                                                            }
+                                                            chartValues.push(measurement[entry]);
+                                                            var numMbytes = parseFloat(measurement[entry]);
+                                                            if (numMbytes > maxMBytesToChart) {
+                                                                maxMBytesToChart = numMbytes;
+                                                                //console.log("maxMBytesToChart is now " + maxMBytesToChart);
+                                                            } 
+                                                        }
+                                                    } 
+                                                    trafficTableRow += "<td>" + measurement[entry] + "</td>"
+                                                }
+                                                trafficTableRows += "<tr>" + trafficTableRow + "</tr>";
+                                            }
+                                            if (perSite) {
+                                                trafficTableCols = "<tr><th>Date</th><th>Site</th><th>Metric</th>" + trafficTableCols + "</tr>";
+                                            } else {
+                                                trafficTableCols = "<tr><th>Date</th><th>Metric</th>" + trafficTableCols + "</tr>";                                                
+                                            }
+                                            trafficTableRows += "</table>";
+                                        }
+                                        if ($('#site').val().length > 1) {
+                                            siteLabel = $('#site').val().toString();
                                         } else {
-                                            // console.log("response text is " + this.responseText);
-                                            var metrics = JSON.parse(this.responseText);
-                                            if ((metric.substring(0,8) !== "Traffic-") && (metric.substring(0,6) !== "Calls-") && (metric.substring(0,9) !== "FemtoRCA-")) {
-                                                var graphTimes = new Array();
-                                                var graphValues = new Map(); // one entry for each metric
-                                                for (var key in metrics) {
-                                                    var measurement = metrics[key];
-                                                    var dataPoints;
-                                                    for (var entry in measurement) {
-                                                        if (entry === 'time') {
-                                                            graphTimes.push(measurement[entry]);
-                                                            //console.log("Adding time " + measurement[entry]);
-                                                        } else {
-                                                            // add the data point to a Map, null or missing values will get "spanned" (spanGap)
-                                                            if (graphValues.has(entry)) {
-                                                                graphValues.get(entry).push(measurement[entry]);
-                                                                //console.log("   Adding measurement " + entry + "=" + measurement[entry]);
-                                                            } else {
-                //                                                console.log("   How is measurement " + entry + "=" + measurement[entry] + " being stored?");
-                                                                graphValues.set(entry, new Array(measurement[entry]));
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            } else if (metric.substring(0,9) === "FemtoRCA-") {
-                                                var rcaTableDef ="<table align=\"center\" style=\"width:90%\">"; // ;table-layout:auto had no effect
-                                                var rcaTableCols = "<tr><th>Switch</th><th>Port</th><th>Location</th><th>IMEI</th><th>Rate</th></tr>";
-                                                var rcaTableRows = "";
-                                                for (var kpi in metrics) {
-                                                    var rcaTableRow = "";
-                                                    var measurement = metrics[kpi];
-                                                    for (var entry in measurement) {
-                                                        // console.log("kpi=" + kpi + ", entry=" + entry + ", measurement[entry]=" + measurement[entry]);
-                                                    // <td><a href="#">&nbsp;</a></td>
-                                                        if (entry === "IMEI") {
-                                                            // a:hover{ cursor: pointer; }
-                                                            rcaTableRow += "<td onclick=\"ShowRCADetails(this.innerText)\"><a href=\"#\">" + measurement[entry] + "</a></td>"
-                                                            // rcaTableRow += "<td onclick=\"ShowRCADetails(this.innerText)\"><a>" + measurement[entry] + "</a></td>"
-                                                            // rcaTableRow += "<td onclick=\"ShowRCADetails(this.innerText)\">" + measurement[entry] + "</td>"
-                                                        } else {
-                                                            rcaTableRow += "<td>" + measurement[entry] + "</td>"                                                        
-                                                        }
-                                                    }
-                                                    rcaTableRows += "<tr>" + rcaTableRow + "</tr>";
-                                                }
-                                                rcaTableRows += "</table>";
-                                            } else {                                            
-                                                // prepare the chart
-                                                var trafficTableDef ="<table align=\"center\" style=\"width:90%\">"; // ;table-layout:auto had no effect
-                                                var trafficTableCols = "";
-                                                var trafficTableRows = "";
+                                            siteLabel = site;
+                                        }
+                                        if ($('#metric').val().length > 1) {
+                                            metricLabel = $('#metric').val().toString();
+                                        } else {
+                                            metricLabel = metric;
+                                        }
+            //                                        alert(entry + ' ' + measurement[entry]);
 
-                                                // prepare the chart
-                                                var chartLabels = new Array();
-                                                var trafficChartTitles = new Array();
-                                                if (metric.substring(0,8) == "Traffic-") {
-                                                    var numCharts = 8;                                               
-                                                } else if (metric.substring(0,6) == "Calls-") {
-                                                    var numCharts = 3;
-                                                }
-                                                console.log(numCharts + " traffic charts being initialised");
-                                                var trafficCharts = new Array(numCharts);
-                                                for (nero=0; nero < numCharts; nero++) {
-                                                    trafficCharts[nero] = new Array();
-                                                }
-                                                trafficCharts[0] = new Array();
-                                                //var chartColours = ['rgba(255,36,36,1)','rgba(42,137,192,1)','rgba(182,95,194,1)','rgba(43,172,177, 1)'];
-                                                var chartColours = [Mno1colour,Mno2colour,Mno3colour,Mno4colour];
-                                                maxMBytesToChart = 0;
-                                                for (var kpi in metrics) {
-                                                    //console.log("JS: 'kpi in metrics' is " + kpi); // Output says it's 0
-                                                    var chartValues = new Array();
-                                                    var measurement = metrics[kpi];
-                                                    var dataPoints;
-                                                    var trafficTableRow = "";
-                                                    var date;
-                                                    for (var entry in measurement) {
-                                                        if (entry !== 'time') {
-                                                            if (entry === 'metric_name') {
-                                                                trafficChartTitles.push(measurement[entry]);
-                                                                date = measurement[entry];
-                                                                //console.log("Adding metric " + measurement[entry]);                                                            
-                                                            } else if (entry === 'site_name') {
-                                                                console.log("site_name filtered out");
-                                                            } else {
-                                                                // console.log("   Adding measurement " + entry + "=" + measurement[entry]);
-                                                                if (kpi == 0) {
-                                                                    chartLabels.push(entry);
-                                                                    trafficTableCols += "<th>" + entry + "</th>"
-                                                                }
-                                                                // GROUP BY SQL required by table output format generates more rows than can be anticipated for charts
-                                                                if (!trafficTableOutput) {
-                                                                    trafficCharts[kpi].push(measurement[entry]);
-                                                                }
-                                                                chartValues.push(measurement[entry]);
-                                                                var numMbytes = parseFloat(measurement[entry]);
-                                                                if (numMbytes > maxMBytesToChart) {
-                                                                    maxMBytesToChart = numMbytes;
-                                                                    //console.log("maxMBytesToChart is now " + maxMBytesToChart);
-                                                                } 
-                                                            }
-                                                        } 
-                                                        trafficTableRow += "<td>" + measurement[entry] + "</td>"
-                                                    }
-                                                    trafficTableRows += "<tr>" + trafficTableRow + "</tr>";
-                                                }
-                                                if (perSite) {
-                                                    trafficTableCols = "<tr><th>Date</th><th>Site</th><th>Metric</th>" + trafficTableCols + "</tr>";
-                                                } else {
-                                                    trafficTableCols = "<tr><th>Date</th><th>Metric</th>" + trafficTableCols + "</tr>";                                                
-                                                }
-                                                trafficTableRows += "</table>";
-                                            }
-                                            if ($('#site').val().length > 1) {
-                                                siteLabel = $('#site').val().toString();
-                                            } else {
-                                                siteLabel = site;
-                                            }
-                                            if ($('#metric').val().length > 1) {
-                                                metricLabel = $('#metric').val().toString();
-                                            } else {
-                                                metricLabel = metric;
-                                            }
-                //                                        alert(entry + ' ' + measurement[entry]);
-
-            //                                var ctx = document.getElementById("graph");
-                                            var canvas = document.getElementById("graph");
-                                            var ctx = canvas.getContext("2d"); // Get the context to draw on.
-                                            destroyOldCharts();
-    //                                        if (typeof myChart !== 'undefined') {
-    //                                            console.log("Destroying the Single Graph Chart");
-    //                                            myChart.destroy();
-    //                                        } else {
-    //                                            try {
-    //                                                myChart.destroy();                                                                 
-    //                                            } catch (err) {
-    //                                                console.log("Error destroying the single graph chart, " + err.message);
-    //                                            }                                            
-    //                                        }
-                                            if ((metric.substring(0,8) == "Traffic-") || (metric.substring(0,6) == "Calls-")) {
-                                                $('#GraphWrap').hide();
-                                                if (trafficTableOutput) {
-                                                    //console.log("Outputting metrics data in table format");
-                                                    $('#TrafficTableWrap').show();
-                                                    $('#TrafficChartWrap').hide();
-                                                    $('#CallsChartWrap').hide();
-                                                    // console.log("Table HTML is " + trafficTableDef + trafficTableCols + trafficTableRows);
-                                                    document.getElementById("TrafficTableWrap").innerHTML = trafficTableDef + trafficTableCols + trafficTableRows;
-                                                } else if (metric.substring(0,8) == "Traffic-") {
-                                                    var chartType, legendDisplay;
-                                                    if (trafficBarOutput) {
-                                                        chartType = 'bar';
-                                                        legendDisplay = false;
-                                                    } else {
-                                                        chartType = 'pie';
-                                                        legendDisplay = true;
-                                                    }                                                    
-                                                    //console.log("Outputting metrics data in chart format");
-                                                    $('#TrafficChartWrap').show();
-                                                    $('#TrafficTableWrap').hide();
-                                                    $('#CallsChartWrap').hide();
-
-                                                    var inc = 10;
-                                                    if (maxMBytesToChart < 100) {            inc = 10; 
-                                                    } else if (maxMBytesToChart < 200) {     inc = 20;
-                                                    } else if (maxMBytesToChart < 500) {     inc = 50;
-                                                    } else if (maxMBytesToChart < 1000) {    inc = 100;
-                                                    } else if (maxMBytesToChart < 2000) {    inc = 200;
-                                                    } else if (maxMBytesToChart < 5000) {    inc = 500;
-                                                    } else if (maxMBytesToChart < 10000) {   inc = 1000;
-                                                    } else if (maxMBytesToChart < 20000) {   inc = 2000;
-                                                    } else if (maxMBytesToChart < 50000) {   inc = 5000;
-                                                    } else if (maxMBytesToChart < 100000) {  inc = 10000;
-                                                    } else if (maxMBytesToChart < 200000) {  inc = 20000;
-                                                    } else if (maxMBytesToChart < 500000) {  inc = 50000;
-                                                    } else if (maxMBytesToChart < 1000000) { inc = 100000;
-                                                    } else { inc = 200000;
-                                                    }
-                                                    // MW - extend this with more clauses if necessary
-                                                    var r1 = Math.round(maxMBytesToChart / inc) * inc;
-                                                    if (r1 > maxMBytesToChart) {
-                                                        //console.log("The upper range should be " + r1);
-                                                    } else {
-                                                        r1 += inc;
-                                                        //console.log("The upper range should be " + r1);  
-                                                    }
-
-                                                    destroyOldCharts();
-                                                    for (row = 0; row < 2; row++) {
-                                                        for (col = 0; col < 4; col++) {
-    //                                                        console.log("volumeChartNames[" + row + "][" + col + "] is " + document.getElementById(volumeChartNames[row][col]));
-                                                            gridCanvas[row][col] = document.getElementById(volumeChartNames[row][col]);
-                                                            gridCtx[row][col] = gridCanvas[row][col].getContext("2d"); // Get the context to draw on.
-
-    //                                                        if (typeof gridCharts[row][col] !== 'undefined') { 
-    //                                                            console.log("Destroying the multiple (2d) Traffic Charts");
-    //                                                            gridCharts[row][col].destroy(); 
-    //                                                        } else {
-    //                                                            try {
-    //                                                                gridCharts[row][col].destroy();                                                                 
-    //                                                            } catch (err) {
-    //                                                                console.log("Error destroying one of multiple traffic charts [" + row + "][" + col + "], " + err.message);
-    //                                                            }                                                            
-    //                                                        }
-
-                                                            //console.log("trafficCharts[" + (col + (4 * row)) + "] = " + trafficCharts[(col + (4 * row))]);
-                                                            //console.log("The typeof maxMBytesToChart is " + typeof maxMBytesToChart + " and value is " + maxMBytesToChart);
-
-                                                            gridCharts[row][col] = new Chart(gridCtx[row][col], {
-                                                                type: chartType,
-                                                                data: {
-                                                                    labels: chartLabels,
-    //                                                                datasets: [{ data: chartValues, backgroundColor: chartColours }],                                                    
-                                                                    datasets: [{ 
-                                                                            data: trafficCharts[(col + (4 * row))],
-                                                                            //data: [38.8, 26.5, 15.4, 19.2],                                                                        
-                                                                            backgroundColor: chartColours }],                                                    
-                                                                 },
-                                                               options: {
-                                                                    title: {
-                                                                        display: true,
-    //                                                                    text: chartTitles[row][col],
-                                                                        text: trafficChartTitles[col + (4 * row)],
-                                                                        fontSize: 20,
-                                                                        position: 'bottom'
-                                                                    },
-                                                                    scales: {
-                                                                        xAxes: [{ display:!legendDisplay, gridLines: { display: false } }],
-                                                                        yAxes: [{
-                                                                            display:!legendDisplay,
-                                                                            gridLines: { display:!legendDisplay },
-    //                                                                        ticks: { beginAtZero:true },
-    //                                                                        ticks: { beginAtZero:true, max: maxMBytesToChart },
-                                                                            ticks: { beginAtZero:true, max: r1 },
-    //                                                                        ticks: { beginAtZero:true, max: 500 },
-                                                                            scaleLabel: {
-                                                                                display: true,
-                                                                                labelString: 'MBytes'
-                                                                            }
-                                                                        }]
-                                                                    },                                                                
-                                                                    legend: {
-                                                                        display: legendDisplay,
-                                                                        width: 15,
-                                                                        labels: { boxWidth: 25 }
-                                                                    },
-                                                                    plugins: {
-                                                                        labels: {
-                                                                            // configurable parameters and their possible values https://github.com/emn178/chartjs-plugin-labels
-                                                                            render: 'percentage',
-                                                                            fontColor: ['white', 'white', 'white', 'white'],
-                                                                            position: 'border',
-                                                                            precision: 0
-                                                                        }
-                                                                    }                                                                      
-                                                                }
-                                                            });                                            
-                                                        }                                                    
-                                                    }                                                                                                
-                                                } else { // metric.substring(0,6) == "Calls-")
-                                                    var chartType, legendDisplay;
-                                                    if (trafficBarOutput) {
-                                                        chartType = 'bar';
-                                                        legendDisplay = false;
-                                                    } else {
-                                                        chartType = 'pie';
-                                                        legendDisplay = true;
-                                                    }                                                    
-                                                    $('#CallsChartWrap').show();
-                                                    $('#TrafficChartWrap').hide();
-                                                    $('#TrafficTableWrap').hide();
-
-                                                    var inc = 10;
-                                                    if (maxMBytesToChart < 100) {            inc = 10; 
-                                                    } else if (maxMBytesToChart < 200) {     inc = 20;
-                                                    } else if (maxMBytesToChart < 500) {     inc = 50;
-                                                    } else if (maxMBytesToChart < 1000) {    inc = 100;
-                                                    } else if (maxMBytesToChart < 2000) {    inc = 200;
-                                                    } else if (maxMBytesToChart < 5000) {    inc = 500;
-                                                    } else if (maxMBytesToChart < 10000) {   inc = 1000;
-                                                    } else if (maxMBytesToChart < 20000) {   inc = 2000;
-                                                    } else if (maxMBytesToChart < 50000) {   inc = 5000;
-                                                    } else if (maxMBytesToChart < 100000) {  inc = 10000;
-                                                    } else if (maxMBytesToChart < 200000) {  inc = 20000;
-                                                    } else if (maxMBytesToChart < 500000) {  inc = 50000;
-                                                    } else if (maxMBytesToChart < 1000000) { inc = 100000;
-                                                    } else if (maxMBytesToChart < 2000000) { inc = 200000;
-                                                    } else if (maxMBytesToChart < 4000000) { inc = 400000;
-                                                    } else if (maxMBytesToChart < 8000000) { inc = 800000;
-                                                    } else { inc = 1600000;
-                                                    }
-                                                    // MW - extend this with more clauses if necessary
-                                                    var r1 = Math.round(maxMBytesToChart / inc) * inc;
-                                                    if (r1 > maxMBytesToChart) {
-                                                        //console.log("The upper range should be " + r1);
-                                                    } else {
-                                                        r1 += inc;
-                                                        //console.log("The upper range should be " + r1);  
-                                                    }
-
-                                                    destroyOldCharts();
-                                                    row = 0;
-                                                    //for (row = 0; row < 2; row++) { // not needed unless we adopt Keith's idea
-                                                        for (col = 0; col < 3; col++) {
-                                                            //console.log("volumeChartNames[" + row + "][" + col + "] is " + document.getElementById(callsChartNames[row][col]));
-                                                            gridCanvas[row][col] = document.getElementById(callsChartNames[row][col]);
-                                                            gridCtx[row][col] = gridCanvas[row][col].getContext("2d"); // Get the context to draw on.
-
-    //                                                        if (typeof gridCharts[row][col] !== 'undefined') { 
-    //                                                            console.log("Destroying the multiple (1d) Calls Charts");
-    //                                                            gridCharts[row][col].destroy(); 
-    //                                                        } else { // let's destroy it anyway
-    //                                                            try {
-    //                                                                gridCharts[row][col].destroy();                                                                 
-    //                                                            } catch (err) {
-    //                                                                console.log("Error destroying one of multiple calls charts [" + row + "][" + col + "], " + err.message);
-    //                                                            }
-    //                                                        }
-
-                                                            //console.log("trafficCharts[" + (col + (4 * row)) + "] = " + trafficCharts[(col + (4 * row))]);
-                                                            //console.log("The typeof maxMBytesToChart is " + typeof maxMBytesToChart + " and value is " + maxMBytesToChart);
-
-                                                            gridCharts[row][col] = new Chart(gridCtx[row][col], {
-                                                                type: chartType,
-                                                                data: {
-                                                                    labels: chartLabels,
-    //                                                                datasets: [{ data: chartValues, backgroundColor: chartColours }],                                                    
-                                                                    datasets: [{ 
-                                                                            data: trafficCharts[(col + (4 * row))],
-                                                                            //data: [38.8, 26.5, 15.4, 19.2],                                                                        
-                                                                            backgroundColor: chartColours }],                                                    
-                                                                 },
-                                                                options: {
-                                                                    title: {
-                                                                        display: true,
-    //                                                                    text: chartTitles[row][col],
-                                                                        text: trafficChartTitles[col + (4 * row)],
-                                                                        fontSize: 20,
-                                                                        position: 'bottom'
-                                                                    },
-                                                                    scales: {
-                                                                        xAxes: [{ display:!legendDisplay, gridLines: { display: false } }],
-                                                                        yAxes: [{
-                                                                            display:!legendDisplay,
-                                                                            gridLines: { display:!legendDisplay },
-    //                                                                        ticks: { beginAtZero:true },
-    //                                                                        ticks: { beginAtZero:true, max: maxMBytesToChart },
-                                                                            ticks: { beginAtZero:true, max: r1 },
-    //                                                                        ticks: { beginAtZero:true, max: 500 },
-                                                                            scaleLabel: {
-                                                                                display: true,
-                                                                                labelString: '# Calls'
-                                                                            }
-                                                                        }]
-                                                                    },                                                                
-                                                                    legend: {
-                                                                        display: legendDisplay,
-                                                                        width: 15,
-                                                                        labels: { boxWidth: 25 }
-                                                                    },
-                                                                    plugins: {
-                                                                        labels: {
-                                                                            // configurable parameters and their possible values https://github.com/emn178/chartjs-plugin-labels
-                                                                            render: 'percentage',
-                                                                            fontColor: ['white', 'white', 'white', 'white'],
-                                                                            position: 'border',                                                                        
-                                                                            precision: 0
-                                                                        }
-                                                                    }
-                                                                }
-                                                            });                                            
-                                                        }                                                    
-                                                    // } // for 2 rows                                                                                                
-                                                }
-                                            } else if (metric.substring(0,9) == "FemtoRCA-") {
-                                                $('#GraphWrap').hide();
+        //                                var ctx = document.getElementById("graph");
+                                        var canvas = document.getElementById("graph");
+                                        var ctx = canvas.getContext("2d"); // Get the context to draw on.
+                                        destroyOldCharts();
+//                                        if (typeof myChart !== 'undefined') {
+//                                            console.log("Destroying the Single Graph Chart");
+//                                            myChart.destroy();
+//                                        } else {
+//                                            try {
+//                                                myChart.destroy();                                                                 
+//                                            } catch (err) {
+//                                                console.log("Error destroying the single graph chart, " + err.message);
+//                                            }                                            
+//                                        }
+                                        if ((metric.substring(0,8) == "Traffic-") || (metric.substring(0,6) == "Calls-")) {
+                                            $('#GraphWrap').hide();
+                                            if (trafficTableOutput) {
                                                 //console.log("Outputting metrics data in table format");
                                                 $('#TrafficTableWrap').show();
-                                                $('#TrafficTableInnerWrap').show();
-                                                $('#TrafficTableLeftWrap').show();
-                                                //document.getElementById("TrafficTableLeftWrap").style.float="left";
-                                                $('#TrafficTableRightWrap').hide();
                                                 $('#TrafficChartWrap').hide();
                                                 $('#CallsChartWrap').hide();
                                                 // console.log("Table HTML is " + trafficTableDef + trafficTableCols + trafficTableRows);
-                                                // document.getElementById("TrafficTableLeftWrap").innerHTML = rcaTableDef + rcaTableCols + rcaTableRows;
-                                                document.getElementById("TrafficTableLeftWrap").innerHTML = rcaTableDef + rcaTableCols + rcaTableRows;
-                                            } else {
-                                                var graphLines = new Array();
-                                                // add the collection to graphLines
-                                                for (var [key, value] of graphValues) {
-                                                    // console.log("Processing " + key + " value=" + value);
-                                                    graphLines.push(formatGraphLine(key, value));
-                                                }
-                                                $('#TrafficChartWrap').hide();
+                                                document.getElementById("TrafficTableWrap").innerHTML = trafficTableDef + trafficTableCols + trafficTableRows;
+                                            } else if (metric.substring(0,8) == "Traffic-") {
+                                                var chartType, legendDisplay;
+                                                if (trafficBarOutput) {
+                                                    chartType = 'bar';
+                                                    legendDisplay = false;
+                                                } else {
+                                                    chartType = 'pie';
+                                                    legendDisplay = true;
+                                                }                                                    
+                                                //console.log("Outputting metrics data in chart format");
+                                                $('#TrafficChartWrap').show();
                                                 $('#TrafficTableWrap').hide();
                                                 $('#CallsChartWrap').hide();
-                                                $('#GraphWrap').show();
-                                                myChart = new Chart(ctx, {
-                                                    type: 'line',
-                                                    data: {
-                //                                        labels: ["16:00", "16:05", "16:10", "16:15", "16:20", "16:25", "16:30", "16:35"],
-                                                        labels: graphTimes,
-                //                                        datasets: [
-                //                                            {
-                //                                                label: 'VF_1',
-                //                                                fill: false,
-                //                                                lineTension: 0,
-                //                                                borderColor: "rgba(75,192,192,1)",
-                //                                                pointBorderWidth: 0.5,
-                //                                                data: [13.5, 15, 13, 16, 16, 15.5, 14, 15],
-                //                                            },
-                //                                            {
-                //                                                label: 'O2_1',
-                //                                                fill: false,
-                //                                                lineTension: 0,
-                //                                                borderColor: "rgba(250,92,157,1)",
-                //                                                pointBorderWidth: 0.5,
-                //                                                data: [6.5, 6, 6, 5.5, 7, 6.5, 6.5, 7],
-                //                                            }
-                //                                        ]
-                                                        datasets: graphLines
-                                                    },
-                                                    options: {
-                                                        title: {
-                                                            display: true,
-                                                            //text: site + " :: " + metric,
-                                                            text: siteLabel + " :: " + metricLabel,
-                                                            fontSize: 20,
-                                                            position: 'bottom'
-                                                        },
-                                                        scales: {
-                                                            yAxes: [{
-                                                                ticks: {
-                                                                    beginAtZero:true
-                                                                },
-                                                                scaleLabel: {
+
+                                                var inc = 10;
+                                                if (maxMBytesToChart < 100) {            inc = 10; 
+                                                } else if (maxMBytesToChart < 200) {     inc = 20;
+                                                } else if (maxMBytesToChart < 500) {     inc = 50;
+                                                } else if (maxMBytesToChart < 1000) {    inc = 100;
+                                                } else if (maxMBytesToChart < 2000) {    inc = 200;
+                                                } else if (maxMBytesToChart < 5000) {    inc = 500;
+                                                } else if (maxMBytesToChart < 10000) {   inc = 1000;
+                                                } else if (maxMBytesToChart < 20000) {   inc = 2000;
+                                                } else if (maxMBytesToChart < 50000) {   inc = 5000;
+                                                } else if (maxMBytesToChart < 100000) {  inc = 10000;
+                                                } else if (maxMBytesToChart < 200000) {  inc = 20000;
+                                                } else if (maxMBytesToChart < 500000) {  inc = 50000;
+                                                } else if (maxMBytesToChart < 1000000) { inc = 100000;
+                                                } else { inc = 200000;
+                                                }
+                                                // MW - extend this with more clauses if necessary
+                                                var r1 = Math.round(maxMBytesToChart / inc) * inc;
+                                                if (r1 > maxMBytesToChart) {
+                                                    //console.log("The upper range should be " + r1);
+                                                } else {
+                                                    r1 += inc;
+                                                    //console.log("The upper range should be " + r1);  
+                                                }
+
+                                                destroyOldCharts();
+                                                for (row = 0; row < 2; row++) {
+                                                    for (col = 0; col < 4; col++) {
+//                                                        console.log("volumeChartNames[" + row + "][" + col + "] is " + document.getElementById(volumeChartNames[row][col]));
+                                                        gridCanvas[row][col] = document.getElementById(volumeChartNames[row][col]);
+                                                        gridCtx[row][col] = gridCanvas[row][col].getContext("2d"); // Get the context to draw on.
+                                                        
+//                                                        if (typeof gridCharts[row][col] !== 'undefined') { 
+//                                                            console.log("Destroying the multiple (2d) Traffic Charts");
+//                                                            gridCharts[row][col].destroy(); 
+//                                                        } else {
+//                                                            try {
+//                                                                gridCharts[row][col].destroy();                                                                 
+//                                                            } catch (err) {
+//                                                                console.log("Error destroying one of multiple traffic charts [" + row + "][" + col + "], " + err.message);
+//                                                            }                                                            
+//                                                        }
+
+                                                        //console.log("trafficCharts[" + (col + (4 * row)) + "] = " + trafficCharts[(col + (4 * row))]);
+                                                        //console.log("The typeof maxMBytesToChart is " + typeof maxMBytesToChart + " and value is " + maxMBytesToChart);
+                                                         
+                                                        gridCharts[row][col] = new Chart(gridCtx[row][col], {
+                                                            type: chartType,
+                                                            data: {
+                                                                labels: chartLabels,
+//                                                                datasets: [{ data: chartValues, backgroundColor: chartColours }],                                                    
+                                                                datasets: [{ 
+                                                                        data: trafficCharts[(col + (4 * row))],
+                                                                        //data: [38.8, 26.5, 15.4, 19.2],                                                                        
+                                                                        backgroundColor: chartColours }],                                                    
+                                                             },
+                                                           options: {
+                                                                title: {
                                                                     display: true,
-                                                                    labelString: yLabelTitle
+//                                                                    text: chartTitles[row][col],
+                                                                    text: trafficChartTitles[col + (4 * row)],
+                                                                    fontSize: 20,
+                                                                    position: 'bottom'
+                                                                },
+                                                                scales: {
+                                                                    xAxes: [{ display:!legendDisplay, gridLines: { display: false } }],
+                                                                    yAxes: [{
+                                                                        display:!legendDisplay,
+                                                                        gridLines: { display:!legendDisplay },
+//                                                                        ticks: { beginAtZero:true },
+//                                                                        ticks: { beginAtZero:true, max: maxMBytesToChart },
+                                                                        ticks: { beginAtZero:true, max: r1 },
+//                                                                        ticks: { beginAtZero:true, max: 500 },
+                                                                        scaleLabel: {
+                                                                            display: true,
+                                                                            labelString: 'MBytes'
+                                                                        }
+                                                                    }]
+                                                                },                                                                
+                                                                legend: {
+                                                                    display: legendDisplay,
+                                                                    width: 15,
+                                                                    labels: { boxWidth: 25 }
+                                                                },
+                                                                plugins: {
+                                                                    labels: {
+                                                                        // configurable parameters and their possible values https://github.com/emn178/chartjs-plugin-labels
+                                                                        render: 'percentage',
+                                                                        fontColor: ['white', 'white', 'white', 'white'],
+                                                                        position: 'border',
+                                                                        precision: 0
+                                                                    }
+                                                                }                                                                      
+                                                            }
+                                                        });                                            
+                                                    }                                                    
+                                                }                                                                                                
+                                            } else { // metric.substring(0,6) == "Calls-")
+                                                var chartType, legendDisplay;
+                                                if (trafficBarOutput) {
+                                                    chartType = 'bar';
+                                                    legendDisplay = false;
+                                                } else {
+                                                    chartType = 'pie';
+                                                    legendDisplay = true;
+                                                }                                                    
+                                                $('#CallsChartWrap').show();
+                                                $('#TrafficChartWrap').hide();
+                                                $('#TrafficTableWrap').hide();
+
+                                                var inc = 10;
+                                                if (maxMBytesToChart < 100) {            inc = 10; 
+                                                } else if (maxMBytesToChart < 200) {     inc = 20;
+                                                } else if (maxMBytesToChart < 500) {     inc = 50;
+                                                } else if (maxMBytesToChart < 1000) {    inc = 100;
+                                                } else if (maxMBytesToChart < 2000) {    inc = 200;
+                                                } else if (maxMBytesToChart < 5000) {    inc = 500;
+                                                } else if (maxMBytesToChart < 10000) {   inc = 1000;
+                                                } else if (maxMBytesToChart < 20000) {   inc = 2000;
+                                                } else if (maxMBytesToChart < 50000) {   inc = 5000;
+                                                } else if (maxMBytesToChart < 100000) {  inc = 10000;
+                                                } else if (maxMBytesToChart < 200000) {  inc = 20000;
+                                                } else if (maxMBytesToChart < 500000) {  inc = 50000;
+                                                } else if (maxMBytesToChart < 1000000) { inc = 100000;
+                                                } else if (maxMBytesToChart < 2000000) { inc = 200000;
+                                                } else if (maxMBytesToChart < 4000000) { inc = 400000;
+                                                } else if (maxMBytesToChart < 8000000) { inc = 800000;
+                                                } else { inc = 1600000;
+                                                }
+                                                // MW - extend this with more clauses if necessary
+                                                var r1 = Math.round(maxMBytesToChart / inc) * inc;
+                                                if (r1 > maxMBytesToChart) {
+                                                    //console.log("The upper range should be " + r1);
+                                                } else {
+                                                    r1 += inc;
+                                                    //console.log("The upper range should be " + r1);  
+                                                }
+
+                                                destroyOldCharts();
+                                                row = 0;
+                                                //for (row = 0; row < 2; row++) { // not needed unless we adopt Keith's idea
+                                                    for (col = 0; col < 3; col++) {
+                                                        //console.log("volumeChartNames[" + row + "][" + col + "] is " + document.getElementById(callsChartNames[row][col]));
+                                                        gridCanvas[row][col] = document.getElementById(callsChartNames[row][col]);
+                                                        gridCtx[row][col] = gridCanvas[row][col].getContext("2d"); // Get the context to draw on.
+
+//                                                        if (typeof gridCharts[row][col] !== 'undefined') { 
+//                                                            console.log("Destroying the multiple (1d) Calls Charts");
+//                                                            gridCharts[row][col].destroy(); 
+//                                                        } else { // let's destroy it anyway
+//                                                            try {
+//                                                                gridCharts[row][col].destroy();                                                                 
+//                                                            } catch (err) {
+//                                                                console.log("Error destroying one of multiple calls charts [" + row + "][" + col + "], " + err.message);
+//                                                            }
+//                                                        }
+
+                                                        //console.log("trafficCharts[" + (col + (4 * row)) + "] = " + trafficCharts[(col + (4 * row))]);
+                                                        //console.log("The typeof maxMBytesToChart is " + typeof maxMBytesToChart + " and value is " + maxMBytesToChart);
+                                                         
+                                                        gridCharts[row][col] = new Chart(gridCtx[row][col], {
+                                                            type: chartType,
+                                                            data: {
+                                                                labels: chartLabels,
+//                                                                datasets: [{ data: chartValues, backgroundColor: chartColours }],                                                    
+                                                                datasets: [{ 
+                                                                        data: trafficCharts[(col + (4 * row))],
+                                                                        //data: [38.8, 26.5, 15.4, 19.2],                                                                        
+                                                                        backgroundColor: chartColours }],                                                    
+                                                             },
+                                                            options: {
+                                                                title: {
+                                                                    display: true,
+//                                                                    text: chartTitles[row][col],
+                                                                    text: trafficChartTitles[col + (4 * row)],
+                                                                    fontSize: 20,
+                                                                    position: 'bottom'
+                                                                },
+                                                                scales: {
+                                                                    xAxes: [{ display:!legendDisplay, gridLines: { display: false } }],
+                                                                    yAxes: [{
+                                                                        display:!legendDisplay,
+                                                                        gridLines: { display:!legendDisplay },
+//                                                                        ticks: { beginAtZero:true },
+//                                                                        ticks: { beginAtZero:true, max: maxMBytesToChart },
+                                                                        ticks: { beginAtZero:true, max: r1 },
+//                                                                        ticks: { beginAtZero:true, max: 500 },
+                                                                        scaleLabel: {
+                                                                            display: true,
+                                                                            labelString: '# Calls'
+                                                                        }
+                                                                    }]
+                                                                },                                                                
+                                                                legend: {
+                                                                    display: legendDisplay,
+                                                                    width: 15,
+                                                                    labels: { boxWidth: 25 }
+                                                                },
+                                                                plugins: {
+                                                                    labels: {
+                                                                        // configurable parameters and their possible values https://github.com/emn178/chartjs-plugin-labels
+                                                                        render: 'percentage',
+                                                                        fontColor: ['white', 'white', 'white', 'white'],
+                                                                        position: 'border',                                                                        
+                                                                        precision: 0
+                                                                    }
                                                                 }
-                                                            }]
-                                                        },
-                                                        legend: {
-                                                            width: 15,
-                                                        },
-                                                        animation: {
-                                                            onComplete: save
-                                                        }
+                                                            }
+                                                        });                                            
+                                                    }                                                    
+                                                // } // for 2 rows                                                                                                
+                                            }
+                                        } else {
+                                            var graphLines = new Array();
+                                            // add the collection to graphLines
+                                            for (var [key, value] of graphValues) {
+                                                // console.log("Processing " + key + " value=" + value);
+                                                graphLines.push(formatGraphLine(key, value));
+                                            }
+                                            $('#TrafficChartWrap').hide();
+                                            $('#TrafficTableWrap').hide();
+                                            $('#CallsChartWrap').hide();
+                                            $('#GraphWrap').show();
+                                            myChart = new Chart(ctx, {
+                                                type: 'line',
+                                                data: {
+            //                                        labels: ["16:00", "16:05", "16:10", "16:15", "16:20", "16:25", "16:30", "16:35"],
+                                                    labels: graphTimes,
+            //                                        datasets: [
+            //                                            {
+            //                                                label: 'VF_1',
+            //                                                fill: false,
+            //                                                lineTension: 0,
+            //                                                borderColor: "rgba(75,192,192,1)",
+            //                                                pointBorderWidth: 0.5,
+            //                                                data: [13.5, 15, 13, 16, 16, 15.5, 14, 15],
+            //                                            },
+            //                                            {
+            //                                                label: 'O2_1',
+            //                                                fill: false,
+            //                                                lineTension: 0,
+            //                                                borderColor: "rgba(250,92,157,1)",
+            //                                                pointBorderWidth: 0.5,
+            //                                                data: [6.5, 6, 6, 5.5, 7, 6.5, 6.5, 7],
+            //                                            }
+            //                                        ]
+                                                    datasets: graphLines
+                                                },
+                                                options: {
+                                                    title: {
+                                                        display: true,
+                                                        //text: site + " :: " + metric,
+                                                        text: siteLabel + " :: " + metricLabel,
+                                                        fontSize: 20,
+                                                        position: 'bottom'
+                                                    },
+                                                    scales: {
+                                                        yAxes: [{
+                                                            ticks: {
+                                                                beginAtZero:true
+                                                            },
+                                                            scaleLabel: {
+                                                                display: true,
+                                                                labelString: yLabelTitle
+                                                            }
+                                                        }]
+                                                    },
+                                                    legend: {
+                                                        width: 15,
+                                                    },
+                                                    animation: {
+                                                        onComplete: save
                                                     }
-                                                });
-                                            }
-                                            // for testing PDF doc generation
-                                            //if ((metric.substring(0,8) == "Traffic-") || (metric.substring(0,6) == "Calls-")) {
-                                            if (false) {
-                                                // following code produces blank reports
-                                                // var htmlpdfdoc = new jsPDF('p','pt','a4');
-                                                //htmlpdfdoc.addHTML(document.getElementById('TrafficChartWrap'),function() {
-                                                // basic and poor quality
-    //                                            htmlpdfdoc.addHTML(document.getElementsByTagName('body'),function() {
-    //                                                htmlpdfdoc.save('html_report.pdf');
-    //                                            });                                                            
-
-                                                var testCanvas = gridCanvas[0][0];
-                                                var testChart = gridCharts[0][0];
-                                               //https://stackoverflow.com/questions/34897515/chartjs-jspdf-blurry-image
-                                                var htmlpdfdoc = new jsPDF('l', 'mm',[210, 297]);
-                                                    //html2canvas($("#myChart"), {
-                                                    html2canvas($("#testChart"), {
-                                                        onrendered: function(testCanvas) {         
-                                                            var imgData = testCanvas.toDataURL('image/png',1.0);                  
-                                                            htmlpdfdoc.text(130,15,"First PDF");
-                                                            htmlpdfdoc.addImage(imgData, 'PNG',20,30,0,130); 
-                                                            htmlpdfdoc.addHTML(testCanvas);
-                                                            htmlpdfdoc.save('html_report.pdf');             
-                                                        }       
-                                                });
-
-                                            }
-
-                                            d = new Date();
-                                            var endMillis2 = d.getTime();
-                                            console.log(endMillis2 - endMillis + " millis taken to create Graph");
+                                                }
+                                            });
                                         }
-                                    } 
-                                    // DUMBASS, DELETE ASAP
-//                                    else {
-//                                        if (rcaDetailsResponseExpected) {
-//                                            console.log("rcaDetailsResponseExpected so I ain't doin shit");
-//                                            rcaDetailsResponseExpected = false; // my hacks get more and mroe elegant with time. For some reason, this fucntion gets called by the RCADetails call. Not going to educate myself on the vagaries of PHP and JS. Getting too old for this shi
-//                                        }
-//                                    }
-                                };
-                                // disable the graph button
-                                // console.log("Disabling the graph button");
-                                document.getElementById("graphButton").value = 'Wait...';
-                                document.getElementById("graphButton").disabled = true;
-                                // gb.display = 'none';
-                                //var g = document.getElementById("graph");
-                                //g.display = 'none';
-                                destroyOldCharts();
+                                        // for testing PDF doc generation
+                                        //if ((metric.substring(0,8) == "Traffic-") || (metric.substring(0,6) == "Calls-")) {
+                                        if (false) {
+                                            // following code produces blank reports
+                                            // var htmlpdfdoc = new jsPDF('p','pt','a4');
+                                            //htmlpdfdoc.addHTML(document.getElementById('TrafficChartWrap'),function() {
+                                            // basic and poor quality
+//                                            htmlpdfdoc.addHTML(document.getElementsByTagName('body'),function() {
+//                                                htmlpdfdoc.save('html_report.pdf');
+//                                            });                                                            
 
-    //                            if (typeof myChart !== 'undefined') {
-    //                                myChart.destroy();
-    //                            } else {
-    //                                try {
-    //                                    myChart.destroy();
-    //                                } catch (err) {
-    //                                    console.log("Error destroying chart, " + err.message);
-    //                                }                                
-    //                            }
-                                var d = new Date();
-                                startMillis = d.getTime();
-                                // xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+query,true); 
-                                console.log("sql is " + query);
-                                xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+encodeURIComponent(query)+"&metrictype="+metricTypesForPhp.values()[0],true);
-                                xmlhttp.send();
+                                            var testCanvas = gridCanvas[0][0];
+                                            var testChart = gridCharts[0][0];
+                                           //https://stackoverflow.com/questions/34897515/chartjs-jspdf-blurry-image
+                                            var htmlpdfdoc = new jsPDF('l', 'mm',[210, 297]);
+                                                //html2canvas($("#myChart"), {
+                                                html2canvas($("#testChart"), {
+                                                    onrendered: function(testCanvas) {         
+                                                        var imgData = testCanvas.toDataURL('image/png',1.0);                  
+                                                        htmlpdfdoc.text(130,15,"First PDF");
+                                                        htmlpdfdoc.addImage(imgData, 'PNG',20,30,0,130); 
+                                                        htmlpdfdoc.addHTML(testCanvas);
+                                                        htmlpdfdoc.save('html_report.pdf');             
+                                                    }       
+                                            });
+                                            
+                                        }
+                                        
+                                        d = new Date();
+                                        var endMillis2 = d.getTime();
+                                        console.log(endMillis2 - endMillis + " millis taken to create Graph");
+                                    }
+                                }
+                            };
+                            // disable the graph button
+                            // console.log("Disabling the graph button");
+                            document.getElementById("graphButton").value = 'Wait...';
+                            document.getElementById("graphButton").disabled = true;
+                            // gb.display = 'none';
+                            //var g = document.getElementById("graph");
+                            //g.display = 'none';
+                            destroyOldCharts();
+                            
+//                            if (typeof myChart !== 'undefined') {
+//                                myChart.destroy();
+//                            } else {
+//                                try {
+//                                    myChart.destroy();
+//                                } catch (err) {
+//                                    console.log("Error destroying chart, " + err.message);
+//                                }                                
+//                            }
+                            var d = new Date();
+                            startMillis = d.getTime();
+                            // xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+query,true); 
+                            console.log("sql is " + query);
+                            xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+encodeURIComponent(query)+"&metrictype="+metricTypesForPhp.values()[0],true);
+                            xmlhttp.send();
 
-                                // construct a suitable query
-                                // do some clever xmlhttp stuff
+                            // construct a suitable query
+                            // do some clever xmlhttp stuff
 
-        //                        var img = document.getElementById(id);
-        //                        img.style.visibility = (visible ? 'visible' : 'hidden');
-                            }
+    //                        var img = document.getElementById(id);
+    //                        img.style.visibility = (visible ? 'visible' : 'hidden');
                         }
                     }
                 }
-//            } // one of these is the extra put in for the if rcaDetailsResponseExpected
-        }
-    }
-}
-
-function ShowRCADetails(imei) {
-    // rcaDetailsResponseExpected = true;     // used as a filter in the showGraphs() to prevent the PHP return also being handled there and overwriting the initial RCA table
-    var rcaDetailsSQL = getSQL_FemtoRCADetails($('#metric').val()[0], imei, document.getElementById("startTime").value, document.getElementById("endTime").value);
-    console.log("RCADetails SQL is " + rcaDetailsSQL);
-    if (window.XMLHttpRequest) {
-        xmlhttp = new XMLHttpRequest();                     // code for IE7+, Firefox, Chrome, Opera, Safari
-    } else {
-        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");   // code for IE6, IE5
-    }
-    xmlhttp.open("GET","RANMateMetrics_MetricsDataSet.php?query="+encodeURIComponent(rcaDetailsSQL)+"&metrictype=FemtoRCADetails",false);
-    xmlhttp.send();
-
-    if (xmlhttp.status === 200) {
-        console.log("FemtoRCADetails response is " + xmlhttp.responseText);
-        if (xmlhttp.responseText.indexOf("No data available for query") > -1) {
-            alert("Metrics data does not exist for this interval at this site");
-        } else {
-            // console.log("response text is " + this.responseText);
-            var metrics = JSON.parse(xmlhttp.responseText);
-
-            var rcaDetailsTableDef ="<table align=\"center\" style=\"width:90%\">"; // ;table-layout:auto had no effect
-            var rcaDetailsTableCols = "<tr><th>Measurement Time</th><th>IMEI</th><th>Rate</th></tr>";
-            var rcaDetailsTableRows = "";
-            for (var kpi in metrics) {
-                var rcaDetailsTableRow = "";
-                var measurement = metrics[kpi];
-                for (var entry in measurement) {
-                    // console.log("kpi=" + kpi + ", entry=" + entry + ", measurement[entry]=" + measurement[entry]);
-                    rcaDetailsTableRow += "<td>" + measurement[entry] + "</td>"                                                        
-                }
-                rcaDetailsTableRows += "<tr>" + rcaDetailsTableRow + "</tr>";
             }
-
-            rcaDetailsTableRows += "</table>";
-            document.getElementById("TrafficTableLeftWrap").style.float="left";
-            document.getElementById("TrafficTableRightWrap").innerHTML = rcaDetailsTableDef + rcaDetailsTableCols + rcaDetailsTableRows;    
-            $('#TrafficTableRightWrap').show();
         }
-    } else {
-        console.log("Error getting FemtoRCADetails " + xmlhttp.status + ", response is " + xmlhttp.responseText);
-        alert("Unable to retrieve detailed breakdown for " + imei);
+        // https://code-boxx.com/create-save-files-javascript/
+        // var exportBlob = new Blob(["Hello,World"], {type: 'text/plain'});    
+        
+        var exportUrl = "data/RANmate_Export.csv";
+        //var testUrl = "https://www.rte.ie/";
+        document.getElementById("exportForm").action = exportUrl; // testUrl;
+        
+        $('#exportwrapper').show();    
     }
-
-
 }
 
 function save() {
+
 }
 
 // Takes no prisoners
@@ -2898,51 +2834,6 @@ function getTimeGranularityGrouping() {
     else if (timeGranDay) { return "GROUP BY DAY(measurement_time)" }
     else if (timeGranWeek) { return "GROUP BY WEEK(measurement_time)" }
     else if (timeGranMonth) { return "GROUP BY MONTH(measurement_time)" }
-}
-
-function getSQL_FemtoRCADetails(metric, imei, startDateTime, endDateTime) {
-    return "select measurement_time, mno_kpis.imei AS IMEI, ROUND(" + metric.substring(9) + ", 2) AS RATE FROM metrics.mno_kpis " +
-    "where measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
-    "and " + metric.substring(9) + " > 0 and " + metric.substring(9) + " < 100 " +
-    "and mno_kpis.imei = " + imei + 
-    " order by measurement_time;";
-}
-
-
-function getSQL_FemtoRCA(metric, sites, startDateTime, endDateTime) {
-    var siteFilterStr = "";
-    var orderStr = "DESC";
-    var threshStr = "> 0 ";
-    if (sites.length == 0) {
-        alert("At least 1 site must be chosen");
-    } else if (sites.length == 1) {
-        if (sites[0].trim() != "All Sites") {
-            siteFilterStr = "and Femto.site_name = \"" + sites[0].trim() + "\" ";
-        }
-    } else {
-        siteFilterStr = "and (";
-        for (i = 0; i < sites.length; i++) {            
-            if (i == 0) {
-                siteFilterStr += " Femto.site_name = \"" + sites[i].trim() + "\"";
-            } else {
-                siteFilterStr += " OR Femto.site_name = \"" + sites[i].trim() + "\"";
-            }
-        }        
-        siteFilterStr += " ) ";
-        if (siteFilterStr.indexOf("All Sites") !== -1) {
-            siteFilterStr = ""; // If "All Sites" is in the list of sites, remove the filter
-        }
-    }
-    // for any future KPIs that are expected to be 100 when all is ok
-    //if (metric === x, y, z) {
-    //    orderStr = ""; // Implicit ASC
-    //    threshStr = "< 100 ";
-    //}
-    return "select CONCAT(site_name,'-', switch_id) AS Switch, id AS Port, FAP_location AS Location, mno_kpis.imei AS IMEI, ROUND(AVG(" + metric.substring(9) + "), 2) AS RATE " +
-            "FROM metrics.mno_kpis, Concert.Femto " +
-            "where measurement_time BETWEEN '" + startDateTime + "' AND '" + endDateTime + "' " +
-            "and mno_kpis.imei = Femto.imei " + siteFilterStr + 
-            "GROUP BY mno_kpis.IMEI HAVING AVG(" + metric.substring(9) + ") " + threshStr + "ORDER BY RATE " + orderStr + ";";
 }
 
 function getSQL_FemtoPM_SingleMetric_SingleSite(metricTypeLength, metrics, tableName, sites, femtoIds, startDateTime, endDateTime) {

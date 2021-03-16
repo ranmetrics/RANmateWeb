@@ -3,10 +3,11 @@
 To change this license header, choose License Headers in Project Properties.
 To change this template file, choose Tools | Templates
 and open the template in the editor.
+On the customer site a logical link named 'index_metrics.html' should be created to the html file for the correct number of mnos
 -->
 <html>
     <head>
-        <title>RANMate Metrics Dev</title>
+        <title>RANMate Metrics MNO Demo</title>
         <meta charset="UTF-8">
 <!--        <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
 
@@ -23,7 +24,8 @@ and open the template in the editor.
         <link rel="stylesheet" href="css/bootstrap-multiselect.css" type="text/css"/>        
 
         <link rel="stylesheet" href="css/RANMateMetrics.css">
-        <script src="js/RANMateMetrics_dev.js"></script>
+        <script src="js/MnoLetters.js"></script>        
+        <script src="js/RANMateMetrics_mno_demo.js"></script>
         <script src="js/moment.min.js"></script>            
         <script src="js/Chart.min.js"></script>            
         <script src="js/chartjs-plugin-labels.js"></script>
@@ -39,11 +41,14 @@ and open the template in the editor.
         
        
     </head>
-    <body onload="initPageRANmate()">
+<!-- Suggested disabling by Rastko 2/10/2020 to solve narrow drop downs. Replaced by end of file function -->
+<!--  However disabling it here also prevents context-sensitive URL-based loads so re-enabling it until Leto 2021 -->
+<!--    <body onload="initPageRANmate()">-->
+<!-- <body> -->
         <!-- Header-->
         <div id="LogoWrap">        
 <!--            <a><img class="main" src="./img/RANmetricsLogoSmall.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>-->
-            <a href="index_metrics_4mnos_test.html"><img class="main" src="./img/RANmetricsLogoTransparent.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>
+            <a href="index_metrics_mno_demo.html"><img class="main" src="./img/RANmetricsLogoTransparent.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>
         </div>
 
         <!-- Gather Inputs-->
@@ -61,41 +66,68 @@ and open the template in the editor.
                                         enableCollapsibleOptGroups: true,
 //                                        collapseOptGroupsByDefault: true,
                                         maxHeight: 250,
-                                        buttonWidth: '250px',
+                                        buttonWidth: '280px',
                                         numberDisplayed: 2,
-                                        width: 'auto'
+                                        width: 'fixed'
                                     });
                                 });
                             </script>
                             <select id="metric" multiple="multiple" onchange="metricSelected(this.value);" style="width:100%;">
     <!--                        <select id="metric" multiple="multiple">-->
     <!--                            <option disabled>── Femto Metrics ──</option>-->
-                                <optgroup label="Traffic&nbsp;Analysis">
-                                    <option value="Traffic-volumes">Traffic Volumes</option>
-                                    <option value="Calls-number">Number of Calls</option>
-                                    <option value="Reports">Reports</option>
-    <!--                                <option value="Traffic-in_CS">CS Traffic Inbound</option>
-                                    <option value="Traffic-out_CS">CS Traffic Outbound</option>
-                                    <option value="Traffic-in_PS">PS Traffic Inbound</option>
-                                    <option value="Traffic-out_PS">PS Traffic Outbound</option>
-                                    <option value="Traffic-in_Sig">Signalling Traffic Inbound</option>
-                                    <option value="Traffic-out_Sig">Signalling Traffic Outbound</option>-->
-                                </optgroup>                            
-                                <optgroup label="Femto&nbsp;Metrics">
+<!--                                <optgroup label="Femto&nbsp;Metrics">
                                     <option value="Femto-packets">Packets</option>
                                     <option value="Femto-poe">PoE</option>
-                                </optgroup>                        
+                                </optgroup>                        -->
 <!--https://stackoverflow.com/questions/52156973/collapse-expand-optgroup-using-select2                                -->
-                                <optgroup label="Femto&nbsp;Counters">
-                                    <option value="FemtoCounter-NUMBEROFTXBYTES">Tx Bytes</option>
-                                    <option value="FemtoCounter-NUMBEROFRXBYTES">Rx Bytes</option>
-                                    <option value="FemtoCounter-NUMBEROFTXPACKETS">Tx Packets</option>
-                                    <option value="FemtoCounter-NUMBEROFRXPACKETS">Rx Packets</option>
-                                    <option value="FemtoCounter-CSSPEECHRABATTEMPTS">Call Attempts</option>                                    
-                                    <option value="FemtoCounter-CSSPEECHRABSUCCESS">Calls</option>
-                                    <option value="FemtoCounter-UPTIME">Uptime</option>
+                                <optgroup label="3G Femto&nbsp;Counters">
+                                    <option value="FemtoCounter-NUMBEROFTXBYTES" title="NUMBEROFTXBYTES">Tx Bytes</option>
+                                    <option value="FemtoCounter-NUMBEROFRXBYTES" title="NUMBEROFRXBYTES">Rx Bytes</option>
+                                    <option value="FemtoCounter-NUMBEROFTXPACKETS" title="NUMBEROFTXPACKETS">Tx Packets</option>
+                                    <option value="FemtoCounter-NUMBEROFRXPACKETS" title="NUMBEROFRXPACKETS">Rx Packets</option>
+                                    <option value="FemtoCounter-PSATTACHACCEPTS" title="PSATTACHACCEPTS">PS Attach Accepts</option>
+                                    <option value="FemtoCounter-PSATTACHREJECTS" title="PSATTACHREJECTS">PS Attach Rejects</option>
+                                    <option value="FemtoCounter-PSDROPAPINITIATED" title="PSDROPAPINITIATED">PS Drop AP Init</option>
+                                    <option value="FemtoCounter-PSDROPAPINITIATEDHANDOUTEXECINPROGRESS" title="PSDROPAPINITIATEDHANDOUTEXECINPROGRESS">PS Drop AP Init HO In Pro</option>
+                                    <option value="FemtoCounter-PSDROPAPINITIATEDHANDOUTTARGETUNAVAILABLE" title="PSDROPAPINITIATEDHANDOUTTARGETUNAVAILABLE">PS Drop AP Init HO Unav</option>
+                                    <option value="FemtoCounter-PSDROPAPINITIATEDNOHANDOUTTARGETIDENTIFIED" title="PSDROPAPINITIATEDNOHANDOUTTARGETIDENTIFIED">PS Drop AP Init HO Ident</option>
+                                    <option value="FemtoCounter-PSDROPAPINITIATEDRLFAILUEPOWERSATURATED" title="PSDROPAPINITIATEDRLFAILUEPOWERSATURATED">PS Drop AP Init Pow Sat</option>
+                                    <option value="FemtoCounter-PSDROPCNINITIATED" title="PSDROPCNINITIATED">PS Drop CN Init</option>
+                                    <option value="FemtoCounter-PSHSDPADROPAPINITIATED" title="PSHSDPADROPAPINITIATED">HSDPA Drop AP Init</option>
+                                    <option value="FemtoCounter-PSHSDPARABATTEMPTS" title="PSHSDPARABATTEMPTS">HSDPA RAB Attempts</option>
+                                    <option value="FemtoCounter-PSHSDPARABSUCCESS" title="PSHSDPARABSUCCESS">HSDPA RAB Success</option>
+                                    <option value="FemtoCounter-PSR99DROPAPINITIATED" title="PSR99DROPAPINITIATED">R99 Drop AP Init</option>
+                                    <option value="FemtoCounter-PSR99RABATTEMPTS" title="PSR99RABATTEMPTS">R99 RAB Attempts</option>
+                                    <option value="FemtoCounter-PSR99RABSUCCESS" title="PSR99RABSUCCESS">R99 RAB Success</option>
+                                    <option value="FemtoCounter-SPEECHDROPAPINITATED" title="SPEECHDROPAPINITATED">Speech Drop AP Init</option>
+                                    <option value="FemtoCounter-SPEECHDROPAPINITIATEDHANDOUTEXECINPROGRESS" title="SPEECHDROPAPINITIATEDHANDOUTEXECINPROGRESS">Speech Drop AP Init HO In Pro</option>
+                                    <option value="FemtoCounter-SPEECHDROPAPINITIATEDHANDOUTTARGETUNAVAILABLE" title="SPEECHDROPAPINITIATEDHANDOUTTARGETUNAVAILABLE">Speech Drop AP Init HO Unav</option>
+                                    <option value="FemtoCounter-SPEECHDROPAPINITIATEDNOHANDOUTTARGETIDENTIFIED" title="SPEECHDROPAPINITIATEDNOHANDOUTTARGETIDENTIFIED">Speech Drop AP Init HO Ident</option>
+                                    <option value="FemtoCounter-SPEECHDROPAPINITIATEDRLFAILUEPOWERSATURATED" title="SPEECHDROPAPINITIATEDRLFAILUEPOWERSATURATED">Speech Drop AP Init Pow Sat</option>
+                                    <option value="FemtoCounter-SPEECHDROPCNINITATED" title="SPEECHDROPCNINITATED">Speech Drop CN Init</option>
+                                    <option value="FemtoCounter-STANDALONESRBATTEMPTS" title="STANDALONESRBATTEMPTS">SRB Attempts</option>
+                                    <option value="FemtoCounter-STANDALONESRBDROP" title="STANDALONESRBDROP">SRB Drop</option>
+                                    <option value="FemtoCounter-STANDALONESRBSUCCESS" title="STANDALONESRBSUCCESS">SRB Success</option>
+                                    <option value="FemtoCounter-CSSPEECHRABATTEMPTS" title="CSSPEECHRABATTEMPTS">Call Attempts</option>                                    
+                                    <option value="FemtoCounter-CSSPEECHRABSUCCESS" title="CSSPEECHRABSUCCESS">Calls</option>
+                                    <option value="FemtoCounter-UPTIME" title="UPTIME">Uptime</option>
+                                    <option value="FemtoCounter-INTERFAPCSHANDINSUCCESS" title="INTERFAPCSHANDINSUCCESS">CS Handin Success</option>
+                                    <option value="FemtoCounter-INTERFAPCSHANDINCANCELS" title="INTERFAPCSHANDINCANCELS">CS Handin Cancels</option>
+                                    <option value="FemtoCounter-INTERFAPCSHANDINATTEMPTS" title="INTERFAPCSHANDINATTEMPTS">CS Handin Attempts</option>
+                                    <option value="FemtoCounter-INTERFAPPSHANDINSUCCESS" title="INTERFAPPSHANDINSUCCESS">PS Handin Success</option>
+                                    <option value="FemtoCounter-INTERFAPPSHANDINCANCELS" title="INTERFAPPSHANDINCANCELS">PS Handin Cancels</option>
+                                    <option value="FemtoCounter-INTERFAPPSHANDINATTEMPTS" title="INTERFAPPSHANDINATTEMPTS">PS Handin Attempts</option>     
+                                    <option value="FemtoCounter-INTERFAPSPEECHINTERFREQHANDOUTSUCCESS" title="INTERFAPSPEECHINTERFREQHANDOUTSUCCESS">Inter Handout Success</option>     
+                                    <option value="FemtoCounter-INTERFAPSPEECHINTERFREQHANDOUTCANCELS" title="INTERFAPSPEECHINTERFREQHANDOUTCANCELS">Inter Handout Cancels</option>     
+                                    <option value="FemtoCounter-INTERFAPSPEECHINTERFREQHANDOUTATTEMPTS" title="INTERFAPSPEECHINTERFREQHANDOUTATTEMPTS">Inter Handout Attempts</option>     
+                                    <option value="FemtoCounter-INTERFAPSPEECHINTRAFREQHANDOUTSUCCESS" title="INTERFAPSPEECHINTRAFREQHANDOUTSUCCESS">Intra Handout Success</option>     
+                                    <option value="FemtoCounter-INTERFAPSPEECHINTRAFREQHANDOUTCANCELS" title="INTERFAPSPEECHINTRAFREQHANDOUTCANCELS">Intra Handout Cancels</option>     
+                                    <option value="FemtoCounter-INTERFAPSPEECHINTRAFREQHANDOUTATTEMPTS" title="INTERFAPSPEECHINTRAFREQHANDOUTATTEMPTS">Intra Handout Attempts</option>     
+                                    <option value="FemtoCounter-3GSPEECHINTRAFREQHANDOUTSUCCESS" title="3GSPEECHINTRAFREQHANDOUTSUCCESS">Speech Handout Success</option>     
+                                    <option value="FemtoCounter-3GSPEECHINTRAFREQHANDOUTCANCELS" title="3GSPEECHINTRAFREQHANDOUTCANCELS">Speech Handout Cancels</option>     
+                                    <option value="FemtoCounter-3GSPEECHINTRAFREQHANDOUTATTEMPTS" title="3GSPEECHINTRAFREQHANDOUTATTEMPTS">Speech Handout Attempts</option>                                         
                                 </optgroup>                            
-                                <optgroup label="Femto&nbsp;KPIs">
+                                <optgroup label="3G Femto&nbsp;KPIs">
                                     <option value="FemtoKPI-CSSETUPSUCCESSRATE">CS Setup Success Rate</option>
                                     <option value="FemtoKPI-CSDROPRATE">CS Drop Rate</option>
                                     <option value="FemtoKPI-PSSETUPSUCCESSRATE">PS Setup Success Rate</option>
@@ -106,50 +138,15 @@ and open the template in the editor.
                                     <option value="FemtoKPI-CSHANDINSUCCESSRATE">CS Handin Success Rate</option>
                                     <option value="FemtoKPI-PSHANDINSUCCESSRATE">PS Handin Success Rate</option>
                                 </optgroup>                            
-    <!--                            <option disabled>── Router Ping ──</option>-->
-    <!--                            <optgroup label="Router Buddy">-->
-                                <optgroup label="Router Ping">
-                                    <option value="Ping-min">Min Ping Latency</option>
-                                    <option value="Ping-max">Max Ping Latency</option>
-                                    <option value="Ping-avg">Average Ping Latency</option>
-                                    <option value="Ping-mdev">Max Ping Deviation</option>
-                                    <option value="Ping-packet_loss">Packet Loss %age</option>
-                                </optgroup>
-    <!--                            <option disabled>── Router RPM ──</option>-->
-                                <optgroup label="Router RPM">
-                                    <option value="RPM-latency" disabled>Latency</option>
-                                    <option value="RPM-jitter" disabled>Jitter</option>
-                                    <option value="RPM-bandwidth" disabled>Bandwidth</option>
-                                </optgroup>
-    <!--                            <option disabled>─ Router Counters ─</option>-->
+                                <optgroup label="4G Femto&nbsp;Counters">
+                                </optgroup>                            
+                                <optgroup label="4G Femto&nbsp;KPIs">
+                                </optgroup>                            
                                 <optgroup label="Router Counters">                                
                                     <option value="Counter-input_Mbytes">MBytes In</option>
                                     <option value="Counter-input_Mbps">MBit/s In</option>
-                                    <option value="Counter-input_packets">Packets In</option>
-                                    <option value="Counter-input_pps">Packet/s In</option>
                                     <option value="Counter-output_Mbytes">MBytes Out</option>
                                     <option value="Counter-output_Mbps">MBit/s Out</option>
-                                    <option value="Counter-output_packets">Packets Out</option>
-                                    <option value="Counter-output_pps">Packet/s Out</option>
-                                    <option value="Counter-input_errors">Input Errors</option>
-                                    <option value="Counter-input_drops">Input Drops</option>
-                                    <option value="Counter-framing_errors">Framing Errors In</option>
-                                    <option value="Counter-input_l2_channel_errors">Input L2 Channel Errors</option>
-                                    <option value="Counter-carrier_transitions">Carrier Transitions Out</option>
-                                    <option value="Counter-output_errors">Output Errors</option>
-                                    <option value="Counter-output_drops">Output Drops</option>
-                                    <option value="Counter-aged_packets">Aged Packets Out</option>
-                                    <option value="Counter-hs_link_crc_errors">HS Link CRC Errors Out</option>
-                                </optgroup>
-                                <optgroup label="Site Probe">
-                                    <option value="Buddy-bandwidth_loss_pct">Packet Loss (@ 20Mb/s)</option>
-                                    <option value="Buddy-tcp-bandwidth_bandwidth">Max BW Available (tcp)</option>
-                                    <option value="Buddy-jitter_jitter_to">Jitter (To)</option>
-                                    <option value="Buddy-jitter_jitter_from">Jitter (From)</option>
-                                    <option value="Buddy-latency_rtt_min">Min Latency</option>
-                                    <option value="Buddy-latency_rtt_max">Max Latency</option>
-                                    <option value="Buddy-latency_rtt_avg">Avg Latency</option>
-                                    <option value="Buddy-latency_rtt_mdev">Max Latency Deviation</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -266,22 +263,28 @@ and open the template in the editor.
                             <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input type="checkbox" id="EE"></div>                        
                         </div>-->
 
-                        <div id="operators" style="float:left;margin-right:20px;">
-                            <label for="name" id="OpCoName" style="margin-left:0px;">Operator</label>            
-<!--                            <div class="block-field" id="V"><label for="checkbox" style="margin: 0px 2px;">V</label><input type="checkbox" id=0 onChange="opcoSelected(this.id)"></div>                        
-                            <div class="block-field" id="O"><label for="checkbox" style="margin: 0px 2px;">O</label><input type="checkbox" id=1 onChange="opcoSelected(this.id)"></div>                        
-                            <div class="block-field" id="T"><label for="checkbox" style="margin: 0px 2px;">T</label><input type="checkbox" id=2 onChange="opcoSelected(this.id)"></div>                        
-                            <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input type="checkbox" id=3 onChange="opcoSelected(this.id)"></div>                        -->
-                            <div class="block-field" id="V"><label for="checkbox" style="margin: 0px 2px;">V</label><input type="checkbox" id=0></div>                        
-                            <div class="block-field" id="O"><label for="checkbox" style="margin: 0px 2px;">O</label><input type="checkbox" id=1></div>                        
-                            <div class="block-field" id="T"><label for="checkbox" style="margin: 0px 2px;">T</label><input type="checkbox" id=2></div>                        
-                            <div class="block-field" id="E"><label for="checkbox" style="margin: 0px 2px;">E</label><input type="checkbox" id=3></div>                        
+                        <div id="mnowrapper" style="float:left;">
+                            <div id="operators" style="float:left;margin-right:20px;">
+                                <label for="name" id="OpCoName" style="margin-left:0px;">Operator</label>            
+                                <div class="block-field" id=MNO1><label id="MnoLabel1" for="checkbox" style="margin: 0px 2px;"></label><input type="checkbox" id=0></div>                        
+                                <div class="block-field" id=MNO2><label id="MnoLabel2" for="checkbox" style="margin: 0px 2px;"></label><input type="checkbox" id=1></div>                        
+                                <div class="block-field" id=MNO3><label id="MnoLabel3" for="checkbox" style="margin: 0px 2px;"></label><input type="checkbox" id=2></div>                        
+                                <div class="block-field" id=MNO4><label id="MnoLabel4" for="checkbox" style="margin: 0px 2px;"></label><input type="checkbox" id=3></div>                        
+                            </div>
+                            <!--    There's probably a better way of doing this but it's beyond me-->
+                            <script>
+                            document.getElementById("MnoLabel1").innerHTML = Mnos[0];
+                            document.getElementById("MnoLabel2").innerHTML = Mnos[1];
+                            document.getElementById("MnoLabel3").innerHTML = Mnos[2];
+                            document.getElementById("MnoLabel4").innerHTML = Mnos[3];
+                            </script>
+                            <script>
+                                $('#mnowrapper').hide();
+                            </script>
                         </div>
-
 
                         <div id="cells" style="float:left;margin-right:20px;">
                             <label for="name" id="CellNum">Femto Number</label>            
-    <!--                        <div style="float:left;margin-right:0px;"><input type="checkbox" name="FemtoNumber" value="1" style="font-family: Arial; font-size: 60%"> 1<br></div>-->
                             <div class="block-field" id="FAP1" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">1</label><input type="checkbox" id="Femto1"></div>                        
                             <div class="block-field" id="FAP2" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">2</label><input type="checkbox" id="Femto2"></div>                        
                             <div class="block-field" id="FAP3" style="float:left;margin-right:0px;"><label for="checkbox" style="margin: 0px 2px;">3</label><input type="checkbox" id="Femto3"></div>                        
@@ -350,9 +353,9 @@ and open the template in the editor.
                         </div>
     
                         <div id="timegranularitywrapper" style="float:left;margin-right:20px;">
-                            <label id="timegranularitylabel">15 mins</label>            
+                            <label id="timegranularitylabel">Hourly</label>            
                             <div class="slidecontainer">
-                                <input type="range" min="1" max="5" value="1" class="slider" id="timegranularityslider" onChange="outputTimeGranularitySelected(this.value)">
+                                <input type="range" min="1" max="2" value="1" class="slider" id="timegranularityslider" onChange="outputTimeGranularitySelected(this.value)">
                             </div>
                             <script>
                                 $('#timegranularitywrapper').hide();
@@ -408,9 +411,21 @@ and open the template in the editor.
                             </script>
                         </div>
         
-                        <div style="float:left">
+                        <div style="float:left;margin-right:20px;">
                             <br>   
                                 <input id="graphButton" type="submit" value="Show" onclick="showGraph('graph', true); ">           
+                        </div>
+                        
+                        <div id="exportwrapper" style="float:left">
+<!--                            <form id="exportForm" action="http://185.171.220.1:8080/metrics/data/Test.csv">-->
+                            <form id="exportForm" action="">
+                                <br>   
+<!--                                    <input id="exportButton" type="submit" value="Export" onclick="exportData(); ">           -->
+                                    <input id="exportButton" type="submit" value="Export">           
+                            </form>
+                            <script>
+                                $('#exportwrapper').hide();
+                            </script>
                         </div>
                     </section>
             </div>
@@ -478,5 +493,12 @@ and open the template in the editor.
         </div>        -->
 
     </body>
+
+<!-- Attempt by Rastko to keep the width of the Combo boxes constant. However having this here, and not in the opening body means that context-sensitive launches via the URL don't work-->
+    <script>
+        document.onload = function() {
+            initPageRANmate();
+        }
+    </script>      
 </html>
  

@@ -9,8 +9,9 @@ $conn = mysqli_connect('localhost:3306','dataduct','Brearly16','metrics');      
 if (!$conn) {
     die('Could not connect: ' . mysqli_error($con));
 }
+$export_file = fopen("data/RANmate_Export.csv", "w") or die("Unable to open file!");
 
-// The Traffic SQl has a number of SQL statements in the same request, separated by ;\n
+// The Traffic SQL has a number of SQL statements in the same request, separated by ;\n
 // The first statements populate temporary tables, only the final statement gathers the metrics
 if (($metrictype === "Traffic") || ($metrictype === "Calls")) {
     $metrics_sql = substr($sql, strrpos($sql, "SELECT"));
@@ -36,12 +37,22 @@ $tok = strtok(",");
 
 // if it's a Femto PM single metric to multiple sites that's being pivoted we can't token on a single string since
 // that's included in the SQL CONCAT(,,) function and breaks the logic
-if ((strpos($sql, ' CONCAT(') !== false) && (strpos($sql, ' ROUND(') !== false)) {
+if ($metrictype === "FemtoRCA") {
+    $metric_names[] = "Switch";
+    $metric_names[] = "Port";
+    $metric_names[] = "Location";
+    $metric_names[] = "IMEI";
+    $metric_names[] = "RATE";    
+} elseif ($metrictype === "FemtoRCADetails") {
+    $metric_names[] = "IMEI";
+    $metric_names[] = "RATE";    
+} else if ((strpos($sql, ' CONCAT(') !== false) && (strpos($sql, ' ROUND(') !== false)) {
     //$pieces = preg_split("/, /", substr($sql, 0, strpos($sql, ' FROM ')));
     $from_index = strpos($sql, ' FROM ');
     $sql_substr = substr($sql, 0, $from_index);
     $pieces = preg_split("/, /", $sql_substr);
     foreach($pieces as $metricIncAlias) {
+//        fwrite($export_file, "metricIncAlias=" . $metricIncAlias . "\n");
         if (strpos($metricIncAlias, 'ROUND(') !== false) {
             if (strpos($metricIncAlias, ' AS ') !== false) {
                 $metric = substr($metricIncAlias, strpos($metricIncAlias, ' AS ') + 4);
@@ -97,7 +108,9 @@ $queryTok = strtok($sql, ";\n");
 $prevTok;
 $prevPrevTok;
 
+
 while ($queryTok !== false) {
+    fwrite($export_file, $queryTok . "\n");
     $result = $conn->query($queryTok);
 //    $prevPrevTok = $queryTok;
     $prevTok = $queryTok;
@@ -107,35 +120,60 @@ while ($queryTok !== false) {
 //$result = $conn->query($sql);
 $response = array();
 
+// write the csv file header
+if (($metrictype === "FemtoRCA")) {
+    // $csv_string = "measurement_time";
+
+} else { // might need to specialise this per metric type later
+    $csv_string = "measurement_time";
+}
+foreach ($metric_names as &$value) {
+    $csv_string = $csv_string . "," . $value;
+} 
+fwrite($export_file, $csv_string . "\n");
+unset($value);
+
 if ($result->num_rows > 0) {
     // output data of each row
     while($row = $result->fetch_assoc()) {
-        if ($metrictype !== "Traffic") {
-            $dcn = array(
-                'time' => $row['measurement_time'],
-    //            'cell_x' => $row['VF_1'],
-    //            'input_bytes' => $row['input_bytes']
-            );
-        } else {
+        if ($metrictype === "Traffic" || $metrictype === "FemtoRCADetails") {
             // Demo version used to just show the date part of the measurement time in a col named 'Date'
             // select DATE(measurement_time) AS Date
             // $dcn = array('time' => $row['Date']);
             // Delivered version will use the end of the measurement interval range as the measurement_time.
             // Can consolodate with the above if now probs later 
             $dcn = array('time' => $row['measurement_time']);
+        } else if ($metrictype === "FemtoRCA") {
+            $dcn = array('Switch' => $row['Switch']);
+//        } else if ($metrictype === "FemtoRCADetails") {
+//            $dcn = array('Switch' => $row['Switch']);
+        } else {
+            $dcn = array(
+                'time' => $row['measurement_time'],
+    //            'cell_x' => $row['VF_1'],
+    //            'input_bytes' => $row['input_bytes']
+            );
         }
         
         foreach ($metric_names as &$metric) {
+            $csv_string = "";
             //$log = $log . ", metric=" . $metric;
             //$dcn[$metric] = $row[$metric];
             $dcn[str_replace("'", "", str_replace("`", "", $metric))] = $row[str_replace("'", "", str_replace("`", "", $metric))];
             //echo "PHP: dcn " . $metric . " entry is " . $row[str_replace("'", "", str_replace("`", "", $metric))];
+            //fwrite($export_file, str_replace("'", "", str_replace("`", "", $metric))); // this file will be downloaded if someone clicks the 'Export' button
+            foreach ($dcn as &$value) {
+                $csv_string = $csv_string . $value . ",";
+            } 
+            unset($value);
         } 
         // push the final array onto the returning array
         array_push($response, $dcn);
+        fwrite($export_file, rtrim($csv_string, ",") . "\n");
     }
-
+    
     $responseString = json_encode($response);
+    fwrite($export_file, $responseString); // this file will be downloaded if someone clicks the 'Export' button
 //    echo strlen($responseString);        
       echo $responseString;        // commented out for testing UNCOMMENT
     //echo $log;        
@@ -149,6 +187,7 @@ if ($result->num_rows > 0) {
     // echo "<data>(No data available for query: \"$sql\")</data>";    
     echo "<data>(No data available for query: \"$prevTok\")</data>";    
 }
+fclose($export_file);
 $conn->close();
 
 ?>

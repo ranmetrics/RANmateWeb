@@ -6,6 +6,7 @@
 <?php
 $MetricGroup = strtok($_GET['group'], "-");
 $granularity = $_GET['granularity']; // on
+$mnoNum = $_GET['mnoNum']; // 1-4 (or more)
 //echo "<option value=\"". $MetricGroup . "\">" . $MetricGroup . "</option>";
 
 //$conn = mysqli_connect('localhost:3307','dataduct','davy15','metrics');
@@ -52,6 +53,9 @@ if ($MetricGroup == 'Counter') {
     $sql = "SELECT DISTINCT ' (MNO) Three' as 'site_name', '' union "
             . "SELECT DISTINCT CONCAT('(Customer) ', name) as 'site_name', customer FROM metrics.generated_reports where subject = 2 and name != 'Test' union "
             . "SELECT DISTINCT name as 'site_name', customer FROM metrics.generated_reports where subject = 1 ORDER BY site_name";
+} else if ($MetricGroup == 'FemtoRCA') {
+    $sql = "Select ' All Sites' as 'site_name' from Concert.Femto union "
+            . " SELECT DISTINCT(site_name) FROM Concert.Femto WHERE live AND id % 4 = " . $mnoNum . " ORDER BY site_name";
 } else {
     echo "Unexpected Metric Group " . $MetricGroup . "\n";
 }
@@ -62,7 +66,7 @@ if ($result->num_rows > 0) {
     // output data of each row
     while($row = $result->fetch_assoc()) {
 //        echo $row["Site"] . " - " . $row["SwitchLocation"] . " (" . $row["SwitchIP"] . ")\n";
-        if (($MetricGroup == 'Counter') || ($MetricGroup == 'Buddy') || ($MetricGroup == 'Ping') || ($MetricGroup == 'Mixed') || ($MetricGroup == 'Traffic') || ($MetricGroup == 'Calls')) {
+        if (($MetricGroup == 'Counter') || ($MetricGroup == 'Buddy') || ($MetricGroup == 'Ping') || ($MetricGroup == 'Mixed') || ($MetricGroup == 'Traffic') || ($MetricGroup == 'Calls') || ($MetricGroup == 'FemtoRCA')) {
             $site = $row["site_name"];
             echo "<option value=\"". $site . "\">" . $site . "</option>";
         } else if ($MetricGroup == 'Reports') {
