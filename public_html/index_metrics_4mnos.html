@@ -43,8 +43,8 @@ On the customer site a logical link named 'index_metrics.html' should be created
     </head>
 <!-- Suggested disabling by Rastko 2/10/2020 to solve narrow drop downs. Replaced by end of file function -->
 <!--  However disabling it here also prevents context-sensitive URL-based loads so re-enabling it until Leto 2021 -->
-    <body onload="initPageRANmate()">
-<!-- <body> -->
+<!--    <body onload="initPageRANmate()"> -->
+    <body> 
         <!-- Header-->
         <div id="LogoWrap">        
 <!--            <a><img class="main" src="./img/RANmetricsLogoSmall.png" style="max-height: 90%; max-width: 90%; padding: 3px 0px; display: block; margin: auto; vertical-align: middle;"></a>-->
@@ -78,7 +78,8 @@ On the customer site a logical link named 'index_metrics.html' should be created
                                 <optgroup label="Traffic&nbsp;Analysis">
                                     <option value="Traffic-volumes">Traffic Volumes</option>
                                     <option value="Calls-number">Number of Calls</option>
-                                    <option value="Reports">Reports</option>
+                                    <option value="Reports 3G">Customer Summary Reports</option>
+                                    <option value="Reports 4G">Neutral Host Performance Reports</option>
     <!--                                <option value="Traffic-in_CS">CS Traffic Inbound</option>
                                     <option value="Traffic-out_CS">CS Traffic Outbound</option>
                                     <option value="Traffic-in_PS">PS Traffic Inbound</option>
@@ -282,7 +283,7 @@ On the customer site a logical link named 'index_metrics.html' should be created
                                 $('#worstwrapper').hide();
                             </script>
                         </div>
-                                                
+                        
                         <div id="interfacewrapper" style="float:left;margin-right:20px;">
                             <label for="name" id="IfaceName">Interface</label>            
                             <script type="text/javascript">
@@ -428,6 +429,22 @@ On the customer site a logical link named 'index_metrics.html' should be created
                             </script>
                         </div>
 
+                        <div  id="intervalwrapper" style="float:left;margin-right:20px;">
+                            <label for="name" id="Interval">Interval</label>            
+
+                            <select id="mSelect" style="min-width: 1px;" onchange="setInterval(this.value);" >
+                                <option value="1">Last Hour</option>
+                                <option value="2">Last 6 Hours</option>
+                                <option value="3">Last 24 Hours</option>
+                                <option value="4">Last 7 Days</option>
+                                <option value="5">Last 14 Days</option>
+                                <option value="6">Last 28 Days</option>
+                            </select> 
+                            <script>
+                                $('#intervalwrapper').hide();
+                            </script>
+                        </div>
+                        
                         <div id="fixedperiodwrapper" style="float:left;margin-right:20px;">
                             <label for="name" id="FixedPeriodLabel">Fixed Period</label>            
                             <script type="text/javascript">
@@ -536,11 +553,11 @@ On the customer site a logical link named 'index_metrics.html' should be created
 
     </body>
 
-<!-- Attempt by Rastko to keep the width of the Combo boxes constant. However having this here, and not in the opening body means that context-sensitive launches via the URL don't work
     <script>
-        document.onload = function() {
+        $(document).ready(function() {
             initPageRANmate();
-        }
-    </script>      -->
+        });
+    </script>  
+
 </html>
  
