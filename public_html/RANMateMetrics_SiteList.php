@@ -9,8 +9,7 @@ $granularity = $_GET['granularity']; // on
 $mnoNum = $_GET['mnoNum']; // 1-4 (or more)
 //echo "<option value=\"". $MetricGroup . "\">" . $MetricGroup . "</option>";
 
-//$conn = mysqli_connect('localhost:3307','dataduct','davy15','metrics');
-$conn = mysqli_connect('localhost:3306','dataduct','Brearly16','metrics');      // OpenCell live server
+$conn = mysqli_connect('localhost:3306','admin','16characters4admin','metrics');      // OpenCell live server
 if (!$conn) {
     die('Could not connect: ' . mysqli_error($conn));
 }
@@ -44,15 +43,25 @@ if ($MetricGroup == 'Counter') {
 } else if (($MetricGroup == 'Traffic') || ($MetricGroup == 'Calls')) {
 //    $sql = "Select ' All Sites' as 'site_name' from metrics.jflow_sites union "
 //            . "Select DISTINCT site_name from metrics.jflow_sites ORDER BY site_name";
-    $sql = "Select ' All Sites' as 'site_name' from metrics.routers union "
-            . "Select DISTINCT site_name from metrics.routers ORDER BY site_name";
-} else if ($MetricGroup == 'Reports') {
-    //$sql = "SELECT CONCAT('(Customer) ', customer) as 'site_name' FROM OpenCellCM.Site GROUP BY customer HAVING count(*) > 1 union "
-    //        . "Select DISTINCT site_name from metrics.routers ORDER BY site_name";
+    //$sql = "Select ' All Sites' as 'site_name' from metrics.routers union Select DISTINCT site_name from metrics.routers ORDER BY site_name";
+// MW replaced above with below on 11/3/24
+    //$sql = "Select ' All Sites' as 'site_name' from `ranmate-CM`.Site union Select DISTINCT name as 'site_name' FROM `ranmate-CM`.Site WHERE NOT ISNULL(srx_vpn_IP) AND srx_vpn_IP != '' ORDER BY name";
+    $sql = "Select ' All Sites' as 'site_name' from `ranmate-CM`.Site union Select DISTINCT name as 'site_name' FROM `ranmate-CM`.Site WHERE NOT ISNULL(srx_vpn_IP) AND srx_vpn_IP != '' ORDER BY site_name";
+} else if ($MetricGroup == 'Reports 3G') {
     // Every time a fixed period report is generated, it's stored in the metrics.generated_reports table
-    $sql = "SELECT DISTINCT ' (MNO) Three' as 'site_name', '' union "
-            . "SELECT DISTINCT CONCAT('(Customer) ', name) as 'site_name', customer FROM metrics.generated_reports where subject = 2 and name != 'Test' union "
-            . "SELECT DISTINCT name as 'site_name', customer FROM metrics.generated_reports where subject = 1 ORDER BY site_name";
+    $sql = "SELECT DISTINCT ' (MNO) EE' as 'site_name', '' union SELECT DISTINCT ' (MNO) O2' as 'site_name', '' union SELECT DISTINCT ' (MNO) Three' as 'site_name', '' union "
+            // . "SELECT DISTINCT CONCAT('(Customer) ', name) as 'site_name', customer FROM metrics.generated_reports where subject = 2 and name != 'Test' union "
+            . "SELECT DISTINCT CONCAT('(Customer) ', id) as 'site_name', id FROM `ranmate-CM`.Customer where id != 'Test' union "
+            . "Select DISTINCT Site.name as 'site_name', customer from `ranmate-CM`.Site WHERE name not LIKE 'Test %' ORDER BY site_name";            
+    //        . "SELECT DISTINCT name as 'site_name', customer FROM metrics.generated_reports where subject = 1 ORDER BY site_name";
+} else if ($MetricGroup == 'Reports 4G') {
+    // Every time a fixed period report is generated, it's stored in the metrics.generated_reports table
+    $sql = "SELECT DISTINCT ' (MNO) EE' as 'site_name', '' union SELECT DISTINCT ' (MNO) O2' as 'site_name', '' union SELECT DISTINCT ' (MNO) Three' as 'site_name', '' union "
+           // . "Select DISTINCT CONCAT('(Customer) ', Site.customer) as 'site_name', '' FROM Concert.Femto, Concert.Site WHERE Site.id = Femto.site_id AND Femto.live AND Femto.model LIKE 'RP-%' union "
+           // . "Select DISTINCT Site.name as 'site_name', '' FROM Concert.Femto, Concert.Site WHERE Site.id = Femto.site_id AND Femto.live AND Femto.model LIKE 'RP-%' order by site_name";
+           . "Select DISTINCT CONCAT('(Customer) ', Site.customer) as 'site_name', '' FROM Concert.Femto, Concert.Site WHERE Site.id = Femto.site_id AND Femto.model LIKE 'RP-%' union "
+           . "Select DISTINCT Site.name as 'site_name', '' FROM Concert.Femto, Concert.Site WHERE Site.id = Femto.site_id AND Femto.model LIKE 'RP-%' order by site_name";
+    
 } else if ($MetricGroup == 'FemtoRCA') {
     $sql = "Select ' All Sites' as 'site_name' from Concert.Femto union "
             . " SELECT DISTINCT(site_name) FROM Concert.Femto WHERE live AND id % 4 = " . $mnoNum . " ORDER BY site_name";
@@ -69,7 +78,7 @@ if ($result->num_rows > 0) {
         if (($MetricGroup == 'Counter') || ($MetricGroup == 'Buddy') || ($MetricGroup == 'Ping') || ($MetricGroup == 'Mixed') || ($MetricGroup == 'Traffic') || ($MetricGroup == 'Calls') || ($MetricGroup == 'FemtoRCA')) {
             $site = $row["site_name"];
             echo "<option value=\"". $site . "\">" . $site . "</option>";
-        } else if ($MetricGroup == 'Reports') {
+        } else if (($MetricGroup == 'Reports 3G') || ($MetricGroup == 'Reports 4G')) {
             $site = trim($row["site_name"]);
             $customer = $row["customer"];
             echo "<option value=\"". $customer . " " . $site . "\">" . $site . "</option>";

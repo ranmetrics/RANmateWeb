@@ -4,8 +4,8 @@ $metrictype = $_GET['metrictype'];
 
 //echo "<option value=\"". $MetricGroup . "\">" . $MetricGroup . "</option>";
 
-//$conn = mysqli_connect('localhost:3307','dataduct','davy15','metrics');
-$conn = mysqli_connect('localhost:3306','dataduct','Brearly16','metrics');      // OpenCell live server
+//$conn = mysqli_connect('localhost:3306','dataduct','Brearly16','metrics');      // OpenCell live server
+$conn = mysqli_connect('localhost:3306','admin','16characters4admin','metrics');      // OpenCell live server
 if (!$conn) {
     die('Could not connect: ' . mysqli_error($con));
 }
@@ -43,9 +43,12 @@ if ($metrictype === "FemtoRCA") {
     $metric_names[] = "Location";
     $metric_names[] = "IMEI";
     $metric_names[] = "RATE";    
+    $metric_names[] = "DROPS";    
+    $metric_names[] = "TOTAL";    
 } elseif ($metrictype === "FemtoRCADetails") {
-    $metric_names[] = "IMEI";
     $metric_names[] = "RATE";    
+    $metric_names[] = "DROPS";    
+    $metric_names[] = "TOTAL";    
 } else if ((strpos($sql, ' CONCAT(') !== false) && (strpos($sql, ' ROUND(') !== false)) {
     //$pieces = preg_split("/, /", substr($sql, 0, strpos($sql, ' FROM ')));
     $from_index = strpos($sql, ' FROM ');

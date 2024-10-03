@@ -19,9 +19,8 @@ function str_replace_last($needle, $replace, $haystack) {
         return $haystack;
     }   
 }
-//$conn = mysqli_connect('localhost:3307','dataduct','davy15','ranmate-femto');
-$conn = mysqli_connect('localhost:3306','dataduct','Brearly16','ranmate-femto');
-//$conn = mysqli_connect('185.171.220.1:3306','dataduct','Brearly16','ranmate-femto');      // OpenCell live server
+//$conn = mysqli_connect('localhost:3306','dataduct','Brearly16','ranmate-femto');
+$conn = mysqli_connect('localhost:3306','admin','16characters4admin','ranmate-femto');
 if (!$conn) {
     die('Could not connect: ' . mysqli_error($conn));
 }

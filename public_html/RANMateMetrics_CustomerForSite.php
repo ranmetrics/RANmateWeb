@@ -1,7 +1,8 @@
 <?php
 $Site = trim($_GET['site']);
 
-$conn = mysqli_connect('localhost:3306','dataduct','Brearly16','metrics');      // OpenCell live server
+//$conn = mysqli_connect('localhost:3306','dataduct','Brearly16','metrics');      // OpenCell live server
+$conn = mysqli_connect('localhost:3306','admin','16characters4admin','metrics');      // OpenCell live server
 if (!$conn) {
     die('Could not connect: ' . mysqli_error($conn));
 }

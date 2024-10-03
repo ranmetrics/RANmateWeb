@@ -7,8 +7,8 @@
 $Site = $_GET['site'];
 //echo "<option value=\"". $MetricGroup . "\">" . $MetricGroup . "</option>";
 
-//$conn = mysqli_connect('localhost:3307','dataduct','davy15','metrics');
-$conn = mysqli_connect('localhost:3306','dataduct','Brearly16','metrics');      // OpenCell live server
+//$conn = mysqli_connect('localhost:3306','dataduct','Brearly16','metrics');      // OpenCell live server
+$conn = mysqli_connect('localhost:3306','admin','16characters4admin','metrics');      // OpenCell live server
 if (!$conn) {
     die('Could not connect: ' . mysqli_error($con));
 }
